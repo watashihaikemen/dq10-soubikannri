@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ドラクエ10 錬金管理ツール（パスワード保護）</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .hidden { display: none; }
+    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    select, input { margin: 5px; }
+    .effect-row { margin-bottom: 10px; }
+    h2 { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<div id="login">
+  <h2>🔐 パスワード入力</h2>
+  <input type="password" id="password" placeholder="パスワードを入力">
+  <button onclick="checkPassword()">ログイン</button>
+  <p id="error" style="color:red;"></p>
+</div>
+
+<div id="app" class="hidden">
+  <h1>ドラクエ10 錬金効果管理ツール（部位別）</h1>
+  <div id="parts"></div>
+  <h2>📊 合計錬金効果</h2>
+  <pre id="totalDisplay"></pre>
+</div>
+
+<script>
+const CORRECT_PASSWORD = "dq10pass"; // ← 任意のパスワードに変更可能
+
+function checkPassword() {
+  const input = document.getElementById("password").value;
+  if (input === CORRECT_PASSWORD) {
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    initApp(); // メインアプリ初期化
+  } else {
+    document.getElementById("error").textContent = "パスワードが違います";
+  }
+}
+
+function initApp() {
+  const data = {
+    "頭": ["さいだいMP", "さいだいHP", "眠りガード", "マヒガード", "混乱ガード", "封印ガード", "幻惑ガード", "即死ガード", "おびえガード", "どくガード", "開戦時？？％でピオラ"],
+    "体上": ["しゅび力", "ブレス系ダメージ？？%減", "こうげき魔力", "かいふく魔力", "攻撃呪文ダメージ？？%減", "呪いガード", "即死ガード", "おもさ", "炎ダメージ？？%減", "氷ダメージ？？%減", "風ダメージ？？%減", "雷ダメージ？？%減", "土ダメージ？？%減", "闇ダメージ？？%減", "光ダメージ？？%減", "開戦時？？％でスカラ"],
+    "体下": ["しゅび力", "MP吸収ガード", "こうげき魔力", "かいふく魔力", "眠りガード", "マヒガード", "混乱ガード", "封印ガード", "幻惑ガード", "どくガード", "開戦時？？％でマホキテ"],
+    "ウデ": ["きようさ", "かいしん率", "呪文発動速度", "MP消費しない率", "呪文ぼうそう率", "攻撃時？？％で眠り", "攻撃時？？％でヘナトス", "攻撃時？？％でルカニ", "通常ドロップ率", "レアドロップ率", "攻撃時？？％でどく", "攻撃時？？％でマヒ", "攻撃時？？％で混乱", "攻撃時？？％で幻惑", "攻撃時？？％で魅了", "攻撃時？？％でマホトーン"],
+    "足": ["すばやさ", "おもさ", "身かわし率", "おしゃれさ", "転びガード", "踊らされガード", "不意をつく確率", "移動速度"]
+  };
+
+  const container = document.getElementById("parts");
+
+  for (let part in data) {
+    const div = document.createElement("div");
+    div.className = "section";
+    https://t.co/WkyQIkaAxG = `section-${part}`;
+    div.innerHTML = `<h2>${part}</h2>`;
+
+    for (let i = 0; i < 3; i++) {
+      div.innerHTML += `
+        <div class="effect-row">
+          <select id="${part}_effect${i}">
+            <option value="">-- 効果を選択 --</option>
+            ${data[part].map(e => `<option value="${e}">${e}</option>`).join("")}
+          </select>
+          <input type="number" id="${part}_value${i}" placeholder="数値(1〜70)" min="1" max="70">
+        </div>`;
+    }
+
+    div.innerHTML += `
+      <label>保存名:
+        <input type="text" id="${part}_name" placeholder="例: 幻惑100%">
+      </label>
+      <button onclick="savePart('${part}')">保存</button>
+      <select id="${part}_saved" onchange="loadPart('${part}', this.value)">
+        <option value="">-- 保存済み --</option>
+      </select>
+      <button onclick="deletePart('${part}')">削除</button>
+    `;
+
+    container.appendChild(div);
+  }
+
+  for (let part in data) updateSavedList(part);
+  document.querySelectorAll("select, input").forEach(el => el.addEventListener("change", calcTotal));
+}
+
+function savePart(part) {
+  const name = document.getElementById(`${part}_name`).value.trim();
+  if (!name) return alert("保存名を入力してください");
+  const key = `part_${part}_${name}`;
+  const effects = [];
+  for (let i = 0; i < 3; i++) {
+    const effect = document.getElementById(`${part}_effect${i}`).value;
+    const value = Number(document.getElementById(`${part}_value${i}`).value);
+    if (effect && value) effects.push({ effect, value });
+  }
+  if (effects.length === 0) return alert("1つ以上の効果を入力してください");
+  localStorage.setItem(key, JSON.stringify(effects));
+  updateSavedList(part);
+  calcTotal();
+}
+
+function loadPart(part, name) {
+  if (!name) return;
+  const key = `part_${part}_${name}`;
+  const effects = JSON.parse(localStorage.getItem(key) || "[]");
+  effects.forEach((e, i) => {
+    document.getElementById(`${part}_effect${i}`).value = e.effect;
+    document.getElementById(`${part}_value${i}`).value = e.value;
+  });
+  for (let i = effects.length; i < 3; i++) {
+    document.getElementById(`${part}_effect${i}`).value = "";
+    document.getElementById(`${part}_value${i}`).value = "";
+  }
+  calcTotal();
+}
+
+function deletePart(part) {
+  const select = document.getElementById(`${part}_saved`);
+  const name = select.value;
+  if (!name) return alert("削除する錬金名を選んでください");
+  const key = `part_${part}_${name}`;
+  if (!confirm(`"${name}" を削除しますか？`)) return;
+  localStorage.removeItem(key);
+  updateSavedList(part);
+}
+
+function updateSavedList(part) {
+  const select = document.getElementById(`${part}_saved`);
+  select.innerHTML = '<option value="">-- 保存済み --</option>';
+  const names = Object.keys(localStorage)
+    .filter(key => key.startsWith(`part_${part}_`))
+    .map(key => key.replace(`part_${part}_`, ""))
+    .sort((a, b) => a.localeCompare(b, 'ja'));
+  names.forEach(name => {
+    select.innerHTML += `<option value="${name}">${name}</option>`;
+  });
+}
+
+function calcTotal() {
+  const total = {};
+  const allParts = ["頭", "体上", "体下", "ウデ", "足"];
+  for (let part of allParts) {
+    for (let i = 0; i < 3; i++) {
+      const effect = document.getElementById(`${part}_effect${i}`)?.value;
+      const value = Number(document.getElementById(`${part}_value${i}`)?.value);
+      if (effect && value) {
+        total[effect] = (total[effect] || 0) + value;
+      }
+    }
+  }
+  const output = Object.entries(total).map(([k, v]) => `${k}: ${v}%`).join("\n");
+  document.getElementById("totalDisplay").textContent = output;
+}
+</script>
+</body>
+</html>
