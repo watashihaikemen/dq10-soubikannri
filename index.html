@@ -359,4 +359,127 @@ function calculateAndShowRecommendations() {
                 let expectedChange;
                 if(skillKey === 'hogushi'){
                      const recoveryValues = HOGUSHI_VALUES[gameState.currentPower] || [0];
-                     expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) /
+                     expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length;
+                } else {
+                    expectedChange = getExpectedValue(gameState.currentPower, skill.multiplier);
+                }
+                const futureVal = currentVal - Math.round(expectedChange);
+                const efficiency = (Math.abs(currentVal) - Math.abs(futureVal)) / skill.concentration;
+                
+                if (efficiency > 0) {
+                     recommendations.push({
+                        text: `[マス${i+1}] に ${skill.name} (予測: ${currentVal} → ${futureVal})`,
+                        score: efficiency,
+                    });
+                }
+            }
+        }
+    });
+
+    recommendations.sort((a, b) => b.score - a.score);
+    const recommendationList = document.getElementById('recommendation-list');
+    recommendationList.innerHTML = '';
+    if (recommendations.length === 0) {
+        recommendationList.innerHTML = '<li>効率的な行動が見つかりません。状況に応じて判断してください。</li>';
+        return;
+    }
+    recommendations.slice(0, 5).forEach(rec => {
+        const li = document.createElement('li');
+        li.textContent = rec.text;
+        recommendationList.appendChild(li);
+    });
+}
+
+// =============== ゲーム進行 ===============
+
+function executeAction() {
+    // 盤面の数値をgameStateに反映
+    for (let i = 0; i < 9; i++) {
+        gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
+    }
+
+    // 選択された行動で集中力を消費
+    const selectedActionKey = document.getElementById('action-select').value;
+    const skill = SKILLS[selectedActionKey];
+    gameState.currentConcentration -= skill.concentration;
+    
+    if (selectedActionKey === 'seishin') gameState.powerLockTurns = 4;
+
+    if (gameState.currentConcentration <= 0) {
+        updateUI();
+        alert("集中力がなくなりました！");
+        finishSewing();
+    } else {
+        prepareTurn(); // 次のターンの準備
+    }
+}
+
+function prepareTurn() {
+    gameState.turn++;
+    
+    // パワー更新
+    if (gameState.powerLockTurns > 0) {
+        gameState.powerLockTurns--;
+    } else {
+        gameState.powerIndex = (gameState.powerIndex + 1) % POWER_SEQUENCE.length;
+    }
+    
+    const nextPower = POWER_SEQUENCE[gameState.powerIndex];
+    gameState.currentPower = nextPower;
+
+    if (nextPower === '？') {
+        gameState.mode = 'select_power';
+    } else if (nextPower === '回復') {
+        gameState.mode = 'recovery';
+    } else {
+        gameState.mode = 'sewing';
+    }
+    
+    updateUI();
+}
+
+function confirmPower() {
+    const selectedPower = document.getElementById('random-power-select').value;
+    gameState.currentPower = selectedPower;
+    gameState.mode = 'sewing';
+    updateUI();
+}
+
+function completeRecovery() {
+    // 盤面の数値をgameStateに反映
+    for (let i = 0; i < 9; i++) {
+        gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
+    }
+    // 回復ターンでは集中力は消費せず、ターン準備のみ行う
+    prepareTurn();
+}
+
+function finishSewing() {
+    const totalError = gameState.board.reduce((sum, cell) => sum + parseInt(cell.value), 0);
+    const resultDisplay = document.getElementById('result-display');
+    
+    resultDisplay.textContent = (totalError >= -3 && totalError <= 3) 
+        ? `大成功！ (合計誤差: ${totalError})` 
+        : `失敗... (合計誤差: ${totalError})`;
+    resultDisplay.className = (totalError >= -3 && totalError <= 3) ? 'result-success' : 'result-fail';
+
+    resultDisplay.style.display = 'block';
+    document.getElementById('update-button').disabled = true;
+    document.getElementById('finish-button').disabled = true;
+}
+
+// =============== イベントリスナー ===============
+document.getElementById('start-button').addEventListener('click', () => {
+    // 最初のターンだけは手動で設定
+    initGame();
+    gameState.turn = 1;
+    prepareTurn();
+});
+document.getElementById('update-button').addEventListener('click', executeAction);
+document.getElementById('confirm-power-button').addEventListener('click', confirmPower);
+document.getElementById('recovery-complete-button').addEventListener('click', completeRecovery);
+document.getElementById('finish-button').addEventListener('click', finishSewing);
+
+</script>
+</body>
+</html>
