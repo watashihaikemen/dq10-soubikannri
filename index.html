@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>DQX さいほう職人計算ツール - 原始獣のコート</title>
+    <title>DQX さいほう職人計算ツール - 原始獣のコート（修正版）</title>
     <style>
         body {
             font-family: sans-serif;
@@ -34,14 +34,8 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
-        .setup-grid > div {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+        .setup-grid > div { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; font-weight: bold; }
         select, input, button {
             padding: 8px;
             border-radius: 4px;
@@ -55,9 +49,7 @@
             border: none;
             transition: background-color 0.3s;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
+        button:hover { background-color: #0056b3; }
         .tool-section { display: none; }
         .status-display {
             display: grid;
@@ -83,9 +75,6 @@
             gap: 10px;
             margin-bottom: 20px;
         }
-        .grid-cell {
-            position: relative;
-        }
         .grid-cell input {
             width: 100%;
             height: 60px;
@@ -94,21 +83,10 @@
             box-sizing: border-box;
             border: 2px solid #ccc;
         }
-        .grid-cell .shitsuke-mark {
-            position: absolute;
-            top: 2px;
-            right: 5px;
-            font-size: 20px;
-            color: deeppink;
-            display: none;
-        }
-        .recommendation-area, .action-input-area {
+        .recommendation-area, .action-input-area, .power-selection-area, .recovery-info-area {
             margin-top: 20px;
         }
-        #recommendation-list {
-            list-style-type: none;
-            padding: 0;
-        }
+        #recommendation-list { list-style-type: none; padding: 0; }
         #recommendation-list li {
             background: #fffbe6;
             padding: 10px;
@@ -123,15 +101,12 @@
             align-items: end;
         }
         .action-grid > div { display: flex; flex-direction: column; }
+        .power-selection-area, .recovery-info-area {
+             padding: 15px; border: 1px solid #ffc107; background-color: #fff3cd; border-radius: 5px; text-align: center;
+        }
         #finish-button { background-color: #28a745; margin-top: 15px; }
         #finish-button:hover { background-color: #218838; }
-        #result-display {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 1.2em;
-        }
+        #result-display { margin-top: 15px; padding: 15px; border-radius: 5px; text-align: center; font-size: 1.2em; }
         .result-success { background-color: #d4edda; color: #155724; }
         .result-fail { background-color: #f8d7da; color: #721c24; }
     </style>
@@ -140,7 +115,7 @@
 
 <div class="container">
     <h1><img src="https://img.game8.jp/4060867/5923c0b0270a41d99432f5d96f9a9289.png/show" alt="さいほう" style="width:32px; vertical-align:middle;"> さいほう職人計算ツール</h1>
-    <p>原始獣のコート（体上）の大成功をサポートします。</p>
+    <p>原始獣のコート（体上）の大成功をサポートします。（修正版）</p>
 
     <div class="setup-section" id="setup-section">
         <h2>初期設定</h2>
@@ -152,22 +127,22 @@
             <div>
                 <label for="sewing-needle">さいほう針:</label>
                 <select id="sewing-needle">
-                    <option value="copper">銅のさいほう針</option>
-                    <option value="iron">鉄のさいほう針</option>
-                    <option value="silver">銀のさいほう針</option>
-                    <option value="platinum">プラチナさいほう針</option>
-                    <option value="super">超さいほう針</option>
-                    <option value="miracle">奇跡のさいほう針</option>
                     <option value="light" selected>光のさいほう針</option>
+                    <option value="miracle">奇跡のさいほう針</option>
+                    <option value="super">超さいほう針</option>
+                    <option value="platinum">プラチナさいほう針</option>
+                    <option value="silver">銀のさいほう針</option>
+                    <option value="iron">鉄のさいほう針</option>
+                    <option value="copper">銅のさいほう針</option>
                 </select>
             </div>
             <div>
                  <label for="needle-star">針の★の数:</label>
                 <select id="needle-star">
-                    <option value="0">★0</option>
-                    <option value="1">★1</option>
-                    <option value="2">★2</option>
                     <option value="3" selected>★3</option>
+                    <option value="2">★2</option>
+                    <option value="1">★1</option>
+                    <option value="0">★0</option>
                 </select>
             </div>
         </div>
@@ -177,126 +152,77 @@
 
     <div class="tool-section" id="tool-section">
         <div class="status-display">
-            <div class="status-item">
-                <label>集中力</label>
-                <span id="concentration-display">196</span>
-            </div>
-            <div class="status-item">
-                <label>ぬいパワー</label>
-                <span id="power-display">ふつう</span>
-            </div>
-            <div class="status-item">
-                <label>ターン</label>
-                <span id="turn-display">1</span>
-            </div>
-             <div class="status-item">
-                <label>合計誤差</label>
-                <span id="total-error-display">0</span>
-            </div>
+            <div class="status-item"><label>集中力</label><span id="concentration-display">196</span></div>
+            <div class="status-item"><label>ぬいパワー</label><span id="power-display">ふつう</span></div>
+            <div class="status-item"><label>ターン</label><span id="turn-display">1</span></div>
+            <div class="status-item"><label>合計誤差</label><span id="total-error-display">0</span></div>
         </div>
 
         <h2>盤面</h2>
-        <div class="grid-container" id="grid-container">
-            </div>
-
-        <div class="recommendation-area">
-            <h2>おすすめの行動</h2>
-            <ul id="recommendation-list">
-                <li>ここに計算結果が表示されます...</li>
-            </ul>
+        <div class="grid-container" id="grid-container"></div>
+        
+        <div class="power-selection-area" id="power-selection-area" style="display: none;">
+            <h3>「？」パワー入力</h3>
+            <p>ゲーム内で表示されたぬいパワーを選択してください。</p>
+            <select id="random-power-select">
+                <option value="弱い">弱い</option>
+                <option value="ふつう">ふつう</option>
+                <option value="強い">強い</option>
+                <option value="最強">最強</option>
+            </select>
+            <button id="confirm-power-button">パワーを確定</button>
         </div>
 
-        <div class="action-input-area">
-            <h2>行動入力</h2>
-            <div class="action-grid">
-                <div>
-                    <label for="action-select">実行した特技:</label>
-                    <select id="action-select"></select>
-                </div>
-                <div>
-                    <label>結果をマスに入力してください</label>
-                    <button id="update-button">手動更新を反映 ＆ 次のターンへ</button>
-                </div>
-            </div>
-            <p style="font-size: 0.9em; color: #555;">※盤面の数値を直接書き換えてから「手動更新を反映」ボタンを押してください。</p>
-            <button id="finish-button" style="width: 100%;">仕上げる</button>
-             <div id="result-display" style="display:none;"></div>
+        <div class="recovery-info-area" id="recovery-info-area" style="display: none;">
+            <h3>回復ターン</h3>
+            <p>プレイヤーの行動はありません。ゲーム内での回復結果を盤面に直接入力し、下のボタンを押してください。</p>
+            <button id="recovery-complete-button">回復完了 ＆ 次のターンへ</button>
         </div>
+        
+        <div id="main-interaction-area">
+            <div class="recommendation-area">
+                <h2>おすすめの行動</h2>
+                <ul id="recommendation-list"></ul>
+            </div>
+
+            <div class="action-input-area">
+                <h2>行動入力</h2>
+                <div class="action-grid">
+                    <div>
+                        <label for="action-select">実行した特技:</label>
+                        <select id="action-select"></select>
+                    </div>
+                    <div>
+                        <label>結果をマスに直接入力</label>
+                        <button id="update-button">行動を反映 ＆ 次のターンへ</button>
+                    </div>
+                </div>
+                <p style="font-size: 0.9em; color: #555;">※盤面の数値を書き換えてからボタンを押してください。</p>
+            </div>
+        </div>
+
+        <button id="finish-button" style="width: 100%;">仕上げる</button>
+        <div id="result-display" style="display:none;"></div>
     </div>
 </div>
 
 <script>
-// =============== データ定義 ===============
-
-// レベルごとの集中力
-const CONCENTRATION_LEVELS = [
-    0, 50, 51, 54, 55, 58, 61, 62, 65, 68, 68, 71, 74, 74, 77, 79, 82, 82, 85, 88, 88,
-    91, 94, 94, 97, 100, 100, 103, 105, 108, 108, 111, 112, 112, 114, 118, 121, 122, 122, 124,
-    128, 131, 133, 136, 138, 138, 141, 141, 143, 146, 148, 151, 151, 153, 156, 158, 161,
-    161, 163, 166, 168, 170, 170, 172, 174, 176, 179, 181, 183, 185, 187, 188, 190, 192,
-    194, 196, 196, 196, 196, 196, 196
-];
-
-// さいほう針データ
-const NEEDLES = {
-    copper:   { concentration: 0, critical: [1.0, 1.1, 1.2, 2.0] },
-    iron:     { concentration: 10, critical: [1.5, 1.6, 1.7, 2.5] },
-    silver:   { concentration: 15, critical: [2.0, 2.1, 2.2, 3.0] },
-    platinum: { concentration: 25, critical: [2.5, 2.6, 2.7, 3.5] },
-    super:    { concentration: 35, critical: [3.0, 3.1, 3.2, 4.0] },
-    miracle:  { concentration: 50, critical: [3.3, 3.4, 3.5, 4.3] },
-    light:    { concentration: 45, critical: [3.6, 3.7, 3.8, 4.6] }
-};
-
-// 特技データ
-const SKILLS = {
-    sew: { name: '普通に縫う', level: 1, concentration: 5, multiplier: 1, targets: 1 },
-    yoko: { name: 'ヨコぬい', level: 2, concentration: 8, multiplier: 1, targets: 2 },
-    kagen: { name: 'かげんぬい', level: 3, concentration: 10, multiplier: 0.5, targets: 1 },
-    taki: { name: '滝のぼり', level: 5, concentration: 8, multiplier: 1, targets: 2 },
-    tasuki: { name: 'たすきぬい', level: 7, concentration: 7, multiplier: 1, targets: 2 },
-    double: { name: '2倍ぬい', level: 13, concentration: 9, multiplier: 2, targets: 1 },
-    suihei: { name: '水平ぬい', level: 15, concentration: 10, multiplier: 1, targets: 3 },
-    seishin: { name: '精神統一', level: 17, concentration: 7, multiplier: 0, targets: 0 },
-    ootaki: { name: '大滝のぼり', level: 19, concentration: 10, multiplier: 1, targets: 3 },
-    nerai: { name: 'ねらいぬい', level: 23, concentration: 16, multiplier: 1, targets: 1 },
-    gyaku: { name: '逆たすきぬい', level: 25, concentration: 7, multiplier: 1, targets: 2 },
-    hogushi: { name: '糸ほぐし', level: 27, concentration: 16, multiplier: -0.5, targets: 1 },
-    triple: { name: '3倍縫い', level: 33, concentration: 12, multiplier: 3, targets: 1 },
-    shift: { name: 'ぬいパワーシフト', level: 38, concentration: 7, multiplier: 0, targets: 0 },
-    shitsuke: { name: 'しつけがけ', level: 47, concentration: 13, multiplier: 0, targets: 1 }
-};
-
-// ぬいパワーごとの基準値
-const POWER_VALUES = {
-    "弱い":   { base: [6, 7, 8, 9], prob: [0.143, 0.286, 0.286, 0.286] },
-    "ふつう": { base: [12, 13, 14, 15, 16, 17, 18], prob: Array(7).fill(0.143) },
-    "強い":   { base: [18, 20, 21, 23, 24, 26, 27], prob: Array(7).fill(0.143) },
-    "最強":   { base: [24, 26, 28, 30, 32, 34, 36], prob: Array(7).fill(0.143) }
-};
-// 糸ほぐしの回復量（暫定的に普通ぬいの0.5倍とする）
-const HOGUSHI_VALUES = {
-    "弱い": [3, 4],
-    "ふつう": [6, 7, 8, 9],
-    "強い": [9, 10, 11, 12, 13, 14],
-    "最強": [12, 13, 14, 15, 16, 17, 18]
-};
-
-// 原始獣のコートの初期盤面
+// =============== データ定義 (変更なし) ===============
+const CONCENTRATION_LEVELS = [0, 50, 51, 54, 55, 58, 61, 62, 65, 68, 68, 71, 74, 74, 77, 79, 82, 82, 85, 88, 88, 91, 94, 94, 97, 100, 100, 103, 105, 108, 108, 111, 112, 112, 114, 118, 121, 122, 122, 124, 128, 131, 133, 136, 138, 138, 141, 141, 143, 146, 148, 151, 151, 153, 156, 158, 161, 161, 163, 166, 168, 170, 170, 172, 174, 176, 179, 181, 183, 185, 187, 188, 190, 192, 194, 196, 196, 196, 196, 196, 196];
+const NEEDLES = { copper: { concentration: 0, critical: [1.0, 1.1, 1.2, 2.0] }, iron: { concentration: 10, critical: [1.5, 1.6, 1.7, 2.5] }, silver: { concentration: 15, critical: [2.0, 2.1, 2.2, 3.0] }, platinum: { concentration: 25, critical: [2.5, 2.6, 2.7, 3.5] }, super: { concentration: 35, critical: [3.0, 3.1, 3.2, 4.0] }, miracle: { concentration: 50, critical: [3.3, 3.4, 3.5, 4.3] }, light: { concentration: 45, critical: [3.6, 3.7, 3.8, 4.6] } };
+const SKILLS = { sew: { name: '普通に縫う', level: 1, concentration: 5, multiplier: 1, targets: 1 }, yoko: { name: 'ヨコぬい', level: 2, concentration: 8, multiplier: 1, targets: 2 }, kagen: { name: 'かげんぬい', level: 3, concentration: 10, multiplier: 0.5, targets: 1 }, taki: { name: '滝のぼり', level: 5, concentration: 8, multiplier: 1, targets: 2 }, tasuki: { name: 'たすきぬい', level: 7, concentration: 7, multiplier: 1, targets: 2 }, double: { name: '2倍ぬい', level: 13, concentration: 9, multiplier: 2, targets: 1 }, suihei: { name: '水平ぬい', level: 15, concentration: 10, multiplier: 1, targets: 3 }, seishin: { name: '精神統一', level: 17, concentration: 7, multiplier: 0, targets: 0 }, ootaki: { name: '大滝のぼり', level: 19, concentration: 10, multiplier: 1, targets: 3 }, nerai: { name: 'ねらいぬい', level: 23, concentration: 16, multiplier: 1, targets: 1 }, gyaku: { name: '逆たすきぬい', level: 25, concentration: 7, multiplier: 1, targets: 2 }, hogushi: { name: '糸ほぐし', level: 27, concentration: 16, multiplier: -0.5, targets: 1 }, triple: { name: '3倍縫い', level: 33, concentration: 12, multiplier: 3, targets: 1 }, shift: { name: 'ぬいパワーシフト', level: 38, concentration: 7, multiplier: 0, targets: 0 }, shitsuke: { name: 'しつけがけ', level: 47, concentration: 13, multiplier: 0, targets: 1 } };
+const POWER_VALUES = { "弱い": { base: [6, 7, 8, 9], prob: [0.143, 0.286, 0.286, 0.286] }, "ふつう": { base: [12, 13, 14, 15, 16, 17, 18], prob: Array(7).fill(0.143) }, "強い": { base: [18, 20, 21, 23, 24, 26, 27], prob: Array(7).fill(0.143) }, "最強": { base: [24, 26, 28, 30, 32, 34, 36], prob: Array(7).fill(0.143) } };
+const HOGUSHI_VALUES = { "弱い": [3, 4], "ふつう": [6, 7, 8, 9], "強い": [9, 10, 11, 12, 13, 14], "最強": [12, 13, 14, 15, 16, 17, 18] };
 const INITIAL_BOARD = [95, 40, 95, 60, 60, 60, 75, 40, 75];
-// ぬいパワーのシーケンス
 const POWER_SEQUENCE = ["ふつう", "？", "弱い", "最強", "回復", "強い"];
-const RANDOM_POWERS = ["弱い", "ふつう", "強い", "最強"];
 
 // =============== ゲーム状態管理 ===============
-
 let gameState = {};
 
 function initGame() {
     const level = parseInt(document.getElementById('player-level').value);
     const needle = document.getElementById('sewing-needle').value;
     const star = parseInt(document.getElementById('needle-star').value);
-
     const baseConcentration = CONCENTRATION_LEVELS[level];
     const needleBonus = NEEDLES[needle].concentration;
 
@@ -309,16 +235,15 @@ function initGame() {
         currentPower: "ふつう",
         board: INITIAL_BOARD.map(val => ({ value: val, shitsuke: false })),
         powerLockTurns: 0,
-        history: []
+        mode: 'sewing' // sewing, select_power, recovery
     };
     
     document.getElementById('setup-section').style.display = 'none';
     document.getElementById('tool-section').style.display = 'block';
     
     createBoard();
-    updateDisplay();
     populateActions();
-    calculateAndShowRecommendations();
+    prepareTurn(); // ターン準備処理を呼び出す
 }
 
 // =============== UI 更新 ===============
@@ -329,59 +254,60 @@ function createBoard() {
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
         cell.className = 'grid-cell';
-        cell.innerHTML = `
-            <input type="number" id="cell-${i}" value="${gameState.board[i].value}" data-index="${i}">
-            <span class="shitsuke-mark" id="shitsuke-mark-${i}">✧</span>
-        `;
+        cell.innerHTML = `<input type="number" id="cell-${i}" value="${gameState.board[i].value}" data-index="${i}">`;
         gridContainer.appendChild(cell);
         
-        document.getElementById(`cell-${i}`).addEventListener('change', (e) => {
-            const index = parseInt(e.target.dataset.index);
-            const value = parseInt(e.target.value);
-            if (!isNaN(value)) {
-                gameState.board[index].value = value;
-                updateTotalErrorDisplay(); // 誤差合計を更新
-            }
-        });
+        document.getElementById(`cell-${i}`).addEventListener('change', updateTotalErrorDisplay);
     }
 }
 
-function updateDisplay() {
+function updateUI() {
+    // 常に更新する部分
     document.getElementById('concentration-display').textContent = `${gameState.currentConcentration}/${gameState.maxConcentration}`;
     document.getElementById('power-display').textContent = gameState.currentPower;
     document.getElementById('turn-display').textContent = gameState.turn;
 
     gameState.board.forEach((cell, i) => {
-        document.getElementById(`cell-${i}`).value = cell.value;
-        const shitsukeMark = document.getElementById(`shitsuke-mark-${i}`);
-        shitsukeMark.style.display = cell.shitsuke ? 'block' : 'none';
-        
-        // 数値に応じて色付け
         const inputEl = document.getElementById(`cell-${i}`);
+        inputEl.value = cell.value;
         if (cell.value >= -3 && cell.value <= 3) {
-            inputEl.style.backgroundColor = '#d4edda'; // green
+            inputEl.style.backgroundColor = '#d4edda';
             inputEl.style.borderColor = '#28a745';
-        } else if (cell.value > 3 && cell.value <= 15) {
-             inputEl.style.backgroundColor = '#fff3cd'; // yellow
+        } else if (cell.value > 3 && cell.value <= 20) {
+             inputEl.style.backgroundColor = '#fff3cd';
              inputEl.style.borderColor = '#ffc107';
         } else {
             inputEl.style.backgroundColor = 'white';
             inputEl.style.borderColor = '#ccc';
         }
     });
-
     updateTotalErrorDisplay();
+
+    // モードに応じてUIを切り替え
+    const mainArea = document.getElementById('main-interaction-area');
+    const powerArea = document.getElementById('power-selection-area');
+    const recoveryArea = document.getElementById('recovery-info-area');
+
+    mainArea.style.display = gameState.mode === 'sewing' ? 'block' : 'none';
+    powerArea.style.display = gameState.mode === 'select_power' ? 'block' : 'none';
+    recoveryArea.style.display = gameState.mode === 'recovery' ? 'block' : 'none';
+
+    // おすすめリストをクリア/計算
+    const recommendationList = document.getElementById('recommendation-list');
+    recommendationList.innerHTML = '';
+    if(gameState.mode === 'sewing'){
+        calculateAndShowRecommendations();
+    }
 }
 
 function updateTotalErrorDisplay() {
-    const totalError = gameState.board.reduce((sum, cell) => sum + cell.value, 0);
+    let totalError = 0;
+    for (let i = 0; i < 9; i++) {
+        totalError += parseInt(document.getElementById(`cell-${i}`).value) || 0;
+    }
     const errorDisplay = document.getElementById('total-error-display');
     errorDisplay.textContent = totalError;
-    if(totalError >= -3 && totalError <= 3) {
-        errorDisplay.style.color = '#28a745';
-    } else {
-        errorDisplay.style.color = '#dc3545';
-    }
+    errorDisplay.style.color = (totalError >= -3 && totalError <= 3) ? '#28a745' : '#dc3545';
 }
 
 function populateActions() {
@@ -397,208 +323,40 @@ function populateActions() {
     });
 }
 
-// =============== 計算ロジック ===============
-
-// 期待値を計算
-function getExpectedValue(power, multiplier, isShitsuke = false) {
+// =============== 計算ロジック (変更なし) ===============
+function getExpectedValue(power, multiplier) {
     if (!POWER_VALUES[power]) return 0;
-
     const { base, prob } = POWER_VALUES[power];
     let expected = 0;
     for (let i = 0; i < base.length; i++) {
-        let val = base[i] * multiplier;
-        if (isShitsuke) val *= 2;
-        expected += Math.round(val) * (prob[i] || 1 / base.length);
+        expected += Math.round(base[i] * multiplier) * (prob[i] || 1 / base.length);
     }
     return Math.round(expected);
 }
 
-// 盤面の評価関数
-function evaluateBoard(board) {
-    // 誤差の絶対値の合計が小さいほど良い
-    return board.reduce((score, cell) => score + Math.abs(cell.value), 0);
-}
-
 function calculateAndShowRecommendations() {
     const recommendations = [];
-    const currentBoard = gameState.board;
-    const currentPower = gameState.currentPower;
-    
-    // 全ての特技を試す
+    const currentBoardValues = [];
+    for(let i=0; i<9; i++) currentBoardValues.push(parseInt(document.getElementById(`cell-${i}`).value));
+
     Object.keys(SKILLS).forEach(skillKey => {
         const skill = SKILLS[skillKey];
         if (gameState.level < skill.level || gameState.currentConcentration < skill.concentration) return;
 
-        // 対象が0の特技（精神統一など）
-        if (skill.targets === 0) {
+        if (skill.targets === 0) { // 精神統一など
             let description = `${skill.name}`;
             if (skillKey === 'seishin') description += " (3ターンパワー固定)";
-            recommendations.push({
-                text: `${description} (消費${skill.concentration})`,
-                score: -10, // 常に上位に表示するための仮スコア
-                action: skillKey,
-                target: null
-            });
+            recommendations.push({ text: `${description}`, score: -10, action: skillKey });
             return;
         }
 
-        // 対象が1マスの特技
-        if (skill.targets === 1) {
+        if (skill.targets === 1) { // 1マス対象
             for (let i = 0; i < 9; i++) {
-                const currentCellValue = currentBoard[i].value;
-                if(currentCellValue <= 0 && skillKey !== 'hogushi') continue; // 縫い過ぎのマスはスキップ
-                if(currentCellValue >= 0 && skillKey === 'hogushi') continue; // 戻す必要のないマスはスキップ
-
-                let multiplier = skill.multiplier;
-                let expectedChange = 0;
+                const currentVal = currentBoardValues[i];
+                if(currentVal <= 0 && skillKey !== 'hogushi') continue;
+                if(currentVal >= 0 && skillKey === 'hogushi') continue;
                 
-                if (skillKey === 'hogushi') {
-                    // 糸ほぐしの回復量で計算
-                    const recoveryValues = HOGUSHI_VALUES[currentPower] || [0];
-                    expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length;
-                } else {
-                    expectedChange = getExpectedValue(currentPower, multiplier, currentBoard[i].shitsuke);
-                }
-
-                const futureValue = currentCellValue - Math.round(expectedChange);
-                const scoreImprovement = Math.abs(currentCellValue) - Math.abs(futureValue);
-                const efficiency = scoreImprovement / skill.concentration;
-                
-                if (scoreImprovement > 0) {
-                     recommendations.push({
-                        text: `[${i+1}] に ${skill.name} (予測: ${currentCellValue} → ${futureValue})`,
-                        score: efficiency,
-                        action: skillKey,
-                        target: i
-                    });
-                }
-            }
-        }
-        
-        // TODO: ここにヨコぬい、タテぬいなどの複数マス特技の評価ロジックを追加
-    });
-
-    // スコアでソートして上位5件を表示
-    recommendations.sort((a, b) => b.score - a.score);
-    const recommendationList = document.getElementById('recommendation-list');
-    recommendationList.innerHTML = '';
-    if (recommendations.length === 0) {
-        recommendationList.innerHTML = '<li>現在、おすすめの行動はありません。</li>';
-        return;
-    }
-    
-    recommendations.slice(0, 5).forEach(rec => {
-        const li = document.createElement('li');
-        li.textContent = rec.text;
-        recommendationList.appendChild(li);
-    });
-}
-
-
-// =============== ゲーム進行 ===============
-
-function nextTurn() {
-    // ユーザーが入力した行動を取得
-    const selectedActionKey = document.getElementById('action-select').value;
-    const skill = SKILLS[selectedActionKey];
-    
-    // 集中力消費
-    gameState.currentConcentration -= skill.concentration;
-    
-    // ターンを進める
-    gameState.turn++;
-    
-    // しつけがけ状態の処理
-    // (ユーザーが手動で数値を更新するので、ここでは状態解除だけを行う)
-    gameState.board.forEach(cell => {
-        if(cell.shitsuke) {
-            // ここで実際に縫われたかどうかの判定が難しい。
-            // ひとまず、しつけがけした次のターンに解除される簡易実装。
-            // cell.shitsuke = false;
-        }
-    });
-
-    // 特殊効果の処理
-    if (selectedActionKey === 'seishin') {
-        gameState.powerLockTurns = 4; // 発動ターン含め4ターン(実質3ターン維持)
-    }
-     if (selectedActionKey === 'shitsuke') {
-        // しつけがけの対象をユーザーに選択させる必要がある
-        // 今回は手動更新なので、ユーザーがマークを頼りに計算することを期待
-        alert("盤面の対象マスにしつけがけ効果が付きました。次にそのマスを縫うと威力が2倍になります。");
-        // 例: 最初のマスにしつけがけ
-        // gameState.board[0].shitsuke = true;
-    }
-
-
-    // ぬいパワー更新
-    if (gameState.powerLockTurns > 0) {
-        gameState.powerLockTurns--;
-    } else {
-        gameState.powerIndex = (gameState.powerIndex + 1) % POWER_SEQUENCE.length;
-        let nextPower = POWER_SEQUENCE[gameState.powerIndex];
-        
-        if (nextPower === '？') {
-            nextPower = RANDOM_POWERS[Math.floor(Math.random() * RANDOM_POWERS.length)];
-        }
-        gameState.currentPower = nextPower;
-    }
-    
-    // 再生布の効果
-    if (gameState.currentPower === '回復') {
-        const targetCells = gameState.board
-            .map((cell, index) => ({...cell, index}))
-            .filter(cell => Math.abs(cell.value) >= 5);
-        
-        if (targetCells.length > 0) {
-            targetCells.sort((a, b) => a.value - b.value);
-            const targetIndex = targetCells[0].index;
-            const recoveryAmount = 12 + Math.floor(Math.random() * 5); // 12-16
-            gameState.board[targetIndex].value += recoveryAmount;
-            alert(`再生ターン！マス[${targetIndex+1}]が ${recoveryAmount} 回復しました。`);
-        }
-    }
-
-
-    // 盤面の数値をユーザー入力から取得
-    for (let i = 0; i < 9; i++) {
-        gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
-    }
-    
-    updateDisplay();
-    
-    if (gameState.currentConcentration <= 0) {
-        alert("集中力がなくなりました！");
-        document.getElementById('update-button').disabled = true;
-        document.getElementById('finish-button').click();
-    } else {
-        calculateAndShowRecommendations();
-    }
-}
-
-function finishSewing() {
-    const totalError = gameState.board.reduce((sum, cell) => sum + cell.value, 0);
-    const resultDisplay = document.getElementById('result-display');
-    
-    if (totalError >= -3 && totalError <= 3) {
-        resultDisplay.textContent = `大成功！ (合計誤差: ${totalError})`;
-        resultDisplay.className = 'result-success';
-    } else {
-        resultDisplay.textContent = `失敗... (合計誤差: ${totalError})`;
-        resultDisplay.className = 'result-fail';
-    }
-    resultDisplay.style.display = 'block';
-    document.getElementById('update-button').disabled = true;
-    document.getElementById('finish-button').disabled = true;
-}
-
-
-// =============== イベントリスナー ===============
-
-document.getElementById('start-button').addEventListener('click', initGame);
-document.getElementById('update-button').addEventListener('click', nextTurn);
-document.getElementById('finish-button').addEventListener('click', finishSewing);
-
-</script>
-</body>
-</html>
+                let expectedChange;
+                if(skillKey === 'hogushi'){
+                     const recoveryValues = HOGUSHI_VALUES[gameState.currentPower] || [0];
+                     expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) /
