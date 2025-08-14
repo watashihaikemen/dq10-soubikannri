@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>DQX さいほう職人計算ツール - 原始獣のコート（再修正版）</title>
+    <title>DQX さいほう職人計算ツール（精神統一ロジック修正版）</title>
     <style>
         body {
             font-family: sans-serif;
@@ -69,6 +69,10 @@
             font-weight: bold;
             color: #0056b3;
         }
+        .status-item .sub-text {
+            font-size: 0.8em;
+            color: #555;
+        }
         .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -115,7 +119,7 @@
 
 <div class="container">
     <h1><img src="https://img.game8.jp/4060867/5923c0b0270a41d99432f5d96f9a9289.png/show" alt="さいほう" style="width:32px; vertical-align:middle;"> さいほう職人計算ツール</h1>
-    <p>原始獣のコート（体上）の大成功をサポートします。（再修正版）</p>
+    <p>原始獣のコート（体上）の大成功をサポートします。（精神統一ロジック修正版）</p>
 
     <div class="setup-section" id="setup-section">
         <h2>初期設定</h2>
@@ -153,7 +157,11 @@
     <div class="tool-section" id="tool-section">
         <div class="status-display">
             <div class="status-item"><label>集中力</label><span id="concentration-display">196</span></div>
-            <div class="status-item"><label>ぬいパワー</label><span id="power-display">ふつう</span></div>
+            <div class="status-item">
+                <label>ぬいパワー</label>
+                <span id="power-display">ふつう</span>
+                <span class="sub-text" id="power-lock-display" style="display:none;"></span>
+            </div>
             <div class="status-item"><label>ターン</label><span id="turn-display">1</span></div>
             <div class="status-item"><label>合計誤差</label><span id="total-error-display">0</span></div>
         </div>
@@ -235,7 +243,8 @@ function initGame() {
         currentPower: "ふつう",
         board: INITIAL_BOARD.map(val => ({ value: val, shitsuke: false })),
         powerLockTurns: 0,
-        mode: 'sewing' // sewing, select_power, recovery
+        lockedPower: null, // ★精神統一でロックしたパワーを保存
+        mode: 'sewing'
     };
     
     document.getElementById('setup-section').style.display = 'none';
@@ -255,34 +264,32 @@ function createBoard() {
         cell.className = 'grid-cell';
         cell.innerHTML = `<input type="number" id="cell-${i}" value="${gameState.board[i].value}" data-index="${i}">`;
         gridContainer.appendChild(cell);
-        
         document.getElementById(`cell-${i}`).addEventListener('change', updateTotalErrorDisplay);
     }
 }
 
 function updateUI() {
-    // 常に更新する部分
     document.getElementById('concentration-display').textContent = `${gameState.currentConcentration}/${gameState.maxConcentration}`;
     document.getElementById('power-display').textContent = gameState.currentPower;
     document.getElementById('turn-display').textContent = gameState.turn;
 
+    const powerLockDisplay = document.getElementById('power-lock-display');
+    if (gameState.powerLockTurns > 0 && gameState.currentPower !== '回復') {
+        powerLockDisplay.textContent = `(精神統一 残り${gameState.powerLockTurns-1}ターン)`;
+        powerLockDisplay.style.display = 'block';
+    } else {
+        powerLockDisplay.style.display = 'none';
+    }
+
     gameState.board.forEach((cell, i) => {
         const inputEl = document.getElementById(`cell-${i}`);
         inputEl.value = cell.value;
-        if (cell.value >= -3 && cell.value <= 3) {
-            inputEl.style.backgroundColor = '#d4edda';
-            inputEl.style.borderColor = '#28a745';
-        } else if (cell.value > 3 && cell.value <= 20) {
-             inputEl.style.backgroundColor = '#fff3cd';
-             inputEl.style.borderColor = '#ffc107';
-        } else {
-            inputEl.style.backgroundColor = 'white';
-            inputEl.style.borderColor = '#ccc';
-        }
+        if (cell.value >= -3 && cell.value <= 3) inputEl.style.backgroundColor = '#d4edda';
+        else if (cell.value > 3 && cell.value <= 20) inputEl.style.backgroundColor = '#fff3cd';
+        else inputEl.style.backgroundColor = 'white';
     });
     updateTotalErrorDisplay();
 
-    // モードに応じてUIを切り替え
     const mainArea = document.getElementById('main-interaction-area');
     const powerArea = document.getElementById('power-selection-area');
     const recoveryArea = document.getElementById('recovery-info-area');
@@ -291,10 +298,9 @@ function updateUI() {
     powerArea.style.display = gameState.mode === 'select_power' ? 'block' : 'none';
     recoveryArea.style.display = gameState.mode === 'recovery' ? 'block' : 'none';
 
-    // おすすめリストをクリア/計算
     const recommendationList = document.getElementById('recommendation-list');
     recommendationList.innerHTML = '';
-    if(gameState.mode === 'sewing'){
+    if (gameState.mode === 'sewing') {
         calculateAndShowRecommendations();
     }
 }
@@ -323,161 +329,98 @@ function populateActions() {
 }
 
 // =============== 計算ロジック (変更なし) ===============
-function getExpectedValue(power, multiplier) {
-    if (!POWER_VALUES[power]) return 0;
-    const { base, prob } = POWER_VALUES[power];
-    let expected = 0;
-    for (let i = 0; i < base.length; i++) {
-        expected += Math.round(base[i] * multiplier) * (prob[i] || 1 / base.length);
-    }
-    return Math.round(expected);
-}
+function getExpectedValue(power, multiplier) { if (!POWER_VALUES[power]) return 0; const { base, prob } = POWER_VALUES[power]; let expected = 0; for (let i = 0; i < base.length; i++) { expected += Math.round(base[i] * multiplier) * (prob[i] || 1 / base.length); } return Math.round(expected); }
+function calculateAndShowRecommendations() { const recommendations = []; const currentBoardValues = Array.from({length: 9}, (_, i) => parseInt(document.getElementById(`cell-${i}`).value)); Object.keys(SKILLS).forEach(skillKey => { const skill = SKILLS[skillKey]; if (gameState.level < skill.level || gameState.currentConcentration < skill.concentration) return; if (skill.targets === 0) { let description = `${skill.name}`; if (skillKey === 'seishin' && gameState.currentPower !== '弱い' && gameState.currentPower !== 'ふつう') recommendations.push({ text: `${description} (${gameState.currentPower}を3ターン維持)`, score: -10 }); return; } if (skill.targets === 1) { for (let i = 0; i < 9; i++) { const currentVal = currentBoardValues[i]; if(currentVal <= 0 && skillKey !== 'hogushi') continue; if(currentVal >= 0 && skillKey === 'hogushi') continue; let expectedChange; if(skillKey === 'hogushi'){ const recoveryValues = HOGUSHI_VALUES[gameState.currentPower] || [0]; expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length; } else { expectedChange = getExpectedValue(gameState.currentPower, skill.multiplier); } const futureVal = currentVal - Math.round(expectedChange); const efficiency = (Math.abs(currentVal) - Math.abs(futureVal)) / skill.concentration; if (efficiency > 0) { recommendations.push({ text: `[マス${i+1}] に ${skill.name} (予測: ${currentVal} → ${futureVal})`, score: efficiency, }); } } } }); recommendations.sort((a, b) => b.score - a.score); const recommendationList = document.getElementById('recommendation-list'); recommendationList.innerHTML = ''; if (recommendations.length === 0) { recommendationList.innerHTML = '<li>効率的な行動が見つかりません。状況に応じて判断してください。</li>'; return; } recommendations.slice(0, 5).forEach(rec => { const li = document.createElement('li'); li.textContent = rec.text; recommendationList.appendChild(li); }); }
 
-function calculateAndShowRecommendations() {
-    const recommendations = [];
-    const currentBoardValues = [];
-    for(let i=0; i<9; i++) currentBoardValues.push(parseInt(document.getElementById(`cell-${i}`).value));
-
-    Object.keys(SKILLS).forEach(skillKey => {
-        const skill = SKILLS[skillKey];
-        if (gameState.level < skill.level || gameState.currentConcentration < skill.concentration) return;
-
-        if (skill.targets === 0) { // 精神統一など
-            let description = `${skill.name}`;
-            if (skillKey === 'seishin') description += " (3ターンパワー固定)";
-            recommendations.push({ text: `${description}`, score: -10, action: skillKey });
-            return;
-        }
-
-        if (skill.targets === 1) { // 1マス対象
-            for (let i = 0; i < 9; i++) {
-                const currentVal = currentBoardValues[i];
-                if(currentVal <= 0 && skillKey !== 'hogushi') continue;
-                if(currentVal >= 0 && skillKey === 'hogushi') continue;
-                
-                let expectedChange;
-                if(skillKey === 'hogushi'){
-                     const recoveryValues = HOGUSHI_VALUES[gameState.currentPower] || [0];
-                     expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length;
-                } else {
-                    expectedChange = getExpectedValue(gameState.currentPower, skill.multiplier);
-                }
-                const futureVal = currentVal - Math.round(expectedChange);
-                const efficiency = (Math.abs(currentVal) - Math.abs(futureVal)) / skill.concentration;
-                
-                if (efficiency > 0) {
-                     recommendations.push({
-                        text: `[マス${i+1}] に ${skill.name} (予測: ${currentVal} → ${futureVal})`,
-                        score: efficiency,
-                    });
-                }
-            }
-        }
-    });
-
-    recommendations.sort((a, b) => b.score - a.score);
-    const recommendationList = document.getElementById('recommendation-list');
-    recommendationList.innerHTML = '';
-    if (recommendations.length === 0) {
-        recommendationList.innerHTML = '<li>効率的な行動が見つかりません。状況に応じて判断してください。</li>';
-        return;
-    }
-    recommendations.slice(0, 5).forEach(rec => {
-        const li = document.createElement('li');
-        li.textContent = rec.text;
-        recommendationList.appendChild(li);
-    });
-}
-
-// =============== ゲーム進行 ===============
+// =============== ゲーム進行 (ロジック修正箇所) ===============
 
 function executeAction() {
-    // 盤面の数値をgameStateに反映
     for (let i = 0; i < 9; i++) {
         gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
     }
-
-    // 選択された行動で集中力を消費
     const selectedActionKey = document.getElementById('action-select').value;
     const skill = SKILLS[selectedActionKey];
     gameState.currentConcentration -= skill.concentration;
     
-    if (selectedActionKey === 'seishin') gameState.powerLockTurns = 4;
+    if (selectedActionKey === 'seishin') {
+        gameState.powerLockTurns = 4; // 発動ターン含め4
+        gameState.lockedPower = gameState.currentPower;
+    }
 
     if (gameState.currentConcentration <= 0) {
         updateUI();
         alert("集中力がなくなりました！");
         finishSewing();
     } else {
-        prepareNextTurn(); // 次のターンの準備
+        prepareNextTurn();
     }
 }
 
 function prepareNextTurn() {
     gameState.turn++;
     
-    // パワー更新
     if (gameState.powerLockTurns > 0) {
         gameState.powerLockTurns--;
-    } else {
-        gameState.powerIndex = (gameState.powerIndex + 1) % POWER_SEQUENCE.length;
     }
-    
-    const nextPower = POWER_SEQUENCE[gameState.powerIndex];
-    gameState.currentPower = nextPower;
 
-    if (nextPower === '？') {
-        gameState.mode = 'select_power';
-    } else if (nextPower === '回復') {
+    // powerIndexは精神統一に関わらず常に進める
+    gameState.powerIndex = (gameState.powerIndex + 1) % POWER_SEQUENCE.length;
+    const sequencePower = POWER_SEQUENCE[gameState.powerIndex];
+
+    // 回復ターンは最優先
+    if (sequencePower === '回復') {
+        gameState.currentPower = '回復';
         gameState.mode = 'recovery';
+    } else if (gameState.powerLockTurns > 0) {
+        // 精神統一中 (回復ターン以外)
+        gameState.currentPower = gameState.lockedPower;
+        gameState.mode = 'sewing'; // '?'ターンもスキップして行動
     } else {
-        gameState.mode = 'sewing';
+        // 通常時
+        gameState.currentPower = sequencePower;
+        if (sequencePower === '？') {
+            gameState.mode = 'select_power';
+        } else {
+            gameState.mode = 'sewing';
+        }
     }
     
     updateUI();
 }
 
 function confirmPower() {
-    const selectedPower = document.getElementById('random-power-select').value;
-    gameState.currentPower = selectedPower;
+    gameState.currentPower = document.getElementById('random-power-select').value;
     gameState.mode = 'sewing';
     updateUI();
 }
 
 function completeRecovery() {
-    // 盤面の数値をgameStateに反映
     for (let i = 0; i < 9; i++) {
         gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
     }
-    // 回復ターンでは集中力は消費せず、ターン準備のみ行う
     prepareNextTurn();
 }
 
 function finishSewing() {
     const totalError = gameState.board.reduce((sum, cell) => sum + parseInt(cell.value), 0);
     const resultDisplay = document.getElementById('result-display');
-    
     resultDisplay.textContent = (totalError >= -3 && totalError <= 3) 
-        ? `大成功！ (合計誤差: ${totalError})` 
-        : `失敗... (合計誤差: ${totalError})`;
+        ? `大成功！ (合計誤差: ${totalError})` : `失敗... (合計誤差: ${totalError})`;
     resultDisplay.className = (totalError >= -3 && totalError <= 3) ? 'result-success' : 'result-fail';
-
     resultDisplay.style.display = 'block';
     document.getElementById('update-button').disabled = true;
     document.getElementById('finish-button').disabled = true;
 }
 
-// =============== イベントリスナー (修正箇所) ===============
+// =============== イベントリスナー ===============
 document.getElementById('start-button').addEventListener('click', () => {
-    initGame(); // gameStateを初期化 (ターン1, ふつう)
-    updateUI(); // 初期状態を画面に正しく描画
+    initGame();
+    updateUI();
 });
-
 document.getElementById('update-button').addEventListener('click', executeAction);
 document.getElementById('confirm-power-button').addEventListener('click', confirmPower);
 document.getElementById('recovery-complete-button').addEventListener('click', completeRecovery);
 document.getElementById('finish-button').addEventListener('click', finishSewing);
-
 </script>
 </body>
 </html>
