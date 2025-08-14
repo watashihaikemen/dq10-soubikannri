@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>DQX さいほう職人計算ツール - 原始獣のコート（修正版）</title>
+    <title>DQX さいほう職人計算ツール - 原始獣のコート（再修正版）</title>
     <style>
         body {
             font-family: sans-serif;
@@ -115,7 +115,7 @@
 
 <div class="container">
     <h1><img src="https://img.game8.jp/4060867/5923c0b0270a41d99432f5d96f9a9289.png/show" alt="さいほう" style="width:32px; vertical-align:middle;"> さいほう職人計算ツール</h1>
-    <p>原始獣のコート（体上）の大成功をサポートします。（修正版）</p>
+    <p>原始獣のコート（体上）の大成功をサポートします。（再修正版）</p>
 
     <div class="setup-section" id="setup-section">
         <h2>初期設定</h2>
@@ -243,7 +243,6 @@ function initGame() {
     
     createBoard();
     populateActions();
-    prepareTurn(); // ターン準備処理を呼び出す
 }
 
 // =============== UI 更新 ===============
@@ -410,11 +409,11 @@ function executeAction() {
         alert("集中力がなくなりました！");
         finishSewing();
     } else {
-        prepareTurn(); // 次のターンの準備
+        prepareNextTurn(); // 次のターンの準備
     }
 }
 
-function prepareTurn() {
+function prepareNextTurn() {
     gameState.turn++;
     
     // パワー更新
@@ -451,7 +450,7 @@ function completeRecovery() {
         gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
     }
     // 回復ターンでは集中力は消費せず、ターン準備のみ行う
-    prepareTurn();
+    prepareNextTurn();
 }
 
 function finishSewing() {
@@ -468,13 +467,12 @@ function finishSewing() {
     document.getElementById('finish-button').disabled = true;
 }
 
-// =============== イベントリスナー ===============
+// =============== イベントリスナー (修正箇所) ===============
 document.getElementById('start-button').addEventListener('click', () => {
-    // 最初のターンだけは手動で設定
-    initGame();
-    gameState.turn = 1;
-    prepareTurn();
+    initGame(); // gameStateを初期化 (ターン1, ふつう)
+    updateUI(); // 初期状態を画面に正しく描画
 });
+
 document.getElementById('update-button').addEventListener('click', executeAction);
 document.getElementById('confirm-power-button').addEventListener('click', confirmPower);
 document.getElementById('recovery-complete-button').addEventListener('click', completeRecovery);
