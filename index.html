@@ -1,161 +1,604 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ドラクエ10 錬金管理ツール（パスワード保護）</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    .hidden { display: none; }
-    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    select, input { margin: 5px; }
-    .effect-row { margin-bottom: 10px; }
-    h2 { margin-top: 0; }
-  </style>
+    <meta charset="UTF-8">
+    <title>DQX さいほう職人計算ツール - 原始獣のコート</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .setup-section, .tool-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .setup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .setup-grid > div {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, button {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .tool-section { display: none; }
+        .status-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status-item {
+            background: #e9f5ff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status-item span {
+            display: block;
+            font-size: 20px;
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .grid-cell {
+            position: relative;
+        }
+        .grid-cell input {
+            width: 100%;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+        }
+        .grid-cell .shitsuke-mark {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            font-size: 20px;
+            color: deeppink;
+            display: none;
+        }
+        .recommendation-area, .action-input-area {
+            margin-top: 20px;
+        }
+        #recommendation-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        #recommendation-list li {
+            background: #fffbe6;
+            padding: 10px;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: end;
+        }
+        .action-grid > div { display: flex; flex-direction: column; }
+        #finish-button { background-color: #28a745; margin-top: 15px; }
+        #finish-button:hover { background-color: #218838; }
+        #result-display {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .result-success { background-color: #d4edda; color: #155724; }
+        .result-fail { background-color: #f8d7da; color: #721c24; }
+    </style>
 </head>
 <body>
 
-<div id="login">
-  <h2>🔐 パスワード入力</h2>
-  <input type="password" id="password" placeholder="パスワードを入力">
-  <button onclick="checkPassword()">ログイン</button>
-  <p id="error" style="color:red;"></p>
-</div>
+<div class="container">
+    <h1><img src="https://img.game8.jp/4060867/5923c0b0270a41d99432f5d96f9a9289.png/show" alt="さいほう" style="width:32px; vertical-align:middle;"> さいほう職人計算ツール</h1>
+    <p>原始獣のコート（体上）の大成功をサポートします。</p>
 
-<div id="app" class="hidden">
-  <h1>ドラクエ10 錬金効果管理ツール（部位別）</h1>
-  <div id="parts"></div>
-  <h2>📊 合計錬金効果</h2>
-  <pre id="totalDisplay"></pre>
+    <div class="setup-section" id="setup-section">
+        <h2>初期設定</h2>
+        <div class="setup-grid">
+            <div>
+                <label for="player-level">職人レベル:</label>
+                <input type="number" id="player-level" value="80" min="1" max="80">
+            </div>
+            <div>
+                <label for="sewing-needle">さいほう針:</label>
+                <select id="sewing-needle">
+                    <option value="copper">銅のさいほう針</option>
+                    <option value="iron">鉄のさいほう針</option>
+                    <option value="silver">銀のさいほう針</option>
+                    <option value="platinum">プラチナさいほう針</option>
+                    <option value="super">超さいほう針</option>
+                    <option value="miracle">奇跡のさいほう針</option>
+                    <option value="light" selected>光のさいほう針</option>
+                </select>
+            </div>
+            <div>
+                 <label for="needle-star">針の★の数:</label>
+                <select id="needle-star">
+                    <option value="0">★0</option>
+                    <option value="1">★1</option>
+                    <option value="2">★2</option>
+                    <option value="3" selected>★3</option>
+                </select>
+            </div>
+        </div>
+        <br>
+        <button id="start-button" style="width: 100%;">さいほうを開始</button>
+    </div>
+
+    <div class="tool-section" id="tool-section">
+        <div class="status-display">
+            <div class="status-item">
+                <label>集中力</label>
+                <span id="concentration-display">196</span>
+            </div>
+            <div class="status-item">
+                <label>ぬいパワー</label>
+                <span id="power-display">ふつう</span>
+            </div>
+            <div class="status-item">
+                <label>ターン</label>
+                <span id="turn-display">1</span>
+            </div>
+             <div class="status-item">
+                <label>合計誤差</label>
+                <span id="total-error-display">0</span>
+            </div>
+        </div>
+
+        <h2>盤面</h2>
+        <div class="grid-container" id="grid-container">
+            </div>
+
+        <div class="recommendation-area">
+            <h2>おすすめの行動</h2>
+            <ul id="recommendation-list">
+                <li>ここに計算結果が表示されます...</li>
+            </ul>
+        </div>
+
+        <div class="action-input-area">
+            <h2>行動入力</h2>
+            <div class="action-grid">
+                <div>
+                    <label for="action-select">実行した特技:</label>
+                    <select id="action-select"></select>
+                </div>
+                <div>
+                    <label>結果をマスに入力してください</label>
+                    <button id="update-button">手動更新を反映 ＆ 次のターンへ</button>
+                </div>
+            </div>
+            <p style="font-size: 0.9em; color: #555;">※盤面の数値を直接書き換えてから「手動更新を反映」ボタンを押してください。</p>
+            <button id="finish-button" style="width: 100%;">仕上げる</button>
+             <div id="result-display" style="display:none;"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-const CORRECT_PASSWORD = "dq10pass"; // ← 任意のパスワードに変更可能
+// =============== データ定義 ===============
 
-function checkPassword() {
-  const input = document.getElementById("password").value;
-  if (input === CORRECT_PASSWORD) {
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
-    initApp(); // メインアプリ初期化
-  } else {
-    document.getElementById("error").textContent = "パスワードが違います";
-  }
+// レベルごとの集中力
+const CONCENTRATION_LEVELS = [
+    0, 50, 51, 54, 55, 58, 61, 62, 65, 68, 68, 71, 74, 74, 77, 79, 82, 82, 85, 88, 88,
+    91, 94, 94, 97, 100, 100, 103, 105, 108, 108, 111, 112, 112, 114, 118, 121, 122, 122, 124,
+    128, 131, 133, 136, 138, 138, 141, 141, 143, 146, 148, 151, 151, 153, 156, 158, 161,
+    161, 163, 166, 168, 170, 170, 172, 174, 176, 179, 181, 183, 185, 187, 188, 190, 192,
+    194, 196, 196, 196, 196, 196, 196
+];
+
+// さいほう針データ
+const NEEDLES = {
+    copper:   { concentration: 0, critical: [1.0, 1.1, 1.2, 2.0] },
+    iron:     { concentration: 10, critical: [1.5, 1.6, 1.7, 2.5] },
+    silver:   { concentration: 15, critical: [2.0, 2.1, 2.2, 3.0] },
+    platinum: { concentration: 25, critical: [2.5, 2.6, 2.7, 3.5] },
+    super:    { concentration: 35, critical: [3.0, 3.1, 3.2, 4.0] },
+    miracle:  { concentration: 50, critical: [3.3, 3.4, 3.5, 4.3] },
+    light:    { concentration: 45, critical: [3.6, 3.7, 3.8, 4.6] }
+};
+
+// 特技データ
+const SKILLS = {
+    sew: { name: '普通に縫う', level: 1, concentration: 5, multiplier: 1, targets: 1 },
+    yoko: { name: 'ヨコぬい', level: 2, concentration: 8, multiplier: 1, targets: 2 },
+    kagen: { name: 'かげんぬい', level: 3, concentration: 10, multiplier: 0.5, targets: 1 },
+    taki: { name: '滝のぼり', level: 5, concentration: 8, multiplier: 1, targets: 2 },
+    tasuki: { name: 'たすきぬい', level: 7, concentration: 7, multiplier: 1, targets: 2 },
+    double: { name: '2倍ぬい', level: 13, concentration: 9, multiplier: 2, targets: 1 },
+    suihei: { name: '水平ぬい', level: 15, concentration: 10, multiplier: 1, targets: 3 },
+    seishin: { name: '精神統一', level: 17, concentration: 7, multiplier: 0, targets: 0 },
+    ootaki: { name: '大滝のぼり', level: 19, concentration: 10, multiplier: 1, targets: 3 },
+    nerai: { name: 'ねらいぬい', level: 23, concentration: 16, multiplier: 1, targets: 1 },
+    gyaku: { name: '逆たすきぬい', level: 25, concentration: 7, multiplier: 1, targets: 2 },
+    hogushi: { name: '糸ほぐし', level: 27, concentration: 16, multiplier: -0.5, targets: 1 },
+    triple: { name: '3倍縫い', level: 33, concentration: 12, multiplier: 3, targets: 1 },
+    shift: { name: 'ぬいパワーシフト', level: 38, concentration: 7, multiplier: 0, targets: 0 },
+    shitsuke: { name: 'しつけがけ', level: 47, concentration: 13, multiplier: 0, targets: 1 }
+};
+
+// ぬいパワーごとの基準値
+const POWER_VALUES = {
+    "弱い":   { base: [6, 7, 8, 9], prob: [0.143, 0.286, 0.286, 0.286] },
+    "ふつう": { base: [12, 13, 14, 15, 16, 17, 18], prob: Array(7).fill(0.143) },
+    "強い":   { base: [18, 20, 21, 23, 24, 26, 27], prob: Array(7).fill(0.143) },
+    "最強":   { base: [24, 26, 28, 30, 32, 34, 36], prob: Array(7).fill(0.143) }
+};
+// 糸ほぐしの回復量（暫定的に普通ぬいの0.5倍とする）
+const HOGUSHI_VALUES = {
+    "弱い": [3, 4],
+    "ふつう": [6, 7, 8, 9],
+    "強い": [9, 10, 11, 12, 13, 14],
+    "最強": [12, 13, 14, 15, 16, 17, 18]
+};
+
+// 原始獣のコートの初期盤面
+const INITIAL_BOARD = [95, 40, 95, 60, 60, 60, 75, 40, 75];
+// ぬいパワーのシーケンス
+const POWER_SEQUENCE = ["ふつう", "？", "弱い", "最強", "回復", "強い"];
+const RANDOM_POWERS = ["弱い", "ふつう", "強い", "最強"];
+
+// =============== ゲーム状態管理 ===============
+
+let gameState = {};
+
+function initGame() {
+    const level = parseInt(document.getElementById('player-level').value);
+    const needle = document.getElementById('sewing-needle').value;
+    const star = parseInt(document.getElementById('needle-star').value);
+
+    const baseConcentration = CONCENTRATION_LEVELS[level];
+    const needleBonus = NEEDLES[needle].concentration;
+
+    gameState = {
+        level: level,
+        maxConcentration: baseConcentration + needleBonus,
+        currentConcentration: baseConcentration + needleBonus,
+        turn: 1,
+        powerIndex: 0,
+        currentPower: "ふつう",
+        board: INITIAL_BOARD.map(val => ({ value: val, shitsuke: false })),
+        powerLockTurns: 0,
+        history: []
+    };
+    
+    document.getElementById('setup-section').style.display = 'none';
+    document.getElementById('tool-section').style.display = 'block';
+    
+    createBoard();
+    updateDisplay();
+    populateActions();
+    calculateAndShowRecommendations();
 }
 
-function initApp() {
-  const data = {
-    "頭": ["さいだいMP", "さいだいHP", "眠りガード", "マヒガード", "混乱ガード", "封印ガード", "幻惑ガード", "即死ガード", "おびえガード", "どくガード", "開戦時？？％でピオラ"],
-    "体上": ["しゅび力", "ブレス系ダメージ？？%減", "こうげき魔力", "かいふく魔力", "攻撃呪文ダメージ？？%減", "呪いガード", "即死ガード", "おもさ", "炎ダメージ？？%減", "氷ダメージ？？%減", "風ダメージ？？%減", "雷ダメージ？？%減", "土ダメージ？？%減", "闇ダメージ？？%減", "光ダメージ？？%減", "開戦時？？％でスカラ"],
-    "体下": ["しゅび力", "MP吸収ガード", "こうげき魔力", "かいふく魔力", "眠りガード", "マヒガード", "混乱ガード", "封印ガード", "幻惑ガード", "どくガード", "開戦時？？％でマホキテ"],
-    "ウデ": ["きようさ", "かいしん率", "呪文発動速度", "MP消費しない率", "呪文ぼうそう率", "攻撃時？？％で眠り", "攻撃時？？％でヘナトス", "攻撃時？？％でルカニ", "通常ドロップ率", "レアドロップ率", "攻撃時？？％でどく", "攻撃時？？％でマヒ", "攻撃時？？％で混乱", "攻撃時？？％で幻惑", "攻撃時？？％で魅了", "攻撃時？？％でマホトーン"],
-    "足": ["すばやさ", "おもさ", "身かわし率", "おしゃれさ", "転びガード", "踊らされガード", "不意をつく確率", "移動速度"]
-  };
+// =============== UI 更新 ===============
 
-  const container = document.getElementById("parts");
+function createBoard() {
+    const gridContainer = document.getElementById('grid-container');
+    gridContainer.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.innerHTML = `
+            <input type="number" id="cell-${i}" value="${gameState.board[i].value}" data-index="${i}">
+            <span class="shitsuke-mark" id="shitsuke-mark-${i}">✧</span>
+        `;
+        gridContainer.appendChild(cell);
+        
+        document.getElementById(`cell-${i}`).addEventListener('change', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            const value = parseInt(e.target.value);
+            if (!isNaN(value)) {
+                gameState.board[index].value = value;
+                updateTotalErrorDisplay(); // 誤差合計を更新
+            }
+        });
+    }
+}
 
-  for (let part in data) {
-    const div = document.createElement("div");
-    div.className = "section";
-    https://t.co/WkyQIkaAxG = `section-${part}`;
-    div.innerHTML = `<h2>${part}</h2>`;
+function updateDisplay() {
+    document.getElementById('concentration-display').textContent = `${gameState.currentConcentration}/${gameState.maxConcentration}`;
+    document.getElementById('power-display').textContent = gameState.currentPower;
+    document.getElementById('turn-display').textContent = gameState.turn;
 
-    for (let i = 0; i < 3; i++) {
-      div.innerHTML += `
-        <div class="effect-row">
-          <select id="${part}_effect${i}">
-            <option value="">-- 効果を選択 --</option>
-            ${data[part].map(e => `<option value="${e}">${e}</option>`).join("")}
-          </select>
-          <input type="number" id="${part}_value${i}" placeholder="数値(1〜70)" min="1" max="70">
-        </div>`;
+    gameState.board.forEach((cell, i) => {
+        document.getElementById(`cell-${i}`).value = cell.value;
+        const shitsukeMark = document.getElementById(`shitsuke-mark-${i}`);
+        shitsukeMark.style.display = cell.shitsuke ? 'block' : 'none';
+        
+        // 数値に応じて色付け
+        const inputEl = document.getElementById(`cell-${i}`);
+        if (cell.value >= -3 && cell.value <= 3) {
+            inputEl.style.backgroundColor = '#d4edda'; // green
+            inputEl.style.borderColor = '#28a745';
+        } else if (cell.value > 3 && cell.value <= 15) {
+             inputEl.style.backgroundColor = '#fff3cd'; // yellow
+             inputEl.style.borderColor = '#ffc107';
+        } else {
+            inputEl.style.backgroundColor = 'white';
+            inputEl.style.borderColor = '#ccc';
+        }
+    });
+
+    updateTotalErrorDisplay();
+}
+
+function updateTotalErrorDisplay() {
+    const totalError = gameState.board.reduce((sum, cell) => sum + cell.value, 0);
+    const errorDisplay = document.getElementById('total-error-display');
+    errorDisplay.textContent = totalError;
+    if(totalError >= -3 && totalError <= 3) {
+        errorDisplay.style.color = '#28a745';
+    } else {
+        errorDisplay.style.color = '#dc3545';
+    }
+}
+
+function populateActions() {
+    const actionSelect = document.getElementById('action-select');
+    actionSelect.innerHTML = '';
+    Object.keys(SKILLS).forEach(key => {
+        if (gameState.level >= SKILLS[key].level) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = `${SKILLS[key].name} (消費${SKILLS[key].concentration})`;
+            actionSelect.appendChild(option);
+        }
+    });
+}
+
+// =============== 計算ロジック ===============
+
+// 期待値を計算
+function getExpectedValue(power, multiplier, isShitsuke = false) {
+    if (!POWER_VALUES[power]) return 0;
+
+    const { base, prob } = POWER_VALUES[power];
+    let expected = 0;
+    for (let i = 0; i < base.length; i++) {
+        let val = base[i] * multiplier;
+        if (isShitsuke) val *= 2;
+        expected += Math.round(val) * (prob[i] || 1 / base.length);
+    }
+    return Math.round(expected);
+}
+
+// 盤面の評価関数
+function evaluateBoard(board) {
+    // 誤差の絶対値の合計が小さいほど良い
+    return board.reduce((score, cell) => score + Math.abs(cell.value), 0);
+}
+
+function calculateAndShowRecommendations() {
+    const recommendations = [];
+    const currentBoard = gameState.board;
+    const currentPower = gameState.currentPower;
+    
+    // 全ての特技を試す
+    Object.keys(SKILLS).forEach(skillKey => {
+        const skill = SKILLS[skillKey];
+        if (gameState.level < skill.level || gameState.currentConcentration < skill.concentration) return;
+
+        // 対象が0の特技（精神統一など）
+        if (skill.targets === 0) {
+            let description = `${skill.name}`;
+            if (skillKey === 'seishin') description += " (3ターンパワー固定)";
+            recommendations.push({
+                text: `${description} (消費${skill.concentration})`,
+                score: -10, // 常に上位に表示するための仮スコア
+                action: skillKey,
+                target: null
+            });
+            return;
+        }
+
+        // 対象が1マスの特技
+        if (skill.targets === 1) {
+            for (let i = 0; i < 9; i++) {
+                const currentCellValue = currentBoard[i].value;
+                if(currentCellValue <= 0 && skillKey !== 'hogushi') continue; // 縫い過ぎのマスはスキップ
+                if(currentCellValue >= 0 && skillKey === 'hogushi') continue; // 戻す必要のないマスはスキップ
+
+                let multiplier = skill.multiplier;
+                let expectedChange = 0;
+                
+                if (skillKey === 'hogushi') {
+                    // 糸ほぐしの回復量で計算
+                    const recoveryValues = HOGUSHI_VALUES[currentPower] || [0];
+                    expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length;
+                } else {
+                    expectedChange = getExpectedValue(currentPower, multiplier, currentBoard[i].shitsuke);
+                }
+
+                const futureValue = currentCellValue - Math.round(expectedChange);
+                const scoreImprovement = Math.abs(currentCellValue) - Math.abs(futureValue);
+                const efficiency = scoreImprovement / skill.concentration;
+                
+                if (scoreImprovement > 0) {
+                     recommendations.push({
+                        text: `[${i+1}] に ${skill.name} (予測: ${currentCellValue} → ${futureValue})`,
+                        score: efficiency,
+                        action: skillKey,
+                        target: i
+                    });
+                }
+            }
+        }
+        
+        // TODO: ここにヨコぬい、タテぬいなどの複数マス特技の評価ロジックを追加
+    });
+
+    // スコアでソートして上位5件を表示
+    recommendations.sort((a, b) => b.score - a.score);
+    const recommendationList = document.getElementById('recommendation-list');
+    recommendationList.innerHTML = '';
+    if (recommendations.length === 0) {
+        recommendationList.innerHTML = '<li>現在、おすすめの行動はありません。</li>';
+        return;
+    }
+    
+    recommendations.slice(0, 5).forEach(rec => {
+        const li = document.createElement('li');
+        li.textContent = rec.text;
+        recommendationList.appendChild(li);
+    });
+}
+
+
+// =============== ゲーム進行 ===============
+
+function nextTurn() {
+    // ユーザーが入力した行動を取得
+    const selectedActionKey = document.getElementById('action-select').value;
+    const skill = SKILLS[selectedActionKey];
+    
+    // 集中力消費
+    gameState.currentConcentration -= skill.concentration;
+    
+    // ターンを進める
+    gameState.turn++;
+    
+    // しつけがけ状態の処理
+    // (ユーザーが手動で数値を更新するので、ここでは状態解除だけを行う)
+    gameState.board.forEach(cell => {
+        if(cell.shitsuke) {
+            // ここで実際に縫われたかどうかの判定が難しい。
+            // ひとまず、しつけがけした次のターンに解除される簡易実装。
+            // cell.shitsuke = false;
+        }
+    });
+
+    // 特殊効果の処理
+    if (selectedActionKey === 'seishin') {
+        gameState.powerLockTurns = 4; // 発動ターン含め4ターン(実質3ターン維持)
+    }
+     if (selectedActionKey === 'shitsuke') {
+        // しつけがけの対象をユーザーに選択させる必要がある
+        // 今回は手動更新なので、ユーザーがマークを頼りに計算することを期待
+        alert("盤面の対象マスにしつけがけ効果が付きました。次にそのマスを縫うと威力が2倍になります。");
+        // 例: 最初のマスにしつけがけ
+        // gameState.board[0].shitsuke = true;
     }
 
-    div.innerHTML += `
-      <label>保存名:
-        <input type="text" id="${part}_name" placeholder="例: 幻惑100%">
-      </label>
-      <button onclick="savePart('${part}')">保存</button>
-      <select id="${part}_saved" onchange="loadPart('${part}', this.value)">
-        <option value="">-- 保存済み --</option>
-      </select>
-      <button onclick="deletePart('${part}')">削除</button>
-    `;
 
-    container.appendChild(div);
-  }
-
-  for (let part in data) updateSavedList(part);
-  document.querySelectorAll("select, input").forEach(el => el.addEventListener("change", calcTotal));
-}
-
-function savePart(part) {
-  const name = document.getElementById(`${part}_name`).value.trim();
-  if (!name) return alert("保存名を入力してください");
-  const key = `part_${part}_${name}`;
-  const effects = [];
-  for (let i = 0; i < 3; i++) {
-    const effect = document.getElementById(`${part}_effect${i}`).value;
-    const value = Number(document.getElementById(`${part}_value${i}`).value);
-    if (effect && value) effects.push({ effect, value });
-  }
-  if (effects.length === 0) return alert("1つ以上の効果を入力してください");
-  localStorage.setItem(key, JSON.stringify(effects));
-  updateSavedList(part);
-  calcTotal();
-}
-
-function loadPart(part, name) {
-  if (!name) return;
-  const key = `part_${part}_${name}`;
-  const effects = JSON.parse(localStorage.getItem(key) || "[]");
-  effects.forEach((e, i) => {
-    document.getElementById(`${part}_effect${i}`).value = e.effect;
-    document.getElementById(`${part}_value${i}`).value = e.value;
-  });
-  for (let i = effects.length; i < 3; i++) {
-    document.getElementById(`${part}_effect${i}`).value = "";
-    document.getElementById(`${part}_value${i}`).value = "";
-  }
-  calcTotal();
-}
-
-function deletePart(part) {
-  const select = document.getElementById(`${part}_saved`);
-  const name = select.value;
-  if (!name) return alert("削除する錬金名を選んでください");
-  const key = `part_${part}_${name}`;
-  if (!confirm(`"${name}" を削除しますか？`)) return;
-  localStorage.removeItem(key);
-  updateSavedList(part);
-}
-
-function updateSavedList(part) {
-  const select = document.getElementById(`${part}_saved`);
-  select.innerHTML = '<option value="">-- 保存済み --</option>';
-  const names = Object.keys(localStorage)
-    .filter(key => key.startsWith(`part_${part}_`))
-    .map(key => key.replace(`part_${part}_`, ""))
-    .sort((a, b) => a.localeCompare(b, 'ja'));
-  names.forEach(name => {
-    select.innerHTML += `<option value="${name}">${name}</option>`;
-  });
-}
-
-function calcTotal() {
-  const total = {};
-  const allParts = ["頭", "体上", "体下", "ウデ", "足"];
-  for (let part of allParts) {
-    for (let i = 0; i < 3; i++) {
-      const effect = document.getElementById(`${part}_effect${i}`)?.value;
-      const value = Number(document.getElementById(`${part}_value${i}`)?.value);
-      if (effect && value) {
-        total[effect] = (total[effect] || 0) + value;
-      }
+    // ぬいパワー更新
+    if (gameState.powerLockTurns > 0) {
+        gameState.powerLockTurns--;
+    } else {
+        gameState.powerIndex = (gameState.powerIndex + 1) % POWER_SEQUENCE.length;
+        let nextPower = POWER_SEQUENCE[gameState.powerIndex];
+        
+        if (nextPower === '？') {
+            nextPower = RANDOM_POWERS[Math.floor(Math.random() * RANDOM_POWERS.length)];
+        }
+        gameState.currentPower = nextPower;
     }
-  }
-  const output = Object.entries(total).map(([k, v]) => `${k}: ${v}%`).join("\n");
-  document.getElementById("totalDisplay").textContent = output;
+    
+    // 再生布の効果
+    if (gameState.currentPower === '回復') {
+        const targetCells = gameState.board
+            .map((cell, index) => ({...cell, index}))
+            .filter(cell => Math.abs(cell.value) >= 5);
+        
+        if (targetCells.length > 0) {
+            targetCells.sort((a, b) => a.value - b.value);
+            const targetIndex = targetCells[0].index;
+            const recoveryAmount = 12 + Math.floor(Math.random() * 5); // 12-16
+            gameState.board[targetIndex].value += recoveryAmount;
+            alert(`再生ターン！マス[${targetIndex+1}]が ${recoveryAmount} 回復しました。`);
+        }
+    }
+
+
+    // 盤面の数値をユーザー入力から取得
+    for (let i = 0; i < 9; i++) {
+        gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
+    }
+    
+    updateDisplay();
+    
+    if (gameState.currentConcentration <= 0) {
+        alert("集中力がなくなりました！");
+        document.getElementById('update-button').disabled = true;
+        document.getElementById('finish-button').click();
+    } else {
+        calculateAndShowRecommendations();
+    }
 }
+
+function finishSewing() {
+    const totalError = gameState.board.reduce((sum, cell) => sum + cell.value, 0);
+    const resultDisplay = document.getElementById('result-display');
+    
+    if (totalError >= -3 && totalError <= 3) {
+        resultDisplay.textContent = `大成功！ (合計誤差: ${totalError})`;
+        resultDisplay.className = 'result-success';
+    } else {
+        resultDisplay.textContent = `失敗... (合計誤差: ${totalError})`;
+        resultDisplay.className = 'result-fail';
+    }
+    resultDisplay.style.display = 'block';
+    document.getElementById('update-button').disabled = true;
+    document.getElementById('finish-button').disabled = true;
+}
+
+
+// =============== イベントリスナー ===============
+
+document.getElementById('start-button').addEventListener('click', initGame);
+document.getElementById('update-button').addEventListener('click', nextTurn);
+document.getElementById('finish-button').addEventListener('click', finishSewing);
+
 </script>
 </body>
 </html>
