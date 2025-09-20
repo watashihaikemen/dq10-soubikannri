@@ -106,7 +106,7 @@
             font-weight: bold;
             font-size: 16px;
         }
-        .close-button, .delete-image-button {
+        .close-button {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -123,17 +123,9 @@
             font-weight: bold;
             line-height: 1;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease;
         }
-        .close-button:hover, .delete-image-button:hover {
+        .close-button:hover {
             background-color: #e03d00;
-        }
-        .delete-image-button {
-            right: 48px; /* close-buttonの左に配置 */
-            background-color: #888;
-        }
-        .delete-image-button:hover {
-            background-color: #555;
         }
         .divider {
             height: 1px;
@@ -241,7 +233,6 @@
                 <div class="info-box">?</div>
             </div>
         </div>
-        <div class="delete-image-button" style="display: none;">-</div>
         <div class="close-button">×</div>
     </div>
     
@@ -299,8 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileImage = document.getElementById('profile-image');
     const editableElements = cardContainer.querySelectorAll('[contenteditable="true"]');
     const addCardButton = document.querySelector('.add-card-button');
-    const selectImageText = document.querySelector('.select-image-text');
-    const deleteImageButton = document.querySelector('.delete-image-button');
 
     // Load saved data from localStorage
     function loadData() {
@@ -321,9 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Load image
             if (data.image) {
                 profileImage.src = data.image;
-                updateImageUI(true);
-            } else {
-                updateImageUI(false);
             }
         } else {
              // Set default placeholder texts
@@ -332,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     el.textContent = el.dataset.placeholder;
                 }
             });
-            updateImageUI(false);
         }
     }
 
@@ -348,6 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Save image as base64
         if (profileImage.src && !profileImage.src.startsWith('data:image')) {
+            // If the image is a file, convert it to base64 before saving
+            // This part is for images selected during the session
             const xhr = new XMLHttpRequest();
             xhr.onload = function() {
                 const reader = new FileReader();
@@ -355,24 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     data.image = reader.result;
                     localStorage.setItem('characterCardData', JSON.stringify(data));
                 };
-                xhr.responseType = 'blob';
-                xhr.send();
+                reader.readAsDataURL(xhr.response);
             };
             xhr.open('GET', profileImage.src);
+            xhr.responseType = 'blob';
+            xhr.send();
         } else {
             data.image = profileImage.src;
             localStorage.setItem('characterCardData', JSON.stringify(data));
-        }
-    }
-
-    // Function to update the UI based on whether an image is present
-    function updateImageUI(hasImage) {
-        if (hasImage) {
-            selectImageText.style.display = 'none';
-            deleteImageButton.style.display = 'flex';
-        } else {
-            selectImageText.style.display = 'block';
-            deleteImageButton.style.display = 'none';
         }
     }
 
@@ -384,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (el.textContent.trim() === '') {
                 el.textContent = el.dataset.placeholder || '';
             }
-            saveData();
         });
         // Clear placeholder on focus
         el.addEventListener('focus', () => {
@@ -405,18 +381,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 profileImage.src = e.target.result;
-                updateImageUI(true);
                 saveData(); // Save the new image
             };
             reader.readAsDataURL(file);
         }
-    });
-
-    // Delete image functionality
-    deleteImageButton.addEventListener('click', () => {
-        profileImage.src = '';
-        updateImageUI(false);
-        saveData();
     });
 
     // Handle "add card" button click
