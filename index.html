@@ -222,266 +222,250 @@
 </div>
 
 <script>
-    const dbName = 'characterDB';
-    const dbVersion = 3;
-    let db;
+    document.addEventListener('DOMContentLoaded', () => {
+        const dbName = 'characterDB';
+        const dbVersion = 3;
+        let db;
+        const characterCardList = document.getElementById('character-card-list');
+        const addCardButton = document.getElementById('add-card-button');
+        const cardTemplate = document.getElementById('card-template');
 
-    const request = indexedDB.open(dbName, dbVersion);
-
-    request.onerror = (event) => {
-        console.error('IndexedDB error:', event.target.errorCode);
-    };
-
-    request.onupgradeneeded = (event) => {
-        db = event.target.result;
-        if (!db.objectStoreNames.contains('cardData')) {
-            db.createObjectStore('cardData');
-        }
-        if (!db.objectStoreNames.contains('cardOrder')) {
-            db.createObjectStore('cardOrder');
-        }
-    };
-
-    request.onsuccess = (event) => {
-        db = event.target.result;
-        loadAllCards();
-    };
-
-    function saveCardData(cardId, key, value) {
-        const transaction = db.transaction('cardData', 'readwrite');
-        const objectStore = transaction.objectStore('cardData');
-        objectStore.put(value, `${cardId}_${key}`);
-    }
-
-    function loadCardData(cardId, key, element) {
-        const transaction = db.transaction('cardData', 'readonly');
-        const objectStore = transaction.objectStore('cardData');
-        const request = objectStore.get(`${cardId}_${key}`);
-        return new Promise((resolve) => {
-            request.onsuccess = (event) => {
-                const savedData = event.target.result;
-                if (savedData !== undefined) {
-                    if (key === 'image') {
-                        element.src = savedData;
-                    } else {
-                        element.innerHTML = savedData;
-                    }
-                }
-                resolve();
-            };
-            request.onerror = () => {
-                resolve();
-            };
-        });
-    }
-
-    function deleteCardData(cardId) {
-        const transaction = db.transaction('cardData', 'readwrite');
-        const objectStore = transaction.objectStore('cardData');
-        
-        const request = objectStore.openCursor();
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (cursor.key.startsWith(`${cardId}_`)) {
-                    cursor.delete();
-                }
-                cursor.continue();
-            }
-        };
-    }
-
-    function updateRankColor(rankElement) {
-        const rankValue = rankElement.innerText.toUpperCase().trim().replace(/位$/, '');
-        rankElement.classList.remove('rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e', 'rank-default');
-
-        switch (rankValue) {
-            case 'SS':
-                rankElement.classList.add('rank-ss');
-                break;
-            case 'S':
-                rankElement.classList.add('rank-s');
-                break;
-            case 'A':
-                rankElement.classList.add('rank-a');
-                break;
-            case 'B':
-                rankElement.classList.add('rank-b');
-                break;
-            case 'C':
-                rankElement.classList.add('rank-c');
-                break;
-            case 'D':
-                rankElement.classList.add('rank-d');
-                break;
-            case 'E':
-                rankElement.classList.add('rank-e');
-                break;
-            default:
-                rankElement.classList.add('rank-default');
-        }
-    }
-
-    function setupCardEventListeners(cardElement, cardId) {
-        const characterNameElem = cardElement.querySelector('.character-name');
-        const rank1Elem = cardElement.querySelectorAll('.character-rank')[0];
-        const rankingTextElem = cardElement.querySelector('.ranking-text');
-        const rank2Elem = cardElement.querySelectorAll('.character-rank')[1];
-        const statValues = cardElement.querySelectorAll('.stats-item .value');
-        const skillItems = cardElement.querySelectorAll('.skill-list li');
-        const imageInput = cardElement.querySelector('.image-file-input');
-        const imgContainer = cardElement.querySelector('.character-image');
-        const imgElement = cardElement.querySelector('.card-image');
-        const deleteButton = cardElement.querySelector('.delete-button');
-
-        characterNameElem.addEventListener('input', () => saveCardData(cardId, 'name', characterNameElem.innerHTML));
-        rank1Elem.addEventListener('input', () => {
-            saveCardData(cardId, 'rank1', rank1Elem.innerHTML);
-            updateRankColor(rank1Elem);
-        });
-        rankingTextElem.addEventListener('input', () => saveCardData(cardId, 'ranking_text', rankingTextElem.innerHTML));
-        rank2Elem.addEventListener('input', () => {
-            saveCardData(cardId, 'rank2', rank2Elem.innerHTML);
-            updateRankColor(rank2Elem);
-        });
-        statValues.forEach((elem, index) => {
-            elem.addEventListener('input', () => saveCardData(cardId, `stat_${index}`, elem.innerHTML));
-        });
-        skillItems.forEach((elem, index) => {
-            elem.addEventListener('input', () => saveCardData(cardId, `skill_${index}`, elem.innerHTML));
-        });
-
-        imgContainer.addEventListener('click', () => imageInput.click());
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    imgElement.src = event.target.result;
-                    saveCardData(cardId, 'image', event.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        deleteButton.addEventListener('click', () => {
-            if (confirm('このカードを本当に削除しますか？')) {
-                deleteCard(cardId, cardElement);
-            }
-        });
-    }
-
-    async function createCard(isNew = true) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.cloneNode(true);
-        cardClone.classList.remove('card-template');
-        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        cardClone.setAttribute('data-card-id', newCardId);
-        
-        setupCardEventListeners(cardClone, newCardId);
-
-        if (isNew) {
-            const initialData = {
-                name: 'キャラクター名',
-                rank1: '?',
-                ranking_text: '/??位',
-                rank2: '?',
-                stats: ['?', '?', '?', '?', '?'],
-                skills: ['スキルや評価を入力してください', '', '', ''],
-                image: ''
-            };
-            
-            cardClone.querySelector('.character-name').innerHTML = initialData.name;
-            cardClone.querySelectorAll('.character-rank')[0].innerHTML = initialData.rank1;
-            cardClone.querySelector('.ranking-text').innerHTML = initialData.ranking_text;
-            cardClone.querySelectorAll('.character-rank')[1].innerHTML = initialData.rank2;
-            cardClone.querySelector('.card-image').src = initialData.image;
-            cardClone.querySelectorAll('.stats-item .value').forEach((el, i) => el.innerHTML = initialData.stats[i]);
-            cardClone.querySelectorAll('.skill-list li').forEach((el, i) => el.innerHTML = initialData.skills[i]);
-            
-            updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
-            updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
-
-            saveCardData(newCardId, 'name', initialData.name);
-            saveCardData(newCardId, 'rank1', initialData.rank1);
-            saveCardData(newCardId, 'ranking_text', initialData.ranking_text);
-            saveCardData(newCardId, 'rank2', initialData.rank2);
-            initialData.stats.forEach((val, i) => saveCardData(newCardId, `stat_${i}`, val));
-            initialData.skills.forEach((val, i) => saveCardData(newCardId, `skill_${i}`, val));
-            saveCardData(newCardId, 'image', initialData.image);
-        }
-
-        document.getElementById('character-card-list').appendChild(cardClone);
-        
-        if (isNew) {
-            saveCardOrder();
-        }
-    }
-
-    async function loadCard(cardId) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.cloneNode(true);
-        cardClone.classList.remove('card-template');
-        cardClone.setAttribute('data-card-id', cardId);
-
-        setupCardEventListeners(cardClone, cardId);
-
-        await Promise.all([
-            loadCardData(cardId, 'name', cardClone.querySelector('.character-name')),
-            loadCardData(cardId, 'rank1', cardClone.querySelectorAll('.character-rank')[0]),
-            loadCardData(cardId, 'ranking_text', cardClone.querySelector('.ranking-text')),
-            loadCardData(cardId, 'rank2', cardClone.querySelectorAll('.character-rank')[1]),
-            loadCardData(cardId, 'image', cardClone.querySelector('.card-image')),
-            ...Array.from(cardClone.querySelectorAll('.stats-item .value')).map((el, i) => loadCardData(cardId, `stat_${i}`, el)),
-            ...Array.from(cardClone.querySelectorAll('.skill-list li')).map((el, i) => loadCardData(cardId, `skill_${i}`, el))
-        ]);
-
-        document.getElementById('character-card-list').appendChild(cardClone);
-        
-        updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
-        updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
-    }
-
-    function deleteCard(cardId, cardElement) {
-        cardElement.remove();
-        deleteCardData(cardId);
-        saveCardOrder();
-    }
-
-    function saveCardOrder() {
-        const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)')).map(card => card.getAttribute('data-card-id'));
-        const transaction = db.transaction('cardOrder', 'readwrite');
-        const objectStore = transaction.objectStore('cardOrder');
-        objectStore.put(cardIds, 'order');
-    }
-
-    async function loadAllCards() {
-        const transaction = db.transaction('cardOrder', 'readonly');
-        const objectStore = transaction.objectStore('cardOrder');
-        const request = objectStore.get('order');
-
-        request.onsuccess = async (event) => {
-            const cardIds = event.target.result;
-            if (cardIds && cardIds.length > 0) {
-                document.getElementById('character-card-list').innerHTML = '';
-                for (const cardId of cardIds) {
-                    await loadCard(cardId);
-                }
-            } else {
-                for (let i = 0; i < 3; i++) {
-                    await createCard();
-                }
-            }
-        };
+        const request = indexedDB.open(dbName, dbVersion);
 
         request.onerror = (event) => {
-            console.error('Failed to load card order:', event.target.errorCode);
-            for (let i = 0; i < 3; i++) {
-                createCard(true);
+            console.error('IndexedDB error:', event.target.errorCode);
+        };
+
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains('cardData')) {
+                db.createObjectStore('cardData');
+            }
+            if (!db.objectStoreNames.contains('cardOrder')) {
+                db.createObjectStore('cardOrder');
             }
         };
-    }
 
-    document.getElementById('add-card-button').addEventListener('click', () => createCard(true));
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadAllCards();
+        };
+
+        function saveCardData(cardId, key, value) {
+            if (!db) return;
+            const transaction = db.transaction('cardData', 'readwrite');
+            const objectStore = transaction.objectStore('cardData');
+            objectStore.put(value, `${cardId}_${key}`);
+        }
+
+        function loadCardData(cardId, key, element) {
+            return new Promise((resolve) => {
+                if (!db) {
+                    resolve();
+                    return;
+                }
+                const transaction = db.transaction('cardData', 'readonly');
+                const objectStore = transaction.objectStore('cardData');
+                const request = objectStore.get(`${cardId}_${key}`);
+                
+                request.onsuccess = (event) => {
+                    const savedData = event.target.result;
+                    if (savedData !== undefined) {
+                        if (key === 'image') {
+                            element.src = savedData;
+                        } else {
+                            element.innerHTML = savedData;
+                        }
+                    }
+                    resolve();
+                };
+                request.onerror = () => {
+                    resolve();
+                };
+            });
+        }
+
+        function deleteCardData(cardId) {
+            if (!db) return;
+            const transaction = db.transaction('cardData', 'readwrite');
+            const objectStore = transaction.objectStore('cardData');
+            
+            const request = objectStore.openCursor();
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    if (cursor.key.startsWith(`${cardId}_`)) {
+                        cursor.delete();
+                    }
+                    cursor.continue();
+                }
+            };
+        }
+
+        function updateRankColor(rankElement) {
+            const rankValue = rankElement.innerText.toUpperCase().trim().replace(/位$/, '');
+            rankElement.classList.remove('rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e', 'rank-default');
+
+            switch (rankValue) {
+                case 'SS': rankElement.classList.add('rank-ss'); break;
+                case 'S': rankElement.classList.add('rank-s'); break;
+                case 'A': rankElement.classList.add('rank-a'); break;
+                case 'B': rankElement.classList.add('rank-b'); break;
+                case 'C': rankElement.classList.add('rank-c'); break;
+                case 'D': rankElement.classList.add('rank-d'); break;
+                case 'E': rankElement.classList.add('rank-e'); break;
+                default: rankElement.classList.add('rank-default');
+            }
+        }
+
+        function setupCardEventListeners(cardElement, cardId) {
+            const elements = {
+                name: cardElement.querySelector('.character-name'),
+                rank1: cardElement.querySelectorAll('.character-rank')[0],
+                rankingText: cardElement.querySelector('.ranking-text'),
+                rank2: cardElement.querySelectorAll('.character-rank')[1],
+                stats: cardElement.querySelectorAll('.stats-item .value'),
+                skills: cardElement.querySelectorAll('.skill-list li'),
+                imageInput: cardElement.querySelector('.image-file-input'),
+                imgContainer: cardElement.querySelector('.character-image'),
+                imgElement: cardElement.querySelector('.card-image'),
+                deleteButton: cardElement.querySelector('.delete-button')
+            };
+
+            elements.name.addEventListener('input', () => saveCardData(cardId, 'name', elements.name.innerHTML));
+            elements.rank1.addEventListener('input', () => {
+                saveCardData(cardId, 'rank1', elements.rank1.innerHTML);
+                updateRankColor(elements.rank1);
+            });
+            elements.rankingText.addEventListener('input', () => saveCardData(cardId, 'ranking_text', elements.rankingText.innerHTML));
+            elements.rank2.addEventListener('input', () => {
+                saveCardData(cardId, 'rank2', elements.rank2.innerHTML);
+                updateRankColor(elements.rank2);
+            });
+            elements.stats.forEach((elem, index) => {
+                elem.addEventListener('input', () => saveCardData(cardId, `stat_${index}`, elem.innerHTML));
+            });
+            elements.skills.forEach((elem, index) => {
+                elem.addEventListener('input', () => saveCardData(cardId, `skill_${index}`, elem.innerHTML));
+            });
+
+            elements.imgContainer.addEventListener('click', () => elements.imageInput.click());
+            elements.imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        elements.imgElement.src = event.target.result;
+                        saveCardData(cardId, 'image', event.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            elements.deleteButton.addEventListener('click', () => {
+                if (confirm('このカードを本当に削除しますか？')) {
+                    deleteCard(cardId, cardElement);
+                }
+            });
+        }
+
+        async function createCard(isNew = true) {
+            const cardClone = cardTemplate.cloneNode(true);
+            cardClone.classList.remove('card-template');
+            const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            cardClone.setAttribute('data-card-id', newCardId);
+
+            if (isNew) {
+                const initialData = {
+                    name: 'キャラクター名', rank1: '?', ranking_text: '/??位', rank2: '?',
+                    stats: ['?', '?', '?', '?', '?'],
+                    skills: ['スキルや評価を入力してください', '', '', ''],
+                    image: ''
+                };
+                
+                cardClone.querySelector('.character-name').innerHTML = initialData.name;
+                cardClone.querySelectorAll('.character-rank')[0].innerHTML = initialData.rank1;
+                cardClone.querySelector('.ranking-text').innerHTML = initialData.ranking_text;
+                cardClone.querySelectorAll('.character-rank')[1].innerHTML = initialData.rank2;
+                cardClone.querySelector('.card-image').src = initialData.image;
+                cardClone.querySelectorAll('.stats-item .value').forEach((el, i) => el.innerHTML = initialData.stats[i]);
+                cardClone.querySelectorAll('.skill-list li').forEach((el, i) => el.innerHTML = initialData.skills[i]);
+                
+                updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
+                updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
+
+                saveCardData(newCardId, 'name', initialData.name);
+                saveCardData(newCardId, 'rank1', initialData.rank1);
+                saveCardData(newCardId, 'ranking_text', initialData.ranking_text);
+                saveCardData(newCardId, 'rank2', initialData.rank2);
+                initialData.stats.forEach((val, i) => saveCardData(newCardId, `stat_${i}`, val));
+                initialData.skills.forEach((val, i) => saveCardData(newCardId, `skill_${i}`, val));
+                saveCardData(newCardId, 'image', initialData.image);
+            }
+
+            characterCardList.appendChild(cardClone);
+            setupCardEventListeners(cardClone, newCardId);
+            saveCardOrder();
+        }
+
+        async function loadCard(cardId) {
+            const cardClone = cardTemplate.cloneNode(true);
+            cardClone.classList.remove('card-template');
+            cardClone.setAttribute('data-card-id', cardId);
+
+            setupCardEventListeners(cardClone, cardId);
+            
+            await Promise.all([
+                loadCardData(cardId, 'name', cardClone.querySelector('.character-name')),
+                loadCardData(cardId, 'rank1', cardClone.querySelectorAll('.character-rank')[0]),
+                loadCardData(cardId, 'ranking_text', cardClone.querySelector('.ranking-text')),
+                loadCardData(cardId, 'rank2', cardClone.querySelectorAll('.character-rank')[1]),
+                loadCardData(cardId, 'image', cardClone.querySelector('.card-image')),
+                ...Array.from(cardClone.querySelectorAll('.stats-item .value')).map((el, i) => loadCardData(cardId, `stat_${i}`, el)),
+                ...Array.from(cardClone.querySelectorAll('.skill-list li')).map((el, i) => loadCardData(cardId, `skill_${i}`, el))
+            ]);
+
+            characterCardList.appendChild(cardClone);
+            updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
+            updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
+        }
+
+        function deleteCard(cardId, cardElement) {
+            cardElement.remove();
+            deleteCardData(cardId);
+            saveCardOrder();
+        }
+
+        function saveCardOrder() {
+            if (!db) return;
+            const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)')).map(card => card.getAttribute('data-card-id'));
+            const transaction = db.transaction('cardOrder', 'readwrite');
+            const objectStore = transaction.objectStore('cardOrder');
+            objectStore.put(cardIds, 'order');
+        }
+
+        async function loadAllCards() {
+            if (!db) return;
+            const transaction = db.transaction('cardOrder', 'readonly');
+            const objectStore = transaction.objectStore('cardOrder');
+            const request = objectStore.get('order');
+
+            request.onsuccess = async (event) => {
+                const cardIds = event.target.result;
+                characterCardList.innerHTML = '';
+                if (cardIds && cardIds.length > 0) {
+                    for (const cardId of cardIds) {
+                        await loadCard(cardId);
+                    }
+                } else {
+                    for (let i = 0; i < 3; i++) {
+                        await createCard();
+                    }
+                }
+            };
+        }
+
+        addCardButton.addEventListener('click', () => createCard(true));
+    });
 </script>
 </body>
 </html>
