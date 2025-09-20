@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -184,7 +184,7 @@
     <input type="file" style="display: none;" accept="image/*" class="image-file-input">
     <div class="stats-table">
         <div class="stats-item">
-            <div class="label">変更耐久</div>
+            <div class="label">耐久</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -214,7 +214,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 4; // バージョンを上げました
+    const dbVersion = 5; // バージョンを上げました
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -228,11 +228,9 @@
         
         // データストアが存在しない場合にのみ作成
         if (!db.objectStoreNames.contains('cardData')) {
-            // keyPathにidを指定して、カードごとのデータを一括で保存できるようにする
             db.createObjectStore('cardData', { keyPath: 'id' });
         }
 
-        // cardOrder object storeが存在しない場合にのみ作成
         if (!db.objectStoreNames.contains('cardOrder')) {
             db.createObjectStore('cardOrder');
         }
@@ -247,7 +245,6 @@
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
         
-        // IDを指定してデータを保存
         objectStore.put({ id: cardId, data: data });
     }
 
