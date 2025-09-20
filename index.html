@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -197,7 +197,7 @@
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
-            <div class="label">変更攻撃</div>
+            <div class="label">攻撃</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -370,15 +370,45 @@
         cardClone.setAttribute('data-card-id', newCardId);
 
         setupCardEventListeners(cardClone, newCardId);
-        document.getElementById('character-card-list').appendChild(cardClone);
 
         // 新規作成時のみ、初期値を設定
         if (isNew) {
-            const rankElements = cardClone.querySelectorAll('.character-rank');
-            rankElements.forEach(elem => {
-                elem.innerText = '?';
-                updateRankColor(elem);
+            // 各editable要素のテキストをリセット
+            const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
+            editableElements.forEach(elem => {
+                elem.innerHTML = '';
             });
+            // 特定の要素に初期テキストを設定
+            cardClone.querySelector('.character-name').innerHTML = 'キャラクター名';
+            cardClone.querySelectorAll('.character-rank')[0].innerHTML = '?';
+            cardClone.querySelector('.ranking-text').innerHTML = '/??位';
+            cardClone.querySelectorAll('.character-rank')[1].innerHTML = '?';
+            cardClone.querySelectorAll('.stats-item .value').forEach(elem => {
+                elem.innerHTML = '?';
+            });
+            const skillListItems = cardClone.querySelectorAll('.skill-list li');
+            skillListItems[0].innerHTML = 'スキルや評価を入力してください';
+            skillListItems[1].innerHTML = '';
+            skillListItems[2].innerHTML = '';
+            skillListItems[3].innerHTML = '';
+            
+            // 画像をリセット
+            cardClone.querySelector('.card-image').src = '';
+
+            updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
+            updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
+
+            // 初期の値をDBに保存
+            const editableElementsToSave = cardClone.querySelectorAll('[contenteditable="true"]');
+            editableElementsToSave.forEach((elem, index) => {
+                saveCardData(newCardId, `text_${index}`, elem.innerHTML);
+            });
+            saveCardData(newCardId, 'image', '');
+        }
+
+        document.getElementById('character-card-list').appendChild(cardClone);
+        
+        if (isNew) {
             saveCardOrder();
         }
     }
@@ -445,12 +475,12 @@
         request.onerror = (event) => {
             console.error('Failed to load card order:', event.target.errorCode);
             for (let i = 0; i < 3; i++) {
-                createCard();
+                createCard(true);
             }
         };
     }
 
-    document.getElementById('add-card-button').addEventListener('click', () => createCard());
+    document.getElementById('add-card-button').addEventListener('click', () => createCard(true));
 </script>
 </body>
 </html>
