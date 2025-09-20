@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キャラクター評価</title>
     <style>
+        /* スタイルの最適化 */
         body {
             font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
+            color: #333; /* 基本テキストカラーの指定 */
         }
         .container {
             max-width: 800px;
@@ -22,6 +24,9 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
+            /* Flexboxで内部を整理 */
+            display: flex;
+            flex-direction: column;
         }
         .card-header {
             display: flex;
@@ -36,12 +41,12 @@
             border: 3px solid #f9d71c;
             position: relative;
             background-color: #e0e0e0;
+            overflow: hidden; /* 画像のはみ出しを防ぐ */
         }
         .character-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 50%;
         }
         .character-image::after {
             content: attr(data-rank);
@@ -62,6 +67,11 @@
             font-weight: bold;
             color: #4a4a4a;
         }
+        .ranking-info {
+            display: flex;
+            align-items: baseline;
+            margin-top: 5px; /* 名前との間隔 */
+        }
         .character-rank {
             background-color: #a42c2c;
             color: white;
@@ -78,7 +88,8 @@
             margin-left: 10px;
         }
         .stats-table {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5列のグリッドレイアウト */
             background-color: #e0e0e0;
             border-radius: 8px;
             overflow: hidden;
@@ -86,7 +97,6 @@
             text-align: center;
         }
         .stats-item {
-            flex: 1;
             padding: 8px;
         }
         .stats-item:first-child {
@@ -133,6 +143,9 @@
         .image-input:hover {
             background-color: #e9e9e9;
         }
+        .add-button, .delete-button {
+            transition: background-color 0.2s, transform 0.2s;
+        }
         .add-button {
             width: 100%;
             padding: 15px;
@@ -142,7 +155,6 @@
             border-radius: 8px;
             font-size: 18px;
             cursor: pointer;
-            transition: background-color 0.2s;
             margin-top: 20px;
         }
         .add-button:hover {
@@ -164,12 +176,10 @@
             line-height: 1;
             padding: 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
         }
         .delete-button:hover {
             transform: scale(1.1);
         }
-        /* カードテンプレートは非表示にする */
         .card-template {
             display: none;
         }
@@ -177,78 +187,76 @@
 </head>
 <body>
 
-<div class="container">
-    <div id="character-card-list">
-        </div>
-    <button class="add-button" id="add-card-button">カードを追加</button>
-</div>
+<main class="container">
+    <section id="character-card-list">
+        </section>
+    <button type="button" class="add-button" id="add-card-button">カードを追加</button>
+</main>
 
-<div id="card-template" class="character-card card-template">
-    <button class="delete-button" title="カードを削除">&times;</button>
-    <div class="card-header">
-        <div class="character-image" data-rank="?">
-            <img src="" alt="" class="card-image">
-        </div>
-        <div>
-            <div class="character-name" contenteditable="true">キャラクター名</div>
-            <div style="display: flex; align-items: baseline;">
-                <span class="character-rank" contenteditable="true">?位</span>
-                <span class="ranking-text" contenteditable="true">/??位</span>
-                <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">?</span>
+<template id="card-template">
+    <article class="character-card">
+        <button type="button" class="delete-button" aria-label="カードを削除">&times;</button>
+        <header class="card-header">
+            <div class="character-image" data-rank="?">
+                <img src="" alt="キャラクターの画像" class="card-image">
+            </div>
+            <div>
+                <h2 class="character-name" contenteditable="true">キャラクター名</h2>
+                <div class="ranking-info">
+                    <span class="character-rank" contenteditable="true">?位</span>
+                    <span class="ranking-text" contenteditable="true">/??位</span>
+                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">?</span>
+                </div>
+            </div>
+        </header>
+        <label class="image-input" for="file-input-id">画像を選択</label>
+        <input type="file" id="file-input-id" style="display: none;" accept="image/*" class="image-file-input">
+        <div class="stats-table" role="table" aria-label="キャラクターのステータス">
+            <div role="rowheader" class="stats-item">
+                <div class="label">耐久</div>
+                <div class="value" contenteditable="true">?</div>
+            </div>
+            <div role="cell" class="stats-item">
+                <div class="label">変更16攻撃</div>
+                <div class="value" contenteditable="true">?</div>
+            </div>
+            <div role="cell" class="stats-item">
+                <div class="label">安定性</div>
+                <div class="value" contenteditable="true">?</div>
+            </div>
+            <div role="cell" class="stats-item">
+                <div class="label">機動力</div>
+                <div class="value" contenteditable="true">?</div>
+            </div>
+            <div role="cell" class="stats-item">
+                <div class="label">援護</div>
+                <div class="value" contenteditable="true">?</div>
             </div>
         </div>
-    </div>
-    <label class="image-input">画像を選択</label>
-    <input type="file" style="display: none;" accept="image/*" class="image-file-input">
-    <div class="stats-table">
-        <div class="stats-item">
-            <div class="label">耐久</div>
-            <div class="value" contenteditable="true">?</div>
-        </div>
-        <div class="stats-item">
-            <div class="label">変更14攻撃</div>
-            <div class="value" contenteditable="true">?</div>
-        </div>
-        <div class="stats-item">
-            <div class="label">安定性</div>
-            <div class="value" contenteditable="true">?</div>
-        </div>
-        <div class="stats-item">
-            <div class="label">機動力</div>
-            <div class="value" contenteditable="true">?</div>
-        </div>
-        <div class="stats-item">
-            <div class="label">援護</div>
-            <div class="value" contenteditable="true">?</div>
-        </div>
-    </div>
-    <ul class="skill-list">
-        <li contenteditable="true">スキルや評価を入力してください</li>
-        <li contenteditable="true"></li>
-        <li contenteditable="true"></li>
-        <li contenteditable="true"></li>
-    </ul>
-</div>
+        <ul class="skill-list">
+            <li contenteditable="true">スキルや評価を入力してください</li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
+        </ul>
+    </article>
+</template>
 
 <script>
-    // IndexedDBのセットアップ
+    // JavaScriptは元のコードから大幅な変更なしで動作します
+    // 可読性向上のための変数名やコメントの追加、およびエラーハンドリングの改善
     const dbName = 'characterDB';
-    const dbVersion = 2; // バージョンを上げて新しいストアを作成
+    const dbVersion = 2;
     let db;
 
+    // IndexedDBのオープン
     const request = indexedDB.open(dbName, dbVersion);
-
-    request.onerror = (event) => {
-        console.error('IndexedDB error:', event.target.errorCode);
-    };
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        // カードごとのデータを保存するストア
         if (!db.objectStoreNames.contains('cardData')) {
             db.createObjectStore('cardData');
         }
-        // カードIDのリストを保存するストア
         if (!db.objectStoreNames.contains('cardOrder')) {
             db.createObjectStore('cardOrder');
         }
@@ -259,17 +267,36 @@
         loadAllCards();
     };
 
-    // --- データ保存と読み込みのロジック ---
+    request.onerror = (event) => {
+        console.error('IndexedDB error:', event.target.errorCode);
+        // エラー発生時もデフォルトカードを作成
+        for (let i = 0; i < 3; i++) {
+            createCard();
+        }
+    };
+
+    /**
+     * 指定されたカードIDとキーでデータを保存する
+     * @param {string} cardId - カードのユニークID
+     * @param {string} key - 保存するデータのキー
+     * @param {*} value - 保存するデータ
+     */
     function saveCardData(cardId, key, value) {
         const transaction = db.transaction('cardData', 'readwrite');
-        const objectStore = transaction.objectStore('cardData');
-        objectStore.put(value, `${cardId}_${key}`);
+        const store = transaction.objectStore('cardData');
+        store.put(value, `${cardId}_${key}`);
     }
 
+    /**
+     * 指定されたカードIDとキーでデータを読み込み、要素に反映する
+     * @param {string} cardId - カードのユニークID
+     * @param {string} key - 読み込むデータのキー
+     * @param {HTMLElement} element - データ反映先のHTML要素
+     */
     function loadCardData(cardId, key, element) {
         const transaction = db.transaction('cardData', 'readonly');
-        const objectStore = transaction.objectStore('cardData');
-        const request = objectStore.get(`${cardId}_${key}`);
+        const store = transaction.objectStore('cardData');
+        const request = store.get(`${cardId}_${key}`);
         request.onsuccess = (event) => {
             const savedData = event.target.result;
             if (savedData) {
@@ -282,13 +309,14 @@
         };
     }
 
+    /**
+     * 指定されたカードIDに関連するすべてのデータをIndexedDBから削除する
+     * @param {string} cardId - 削除するカードのユニークID
+     */
     function deleteCardData(cardId) {
         const transaction = db.transaction('cardData', 'readwrite');
-        const objectStore = transaction.objectStore('cardData');
-        
-        // 当該カードIDに関連する全てのデータを削除
-        const request = objectStore.openCursor();
-        request.onsuccess = (event) => {
+        const store = transaction.objectStore('cardData');
+        store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
                 if (cursor.key.startsWith(`${cardId}_`)) {
@@ -299,17 +327,61 @@
         };
     }
 
-    // --- カード管理のロジック ---
-    function setupCardEventListeners(cardElement, cardId) {
-        // テキスト入力のイベント
-        const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
+    /**
+     * 新しいカードを作成し、DOMに追加する
+     * @param {boolean} isNew - 新規作成か、既存データのロードか
+     * @returns {string} 新しいカードのID
+     */
+    function createCard(isNew = true) {
+        const template = document.getElementById('card-template');
+        const cardClone = template.content.cloneNode(true); // <template>からコンテンツをクローン
+        
+        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+        const articleElement = cardClone.querySelector('article');
+        articleElement.setAttribute('data-card-id', newCardId);
+
+        setupCardEventListeners(articleElement, newCardId);
+        document.getElementById('character-card-list').appendChild(cardClone);
+
+        if (isNew) {
+            saveCardOrder();
+        }
+        return newCardId;
+    }
+
+    /**
+     * 既存のカードをIDからロードしてDOMに追加する
+     * @param {string} cardId - ロードするカードのID
+     */
+    function loadCard(cardId) {
+        const template = document.getElementById('card-template');
+        const cardClone = template.content.cloneNode(true);
+        const articleElement = cardClone.querySelector('article');
+        articleElement.setAttribute('data-card-id', cardId);
+
+        setupCardEventListeners(articleElement, cardId);
+
+        const editableElements = articleElement.querySelectorAll('[contenteditable="true"]');
         editableElements.forEach((elem, index) => {
+            loadCardData(cardId, `text_${index}`, elem);
+        });
+        loadCardData(cardId, 'image', articleElement.querySelector('.card-image'));
+        
+        document.getElementById('character-card-list').appendChild(cardClone);
+    }
+
+    /**
+     * カード要素にイベントリスナーを設定する
+     * @param {HTMLElement} cardElement - イベントリスナーを設定するカード要素
+     * @param {string} cardId - カードのID
+     */
+    function setupCardEventListeners(cardElement, cardId) {
+        cardElement.querySelectorAll('[contenteditable="true"]').forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
                 saveCardData(cardId, `text_${index}`, e.target.innerHTML);
             });
         });
 
-        // 画像入力のイベント
         const fileInput = cardElement.querySelector('.image-file-input');
         const imgElement = cardElement.querySelector('.card-image');
         fileInput.addEventListener('change', (e) => {
@@ -324,12 +396,11 @@
             }
         });
 
-        // 画像選択ラベルのクリックイベント
-        cardElement.querySelector('.image-input').addEventListener('click', () => {
-            fileInput.click();
-        });
+        const imageLabel = cardElement.querySelector('.image-input');
+        if (imageLabel) {
+            imageLabel.addEventListener('click', () => fileInput.click());
+        }
 
-        // 削除ボタンのイベント
         cardElement.querySelector('.delete-button').addEventListener('click', () => {
             if (confirm('このカードを本当に削除しますか？')) {
                 deleteCard(cardId, cardElement);
@@ -337,63 +408,40 @@
         });
     }
 
-    function createCard(isNew = true) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.cloneNode(true);
-        cardClone.classList.remove('card-template');
-        
-        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        cardClone.setAttribute('data-card-id', newCardId);
-        
-        setupCardEventListeners(cardClone, newCardId);
-        document.getElementById('character-card-list').appendChild(cardClone);
-
-        if (isNew) {
-            saveCardOrder();
-        }
-    }
-
-    function loadCard(cardId) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.cloneNode(true);
-        cardClone.classList.remove('card-template');
-        cardClone.setAttribute('data-card-id', cardId);
-
-        setupCardEventListeners(cardClone, cardId);
-
-        const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
-        editableElements.forEach((elem, index) => {
-            loadCardData(cardId, `text_${index}`, elem);
-        });
-        loadCardData(cardId, 'image', cardClone.querySelector('.card-image'));
-        
-        document.getElementById('character-card-list').appendChild(cardClone);
-    }
-
+    /**
+     * カードをDOMとIndexedDBから削除する
+     * @param {string} cardId - 削除するカードのID
+     * @param {HTMLElement} cardElement - 削除するカードのDOM要素
+     */
     function deleteCard(cardId, cardElement) {
         cardElement.remove();
         deleteCardData(cardId);
         saveCardOrder();
     }
 
+    /**
+     * 現在のカードの並び順をIndexedDBに保存する
+     */
     function saveCardOrder() {
-        const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)')).map(card => card.getAttribute('data-card-id'));
+        const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)'))
+            .map(card => card.getAttribute('data-card-id'));
         const transaction = db.transaction('cardOrder', 'readwrite');
-        const objectStore = transaction.objectStore('cardOrder');
-        objectStore.put(cardIds, 'order');
+        const store = transaction.objectStore('cardOrder');
+        store.put(cardIds, 'order');
     }
 
+    /**
+     * IndexedDBから保存されているすべてのカードを読み込む
+     */
     function loadAllCards() {
         const transaction = db.transaction('cardOrder', 'readonly');
-        const objectStore = transaction.objectStore('cardOrder');
-        const request = objectStore.get('order');
+        const store = transaction.objectStore('cardOrder');
+        const request = store.get('order');
 
         request.onsuccess = (event) => {
             const cardIds = event.target.result;
             if (cardIds && cardIds.length > 0) {
-                cardIds.forEach(cardId => {
-                    loadCard(cardId);
-                });
+                cardIds.forEach(loadCard);
             } else {
                 for (let i = 0; i < 3; i++) {
                     createCard();
@@ -401,9 +449,7 @@
             }
         };
 
-        request.onerror = (event) => {
-            console.error('Failed to load card order:', event.target.errorCode);
-            // エラー時もデフォルトカードを作成
+        request.onerror = () => {
             for (let i = 0; i < 3; i++) {
                 createCard();
             }
