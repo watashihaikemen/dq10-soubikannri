@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -184,7 +184,7 @@
     <input type="file" style="display: none;" accept="image/*" class="image-file-input">
     <div class="stats-table">
         <div class="stats-item">
-            <div class="label">耐久</div>
+            <div class="label">変更耐久</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -283,7 +283,7 @@
                 name: cardElement.querySelector('.character-name').innerHTML,
                 rank: cardElement.querySelector('.character-rank').innerHTML,
                 rankingText: cardElement.querySelector('.ranking-text').innerHTML,
-                value1: cardElement.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML,
+                value1: cardElement.querySelector('.character-rank[style*="background-color: rgb(59, 89, 152);"]').innerHTML,
                 value2: cardElement.querySelectorAll('.stats-item .value')[0].innerHTML,
                 value3: cardElement.querySelectorAll('.stats-item .value')[1].innerHTML,
                 value4: cardElement.querySelectorAll('.stats-item .value')[2].innerHTML,
