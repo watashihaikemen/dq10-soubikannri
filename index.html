@@ -81,8 +81,14 @@
             margin-top: 20px;
         }
 
-        .character-card {
+        .card-container {
             width: 350px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .character-card {
+            width: 100%;
             border: 1px solid #ccc;
             border-radius: 8px;
             overflow: hidden;
@@ -166,6 +172,7 @@
             padding: 15px;
             font-size: 14px;
             line-height: 1.5;
+            text-align: left; /* 左揃えに設定 */
         }
 
         .card-actions {
@@ -274,12 +281,11 @@
             const cardList = document.getElementById('card-list');
             const imageUpload = document.getElementById('char-image-upload');
             const imagePreview = document.getElementById('image-preview');
-            let editingCard = null;
+            let editingCardData = null; // 編集中のカードデータを保持
 
-            // ローカルストレージからカードを読み込む
             const savedCards = JSON.parse(localStorage.getItem('characterCards')) || [];
             if (savedCards.length > 0) {
-                savedCards.forEach(data => createCard(data));
+                savedCards.forEach(data => createCardElement(data));
                 sortCards();
             }
 
@@ -321,20 +327,20 @@
                     description: form['char-description'].value,
                 };
 
-                if (editingCard) {
-                    const cardData = savedCards.find(c => c.name === data.name);
-                    if (cardData) {
-                        Object.assign(cardData, data);
+                if (editingCardData) {
+                    const cardIndex = savedCards.findIndex(c => c.name === editingCardData.name);
+                    if (cardIndex > -1) {
+                        savedCards[cardIndex] = data;
                     }
-                    updateCard(editingCard, data);
-                    editingCard = null;
+                    const cardElement = document.querySelector(`.character-card[data-position="${editingCardData.position}"]`).parentElement;
+                    updateCardElement(cardElement, data);
+                    editingCardData = null;
                     document.getElementById('submit-button').textContent = 'カードを作成';
                 } else {
                     savedCards.push(data);
-                    createCard(data);
+                    createCardElement(data);
                 }
 
-                // ローカルストレージに保存
                 localStorage.setItem('characterCards', JSON.stringify(savedCards));
                 
                 form.reset();
@@ -344,7 +350,7 @@
             });
 
             function updateCardCount() {
-                const totalCards = cardList.children.length;
+                const totalCards = savedCards.length;
                 const cards = document.querySelectorAll('.character-card');
                 cards.forEach(card => {
                     const positionSpan = card.querySelector('.card-position');
@@ -356,18 +362,19 @@
             }
 
             function sortCards() {
-                const cards = Array.from(cardList.children);
-                cards.sort((a, b) => {
-                    const posA = parseInt(a.dataset.position);
-                    const posB = parseInt(b.dataset.position);
-                    return posA - posB;
-                });
+                savedCards.sort((a, b) => a.position - b.position);
                 
-                cards.forEach(card => cardList.appendChild(card));
+                cardList.innerHTML = '';
+                savedCards.forEach(data => createCardElement(data));
+                
                 updateCardCount();
             }
 
-            function createCard(data) {
+            function createCardElement(data) {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card-container';
+                cardContainer.dataset.position = data.position;
+                
                 const card = document.createElement('div');
                 card.className = 'character-card';
                 card.dataset.position = data.position;
@@ -409,24 +416,31 @@
                             <li>${data.description.split('\n').join('</li><li>')}</li>
                         </ul>
                     </div>
-                    <div class="card-actions">
-                        <button class="edit-button">編集</button>
-                        <button class="delete-button">削除</button>
-                    </div>
                 `;
 
-                card.querySelector('.edit-button').addEventListener('click', () => {
-                    startEditing(card, data);
+                const actions = document.createElement('div');
+                actions.className = 'card-actions';
+                actions.innerHTML = `
+                    <button class="edit-button">編集</button>
+                    <button class="delete-button">削除</button>
+                `;
+
+                actions.querySelector('.edit-button').addEventListener('click', () => {
+                    startEditing(data);
                 });
 
-                card.querySelector('.delete-button').addEventListener('click', () => {
-                    deleteCard(card);
+                actions.querySelector('.delete-button').addEventListener('click', () => {
+                    deleteCard(cardContainer, data);
                 });
 
-                cardList.appendChild(card);
+                cardContainer.appendChild(card);
+                cardContainer.appendChild(actions);
+                cardList.appendChild(cardContainer);
             }
 
-            function updateCard(card, data) {
+            function updateCardElement(cardContainer, data) {
+                const card = cardContainer.querySelector('.character-card');
+                card.dataset.position = data.position;
                 card.querySelector('.char-image').src = data.image;
                 card.querySelector('.card-name').textContent = data.name;
                 
@@ -441,16 +455,12 @@
                 card.querySelector('.card-stats td:nth-child(5)').textContent = data.stats.support;
                 card.querySelector('.card-description ul').innerHTML = `<li>${data.description.split('\n').join('</li><li>')}</li>`;
                 
-                card.dataset.position = data.position;
                 card.querySelector('.card-position').textContent = `${data.position}位/0位`;
-                
-                sortCards();
-                localStorage.setItem('characterCards', JSON.stringify(savedCards));
             }
 
-            function startEditing(card, data) {
+            function startEditing(data) {
                 document.getElementById('char-name').value = data.name;
-                document.getElementById('char-position').value = card.dataset.position;
+                document.getElementById('char-position').value = data.position;
                 document.getElementById('char-rank').value = data.rank;
                 document.getElementById('status-endurance').value = data.stats.endurance;
                 document.getElementById('status-attack').value = data.stats.attack;
@@ -462,19 +472,18 @@
                 imagePreview.src = data.image;
                 imagePreview.style.display = 'block';
 
-                editingCard = card;
+                editingCardData = data;
                 document.getElementById('submit-button').textContent = 'カードを更新';
             }
 
-            function deleteCard(card) {
-                const cardPosition = card.dataset.position;
-                const cardIndex = savedCards.findIndex(c => c.position === parseInt(cardPosition));
+            function deleteCard(cardContainer, data) {
+                const cardIndex = savedCards.findIndex(c => c.name === data.name);
                 if (cardIndex > -1) {
                     savedCards.splice(cardIndex, 1);
                 }
-                card.remove();
-                sortCards();
+                cardContainer.remove();
                 localStorage.setItem('characterCards', JSON.stringify(savedCards));
+                sortCards();
             }
         });
     </script>
