@@ -363,6 +363,8 @@
         setupCardEventListeners(cardElement, newCardId);
 
         document.getElementById('character-card-list').appendChild(cardClone);
+        
+        // ★修正点: 新しいカードが作成された直後に順番を保存する
         saveCardOrder();
     }
 
