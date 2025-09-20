@@ -276,6 +276,13 @@
             const imagePreview = document.getElementById('image-preview');
             let editingCard = null;
 
+            // ローカルストレージからカードを読み込む
+            const savedCards = JSON.parse(localStorage.getItem('characterCards')) || [];
+            if (savedCards.length > 0) {
+                savedCards.forEach(data => createCard(data));
+                sortCards();
+            }
+
             imageUpload.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (file) {
@@ -315,13 +322,21 @@
                 };
 
                 if (editingCard) {
+                    const cardData = savedCards.find(c => c.name === data.name);
+                    if (cardData) {
+                        Object.assign(cardData, data);
+                    }
                     updateCard(editingCard, data);
                     editingCard = null;
                     document.getElementById('submit-button').textContent = 'カードを作成';
                 } else {
+                    savedCards.push(data);
                     createCard(data);
                 }
 
+                // ローカルストレージに保存
+                localStorage.setItem('characterCards', JSON.stringify(savedCards));
+                
                 form.reset();
                 imagePreview.style.display = 'none';
                 imagePreview.src = '';
@@ -430,6 +445,7 @@
                 card.querySelector('.card-position').textContent = `${data.position}位/0位`;
                 
                 sortCards();
+                localStorage.setItem('characterCards', JSON.stringify(savedCards));
             }
 
             function startEditing(card, data) {
@@ -451,8 +467,14 @@
             }
 
             function deleteCard(card) {
+                const cardPosition = card.dataset.position;
+                const cardIndex = savedCards.findIndex(c => c.position === parseInt(cardPosition));
+                if (cardIndex > -1) {
+                    savedCards.splice(cardIndex, 1);
+                }
                 card.remove();
                 sortCards();
+                localStorage.setItem('characterCards', JSON.stringify(savedCards));
             }
         });
     </script>
