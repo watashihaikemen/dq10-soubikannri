@@ -2,425 +2,265 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>DQX さいほう職人計算ツール（精神統一ロジック修正版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キャラクター評価</title>
     <style>
         body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
+            font-family: -apple-system, BlinkMac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
+            margin: 0;
             padding: 20px;
         }
-        .container {
-            width: 100%;
-            max-width: 800px;
+        .character-card {
             background-color: white;
+            border-radius: 12px;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1, h2 {
-            text-align: center;
-            color: #333;
-        }
-        .setup-section, .tool-section {
             margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .setup-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
         }
-        .setup-grid > div { display: flex; flex-direction: column; }
-        label { margin-bottom: 5px; font-weight: bold; }
-        select, input, button {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            font-size: 16px;
+        .character-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 3px solid #f9d71c;
+            position: relative;
         }
-        button {
-            cursor: pointer;
-            background-color: #007bff;
+        .character-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .character-image::after {
+            content: attr(data-rank);
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background-color: #a42c2c;
             color: white;
-            border: none;
-            transition: background-color 0.3s;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 2px solid white;
+            line-height: 1;
         }
-        button:hover { background-color: #0056b3; }
-        .tool-section { display: none; }
-        .status-display {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
+        .character-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4a4a4a;
+        }
+        .character-rank {
+            background-color: #a42c2c;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-left: 20px;
+        }
+        .ranking-text {
+            font-size: 18px;
+            color: #777;
+            margin-left: 10px;
+        }
+        .stats-table {
+            display: flex;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
             text-align: center;
         }
-        .status-item {
-            background: #e9f5ff;
-            padding: 10px;
-            border-radius: 5px;
+        .stats-item {
+            flex: 1;
+            padding: 8px;
         }
-        .status-item span {
-            display: block;
+        .stats-item:first-child {
+            background-color: #c9c9c9;
+            font-weight: bold;
+        }
+        .stats-item .label {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .stats-item .value {
             font-size: 20px;
             font-weight: bold;
-            color: #0056b3;
         }
-        .status-item .sub-text {
-            font-size: 0.8em;
-            color: #555;
+        .skill-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+        .skill-list li {
+            position: relative;
+            padding-left: 1.5em;
+            margin-bottom: 10px;
+            line-height: 1.6;
         }
-        .grid-cell input {
-            width: 100%;
-            height: 60px;
-            text-align: center;
-            font-size: 24px;
-            box-sizing: border-box;
-            border: 2px solid #ccc;
+        .skill-list li::before {
+            content: '・';
+            position: absolute;
+            left: 0;
+            color: #4a4a4a;
         }
-        .recommendation-area, .action-input-area, .power-selection-area, .recovery-info-area {
-            margin-top: 20px;
+        .slide-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
         }
-        #recommendation-list { list-style-type: none; padding: 0; }
-        #recommendation-list li {
-            background: #fffbe6;
-            padding: 10px;
-            border: 1px solid #ffeeba;
-            border-radius: 4px;
-            margin-bottom: 5px;
-        }
-        .action-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            align-items: end;
-        }
-        .action-grid > div { display: flex; flex-direction: column; }
-        .power-selection-area, .recovery-info-area {
-             padding: 15px; border: 1px solid #ffc107; background-color: #fff3cd; border-radius: 5px; text-align: center;
-        }
-        #finish-button { background-color: #28a745; margin-top: 15px; }
-        #finish-button:hover { background-color: #218838; }
-        #result-display { margin-top: 15px; padding: 15px; border-radius: 5px; text-align: center; font-size: 1.2em; }
-        .result-success { background-color: #d4edda; color: #155724; }
-        .result-fail { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1><img src="https://img.game8.jp/4060867/5923c0b0270a41d99432f5d96f9a9289.png/show" alt="さいほう" style="width:32px; vertical-align:middle;"> さいほう職人計算ツール</h1>
-    <p>原始獣のコート（体上）の大成功をサポートします。（精神統一ロジック修正版）</p>
+    <div class="slide-info">スライド 3/23</div>
 
-    <div class="setup-section" id="setup-section">
-        <h2>初期設定</h2>
-        <div class="setup-grid">
-            <div>
-                <label for="player-level">職人レベル:</label>
-                <input type="number" id="player-level" value="80" min="1" max="80">
+    <div class="character-card">
+        <div class="card-header">
+            <div class="character-image" data-rank="2">
+                <img src="ウーブの画像URLをここに貼り付け" alt="ウーブ">
             </div>
             <div>
-                <label for="sewing-needle">さいほう針:</label>
-                <select id="sewing-needle">
-                    <option value="light" selected>光のさいほう針</option>
-                    <option value="miracle">奇跡のさいほう針</option>
-                    <option value="super">超さいほう針</option>
-                    <option value="platinum">プラチナさいほう針</option>
-                    <option value="silver">銀のさいほう針</option>
-                    <option value="iron">鉄のさいほう針</option>
-                    <option value="copper">銅のさいほう針</option>
-                </select>
-            </div>
-            <div>
-                 <label for="needle-star">針の★の数:</label>
-                <select id="needle-star">
-                    <option value="3" selected>★3</option>
-                    <option value="2">★2</option>
-                    <option value="1">★1</option>
-                    <option value="0">★0</option>
-                </select>
-            </div>
-        </div>
-        <br>
-        <button id="start-button" style="width: 100%;">さいほうを開始</button>
-    </div>
-
-    <div class="tool-section" id="tool-section">
-        <div class="status-display">
-            <div class="status-item"><label>集中力</label><span id="concentration-display">196</span></div>
-            <div class="status-item">
-                <label>ぬいパワー</label>
-                <span id="power-display">ふつう</span>
-                <span class="sub-text" id="power-lock-display" style="display:none;"></span>
-            </div>
-            <div class="status-item"><label>ターン</label><span id="turn-display">1</span></div>
-            <div class="status-item"><label>合計誤差</label><span id="total-error-display">0</span></div>
-        </div>
-
-        <h2>盤面</h2>
-        <div class="grid-container" id="grid-container"></div>
-        
-        <div class="power-selection-area" id="power-selection-area" style="display: none;">
-            <h3>「？」パワー入力</h3>
-            <p>ゲーム内で表示されたぬいパワーを選択してください。</p>
-            <select id="random-power-select">
-                <option value="弱い">弱い</option>
-                <option value="ふつう">ふつう</option>
-                <option value="強い">強い</option>
-                <option value="最強">最強</option>
-            </select>
-            <button id="confirm-power-button">パワーを確定</button>
-        </div>
-
-        <div class="recovery-info-area" id="recovery-info-area" style="display: none;">
-            <h3>回復ターン</h3>
-            <p>プレイヤーの行動はありません。ゲーム内での回復結果を盤面に直接入力し、下のボタンを押してください。</p>
-            <button id="recovery-complete-button">回復完了 ＆ 次のターンへ</button>
-        </div>
-        
-        <div id="main-interaction-area">
-            <div class="recommendation-area">
-                <h2>おすすめの行動</h2>
-                <ul id="recommendation-list"></ul>
-            </div>
-
-            <div class="action-input-area">
-                <h2>行動入力</h2>
-                <div class="action-grid">
-                    <div>
-                        <label for="action-select">実行した特技:</label>
-                        <select id="action-select"></select>
-                    </div>
-                    <div>
-                        <label>結果をマスに直接入力</label>
-                        <button id="update-button">行動を反映 ＆ 次のターンへ</button>
-                    </div>
+                <div class="character-name">ウーブ</div>
+                <div style="display: flex; align-items: baseline;">
+                    <span class="character-rank">4位</span>
+                    <span class="ranking-text">/22位</span>
+                    <span class="character-rank" style="background-color: #3b5998; margin-left: 10px;">S</span>
                 </div>
-                <p style="font-size: 0.9em; color: #555;">※盤面の数値を書き換えてからボタンを押してください。</p>
             </div>
         </div>
-
-        <button id="finish-button" style="width: 100%;">仕上げる</button>
-        <div id="result-display" style="display:none;"></div>
+        <div class="stats-table">
+            <div class="stats-item">
+                <div class="label">耐久</div>
+                <div class="value">B</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">攻撃</div>
+                <div class="value">SS</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">安定性</div>
+                <div class="value">A</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">機動力</div>
+                <div class="value">S</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">援護</div>
+                <div class="value">B</div>
+            </div>
+        </div>
+        <ul class="skill-list">
+            <li>パッシブ「サイクロン」により技を使用することにラッシュの手数を増やすことが出来る</li>
+            <li>技1の範囲が広く追い込み性能が非常に高い</li>
+            <li>序盤の耐久だけが不安要素なので相手との距離を意識して戦う必要がある</li>
+            <li>技2は自身に依存するデバフを無効化する効果を持っており安定した機動力を保つことが出来る。</li>
+        </ul>
     </div>
-</div>
 
-<script>
-// =============== データ定義 (変更なし) ===============
-const CONCENTRATION_LEVELS = [0, 50, 51, 54, 55, 58, 61, 62, 65, 68, 68, 71, 74, 74, 77, 79, 82, 82, 85, 88, 88, 91, 94, 94, 97, 100, 100, 103, 105, 108, 108, 111, 112, 112, 114, 118, 121, 122, 122, 124, 128, 131, 133, 136, 138, 138, 141, 141, 143, 146, 148, 151, 151, 153, 156, 158, 161, 161, 163, 166, 168, 170, 170, 172, 174, 176, 179, 181, 183, 185, 187, 188, 190, 192, 194, 196, 196, 196, 196, 196, 196];
-const NEEDLES = { copper: { concentration: 0, critical: [1.0, 1.1, 1.2, 2.0] }, iron: { concentration: 10, critical: [1.5, 1.6, 1.7, 2.5] }, silver: { concentration: 15, critical: [2.0, 2.1, 2.2, 3.0] }, platinum: { concentration: 25, critical: [2.5, 2.6, 2.7, 3.5] }, super: { concentration: 35, critical: [3.0, 3.1, 3.2, 4.0] }, miracle: { concentration: 50, critical: [3.3, 3.4, 3.5, 4.3] }, light: { concentration: 45, critical: [3.6, 3.7, 3.8, 4.6] } };
-const SKILLS = { sew: { name: '普通に縫う', level: 1, concentration: 5, multiplier: 1, targets: 1 }, yoko: { name: 'ヨコぬい', level: 2, concentration: 8, multiplier: 1, targets: 2 }, kagen: { name: 'かげんぬい', level: 3, concentration: 10, multiplier: 0.5, targets: 1 }, taki: { name: '滝のぼり', level: 5, concentration: 8, multiplier: 1, targets: 2 }, tasuki: { name: 'たすきぬい', level: 7, concentration: 7, multiplier: 1, targets: 2 }, double: { name: '2倍ぬい', level: 13, concentration: 9, multiplier: 2, targets: 1 }, suihei: { name: '水平ぬい', level: 15, concentration: 10, multiplier: 1, targets: 3 }, seishin: { name: '精神統一', level: 17, concentration: 7, multiplier: 0, targets: 0 }, ootaki: { name: '大滝のぼり', level: 19, concentration: 10, multiplier: 1, targets: 3 }, nerai: { name: 'ねらいぬい', level: 23, concentration: 16, multiplier: 1, targets: 1 }, gyaku: { name: '逆たすきぬい', level: 25, concentration: 7, multiplier: 1, targets: 2 }, hogushi: { name: '糸ほぐし', level: 27, concentration: 16, multiplier: -0.5, targets: 1 }, triple: { name: '3倍縫い', level: 33, concentration: 12, multiplier: 3, targets: 1 }, shift: { name: 'ぬいパワーシフト', level: 38, concentration: 7, multiplier: 0, targets: 0 }, shitsuke: { name: 'しつけがけ', level: 47, concentration: 13, multiplier: 0, targets: 1 } };
-const POWER_VALUES = { "弱い": { base: [6, 7, 8, 9], prob: [0.143, 0.286, 0.286, 0.286] }, "ふつう": { base: [12, 13, 14, 15, 16, 17, 18], prob: Array(7).fill(0.143) }, "強い": { base: [18, 20, 21, 23, 24, 26, 27], prob: Array(7).fill(0.143) }, "最強": { base: [24, 26, 28, 30, 32, 34, 36], prob: Array(7).fill(0.143) } };
-const HOGUSHI_VALUES = { "弱い": [3, 4], "ふつう": [6, 7, 8, 9], "強い": [9, 10, 11, 12, 13, 14], "最強": [12, 13, 14, 15, 16, 17, 18] };
-const INITIAL_BOARD = [95, 40, 95, 60, 60, 60, 75, 40, 75];
-const POWER_SEQUENCE = ["ふつう", "？", "弱い", "最強", "回復", "強い"];
+    <div class="character-card">
+        <div class="card-header">
+            <div class="character-image" data-rank="1">
+                <img src="悟飯の画像URLをここに貼り付け" alt="悟飯">
+            </div>
+            <div>
+                <div class="character-name">悟飯</div>
+                <div style="display: flex; align-items: baseline;">
+                    <span class="character-rank">5位</span>
+                    <span class="ranking-text">/22位</span>
+                    <span class="character-rank" style="background-color: #3b5998; margin-left: 10px;">S</span>
+                </div>
+            </div>
+        </div>
+        <div class="stats-table">
+            <div class="stats-item">
+                <div class="label">耐久</div>
+                <div class="value">A</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">攻撃</div>
+                <div class="value">B</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">安定性</div>
+                <div class="value">A</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">機動力</div>
+                <div class="value">S</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">援護</div>
+                <div class="value">SS</div>
+            </div>
+        </div>
+        <ul class="skill-list">
+            <li>パッシブ「友情ブースト」で近くにいる味方の攻撃力を上げる唯一無二の性能を持つ</li>
+            <li>パッシブ発動中は自身も耐久力が上昇する強力な効果を持つので集団行動を意識した方がよい</li>
+            <li>基本的に味方依存なので単独での行動は難しいが、高い機動力を活かして敵の破壊神攻撃を仕掛けやすい。</li>
+            <li>吹き飛ばし系の技が2つあるのも非常に強力である。</li>
+        </ul>
+    </div>
 
-// =============== ゲーム状態管理 ===============
-let gameState = {};
+    <div class="character-card">
+        <div class="card-header">
+            <div class="character-image" data-rank="2">
+                <img src="17号の画像URLをここに貼り付け" alt="17号">
+            </div>
+            <div>
+                <div class="character-name">17号</div>
+                <div style="display: flex; align-items: baseline;">
+                    <span class="character-rank">6位</span>
+                    <span class="ranking-text">/22位</span>
+                    <span class="character-rank" style="background-color: #3b5998; margin-left: 10px;">S</span>
+                </div>
+            </div>
+        </div>
+        <div class="stats-table">
+            <div class="stats-item">
+                <div class="label">耐久</div>
+                <div class="value">A</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">攻撃</div>
+                <div class="value">C</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">安定性</div>
+                <div class="value">A</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">機動力</div>
+                <div class="value">S</div>
+            </div>
+            <div class="stats-item">
+                <div class="label">援護</div>
+                <div class="value">SS</div>
+            </div>
+        </div>
+        <ul class="skill-list">
+            <li>技3で見方を守りつつ自身と味方の体力と移動速度上昇を付与することが出来る</li>
+            <li>技3で逃げ性能が格段に上がっているため一緒に行動している味方が攻めやすくなる</li>
+            <li>自身の攻撃力はそこまで高くないので抗戦するときは二人で行動することを意識する必要がある</li>
+            <li>自身の機動力が高いので敵がいない間に破壊神を攻撃しやすい</li>
+        </ul>
+    </div>
 
-function initGame() {
-    const level = parseInt(document.getElementById('player-level').value);
-    const needle = document.getElementById('sewing-needle').value;
-    const star = parseInt(document.getElementById('needle-star').value);
-    const baseConcentration = CONCENTRATION_LEVELS[level];
-    const needleBonus = NEEDLES[needle].concentration;
-
-    gameState = {
-        level: level,
-        maxConcentration: baseConcentration + needleBonus,
-        currentConcentration: baseConcentration + needleBonus,
-        turn: 1,
-        powerIndex: 0,
-        currentPower: "ふつう",
-        board: INITIAL_BOARD.map(val => ({ value: val, shitsuke: false })),
-        powerLockTurns: 0,
-        lockedPower: null, // ★精神統一でロックしたパワーを保存
-        mode: 'sewing'
-    };
-    
-    document.getElementById('setup-section').style.display = 'none';
-    document.getElementById('tool-section').style.display = 'block';
-    
-    createBoard();
-    populateActions();
-}
-
-// =============== UI 更新 ===============
-
-function createBoard() {
-    const gridContainer = document.getElementById('grid-container');
-    gridContainer.innerHTML = '';
-    for (let i = 0; i < 9; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'grid-cell';
-        cell.innerHTML = `<input type="number" id="cell-${i}" value="${gameState.board[i].value}" data-index="${i}">`;
-        gridContainer.appendChild(cell);
-        document.getElementById(`cell-${i}`).addEventListener('change', updateTotalErrorDisplay);
-    }
-}
-
-function updateUI() {
-    document.getElementById('concentration-display').textContent = `${gameState.currentConcentration}/${gameState.maxConcentration}`;
-    document.getElementById('power-display').textContent = gameState.currentPower;
-    document.getElementById('turn-display').textContent = gameState.turn;
-
-    const powerLockDisplay = document.getElementById('power-lock-display');
-    if (gameState.powerLockTurns > 0 && gameState.currentPower !== '回復') {
-        powerLockDisplay.textContent = `(精神統一 残り${gameState.powerLockTurns-1}ターン)`;
-        powerLockDisplay.style.display = 'block';
-    } else {
-        powerLockDisplay.style.display = 'none';
-    }
-
-    gameState.board.forEach((cell, i) => {
-        const inputEl = document.getElementById(`cell-${i}`);
-        inputEl.value = cell.value;
-        if (cell.value >= -3 && cell.value <= 3) inputEl.style.backgroundColor = '#d4edda';
-        else if (cell.value > 3 && cell.value <= 20) inputEl.style.backgroundColor = '#fff3cd';
-        else inputEl.style.backgroundColor = 'white';
-    });
-    updateTotalErrorDisplay();
-
-    const mainArea = document.getElementById('main-interaction-area');
-    const powerArea = document.getElementById('power-selection-area');
-    const recoveryArea = document.getElementById('recovery-info-area');
-
-    mainArea.style.display = gameState.mode === 'sewing' ? 'block' : 'none';
-    powerArea.style.display = gameState.mode === 'select_power' ? 'block' : 'none';
-    recoveryArea.style.display = gameState.mode === 'recovery' ? 'block' : 'none';
-
-    const recommendationList = document.getElementById('recommendation-list');
-    recommendationList.innerHTML = '';
-    if (gameState.mode === 'sewing') {
-        calculateAndShowRecommendations();
-    }
-}
-
-function updateTotalErrorDisplay() {
-    let totalError = 0;
-    for (let i = 0; i < 9; i++) {
-        totalError += parseInt(document.getElementById(`cell-${i}`).value) || 0;
-    }
-    const errorDisplay = document.getElementById('total-error-display');
-    errorDisplay.textContent = totalError;
-    errorDisplay.style.color = (totalError >= -3 && totalError <= 3) ? '#28a745' : '#dc3545';
-}
-
-function populateActions() {
-    const actionSelect = document.getElementById('action-select');
-    actionSelect.innerHTML = '';
-    Object.keys(SKILLS).forEach(key => {
-        if (gameState.level >= SKILLS[key].level) {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = `${SKILLS[key].name} (消費${SKILLS[key].concentration})`;
-            actionSelect.appendChild(option);
-        }
-    });
-}
-
-// =============== 計算ロジック (変更なし) ===============
-function getExpectedValue(power, multiplier) { if (!POWER_VALUES[power]) return 0; const { base, prob } = POWER_VALUES[power]; let expected = 0; for (let i = 0; i < base.length; i++) { expected += Math.round(base[i] * multiplier) * (prob[i] || 1 / base.length); } return Math.round(expected); }
-function calculateAndShowRecommendations() { const recommendations = []; const currentBoardValues = Array.from({length: 9}, (_, i) => parseInt(document.getElementById(`cell-${i}`).value)); Object.keys(SKILLS).forEach(skillKey => { const skill = SKILLS[skillKey]; if (gameState.level < skill.level || gameState.currentConcentration < skill.concentration) return; if (skill.targets === 0) { let description = `${skill.name}`; if (skillKey === 'seishin' && gameState.currentPower !== '弱い' && gameState.currentPower !== 'ふつう') recommendations.push({ text: `${description} (${gameState.currentPower}を3ターン維持)`, score: -10 }); return; } if (skill.targets === 1) { for (let i = 0; i < 9; i++) { const currentVal = currentBoardValues[i]; if(currentVal <= 0 && skillKey !== 'hogushi') continue; if(currentVal >= 0 && skillKey === 'hogushi') continue; let expectedChange; if(skillKey === 'hogushi'){ const recoveryValues = HOGUSHI_VALUES[gameState.currentPower] || [0]; expectedChange = -recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length; } else { expectedChange = getExpectedValue(gameState.currentPower, skill.multiplier); } const futureVal = currentVal - Math.round(expectedChange); const efficiency = (Math.abs(currentVal) - Math.abs(futureVal)) / skill.concentration; if (efficiency > 0) { recommendations.push({ text: `[マス${i+1}] に ${skill.name} (予測: ${currentVal} → ${futureVal})`, score: efficiency, }); } } } }); recommendations.sort((a, b) => b.score - a.score); const recommendationList = document.getElementById('recommendation-list'); recommendationList.innerHTML = ''; if (recommendations.length === 0) { recommendationList.innerHTML = '<li>効率的な行動が見つかりません。状況に応じて判断してください。</li>'; return; } recommendations.slice(0, 5).forEach(rec => { const li = document.createElement('li'); li.textContent = rec.text; recommendationList.appendChild(li); }); }
-
-// =============== ゲーム進行 (ロジック修正箇所) ===============
-
-function executeAction() {
-    for (let i = 0; i < 9; i++) {
-        gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
-    }
-    const selectedActionKey = document.getElementById('action-select').value;
-    const skill = SKILLS[selectedActionKey];
-    gameState.currentConcentration -= skill.concentration;
-    
-    if (selectedActionKey === 'seishin') {
-        gameState.powerLockTurns = 4; // 発動ターン含め4
-        gameState.lockedPower = gameState.currentPower;
-    }
-
-    if (gameState.currentConcentration <= 0) {
-        updateUI();
-        alert("集中力がなくなりました！");
-        finishSewing();
-    } else {
-        prepareNextTurn();
-    }
-}
-
-function prepareNextTurn() {
-    gameState.turn++;
-    
-    if (gameState.powerLockTurns > 0) {
-        gameState.powerLockTurns--;
-    }
-
-    // powerIndexは精神統一に関わらず常に進める
-    gameState.powerIndex = (gameState.powerIndex + 1) % POWER_SEQUENCE.length;
-    const sequencePower = POWER_SEQUENCE[gameState.powerIndex];
-
-    // 回復ターンは最優先
-    if (sequencePower === '回復') {
-        gameState.currentPower = '回復';
-        gameState.mode = 'recovery';
-    } else if (gameState.powerLockTurns > 0) {
-        // 精神統一中 (回復ターン以外)
-        gameState.currentPower = gameState.lockedPower;
-        gameState.mode = 'sewing'; // '?'ターンもスキップして行動
-    } else {
-        // 通常時
-        gameState.currentPower = sequencePower;
-        if (sequencePower === '？') {
-            gameState.mode = 'select_power';
-        } else {
-            gameState.mode = 'sewing';
-        }
-    }
-    
-    updateUI();
-}
-
-function confirmPower() {
-    gameState.currentPower = document.getElementById('random-power-select').value;
-    gameState.mode = 'sewing';
-    updateUI();
-}
-
-function completeRecovery() {
-    for (let i = 0; i < 9; i++) {
-        gameState.board[i].value = parseInt(document.getElementById(`cell-${i}`).value);
-    }
-    prepareNextTurn();
-}
-
-function finishSewing() {
-    const totalError = gameState.board.reduce((sum, cell) => sum + parseInt(cell.value), 0);
-    const resultDisplay = document.getElementById('result-display');
-    resultDisplay.textContent = (totalError >= -3 && totalError <= 3) 
-        ? `大成功！ (合計誤差: ${totalError})` : `失敗... (合計誤差: ${totalError})`;
-    resultDisplay.className = (totalError >= -3 && totalError <= 3) ? 'result-success' : 'result-fail';
-    resultDisplay.style.display = 'block';
-    document.getElementById('update-button').disabled = true;
-    document.getElementById('finish-button').disabled = true;
-}
-
-// =============== イベントリスナー ===============
-document.getElementById('start-button').addEventListener('click', () => {
-    initGame();
-    updateUI();
-});
-document.getElementById('update-button').addEventListener('click', executeAction);
-document.getElementById('confirm-power-button').addEventListener('click', confirmPower);
-document.getElementById('recovery-complete-button').addEventListener('click', completeRecovery);
-document.getElementById('finish-button').addEventListener('click', finishSewing);
-</script>
 </body>
 </html>
