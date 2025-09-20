@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>キャラクター評価（画像ファイル対応）</title>
+    <title>キャラクター評価（IndexedDB対応）</title>
     <style>
         body {
             font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
@@ -124,8 +124,6 @@
             border-radius: 5px;
             font-size: 14px;
         }
-
-        /* 編集用のスタイル */
         .editable {
             border: 1px dashed #ccc;
             padding: 2px;
@@ -151,7 +149,7 @@
     <div class="character-card">
         <div class="card-header">
             <div class="character-image" data-rank="2">
-                <img src="https://i.imgur.com/example_oob.png" alt="ウーブ" id="oob-image">
+                <img src="" alt="ウーブ" id="oob-image">
             </div>
             <div>
                 <div class="character-name" contenteditable="true" data-id="oob-name">ウーブ</div>
@@ -163,7 +161,7 @@
             </div>
         </div>
         <label for="oob-file" class="image-input">画像を選択</label>
-        <input type="file" id="oob-file" style="display: none;" accept="image/*" data-id="oob-file">
+        <input type="file" id="oob-file" style="display: none;" accept="image/*" data-image-id="oob-image">
         <div class="stats-table" contenteditable="true" data-id="oob-stats">
             <div class="stats-item">
                 <div class="label">耐久</div>
@@ -197,7 +195,7 @@
     <div class="character-card">
         <div class="card-header">
             <div class="character-image" data-rank="1">
-                <img src="https://i.imgur.com/example_gohan.png" alt="悟飯" id="gohan-image">
+                <img src="" alt="悟飯" id="gohan-image">
             </div>
             <div>
                 <div class="character-name" contenteditable="true" data-id="gohan-name">悟飯</div>
@@ -209,7 +207,7 @@
             </div>
         </div>
         <label for="gohan-file" class="image-input">画像を選択</label>
-        <input type="file" id="gohan-file" style="display: none;" accept="image/*" data-id="gohan-file">
+        <input type="file" id="gohan-file" style="display: none;" accept="image/*" data-image-id="gohan-image">
         <div class="stats-table" contenteditable="true" data-id="gohan-stats">
             <div class="stats-item">
                 <div class="label">耐久</div>
@@ -243,7 +241,7 @@
     <div class="character-card">
         <div class="card-header">
             <div class="character-image" data-rank="2">
-                <img src="https://i.imgur.com/example_17.png" alt="17号" id="17-image">
+                <img src="" alt="17号" id="17-image">
             </div>
             <div>
                 <div class="character-name" contenteditable="true" data-id="17-name">17号</div>
@@ -255,7 +253,7 @@
             </div>
         </div>
         <label for="17-file" class="image-input">画像を選択</label>
-        <input type="file" id="17-file" style="display: none;" accept="image/*" data-id="17-file">
+        <input type="file" id="17-file" style="display: none;" accept="image/*" data-image-id="17-image">
         <div class="stats-table" contenteditable="true" data-id="17-stats">
             <div class="stats-item">
                 <div class="label">耐久</div>
@@ -287,18 +285,33 @@
     </div>
 
     <script>
-        // 保存する要素に data-id 属性を追加
-        const editableElements = document.querySelectorAll('[data-id]');
-        const fileInputs = document.querySelectorAll('input[type="file"]');
-        const characterImages = {
-            'oob-file': document.getElementById('oob-image'),
-            'gohan-file': document.getElementById('gohan-image'),
-            '17-file': document.getElementById('17-image')
+        // IndexedDBのセットアップ
+        const dbName = 'characterDB';
+        const dbVersion = 1;
+        let db;
+
+        const request = indexedDB.open(dbName, dbVersion);
+
+        request.onerror = (event) => {
+            console.error('IndexedDB error:', event.target.errorCode);
         };
 
-        // ページ読み込み時に保存されたデータを復元
-        function loadData() {
-            editableElements.forEach(element => {
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains('data')) {
+                db.createObjectStore('data');
+            }
+        };
+
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadAllData();
+        };
+
+        // ローカルストレージとIndexedDBからデータを読み込む
+        function loadAllData() {
+            // テキストデータの読み込み（localStorage）
+            document.querySelectorAll('[data-id]').forEach(element => {
                 const id = element.getAttribute('data-id');
                 const savedData = localStorage.getItem(id);
                 if (savedData) {
@@ -306,54 +319,66 @@
                 }
             });
 
-            fileInputs.forEach(input => {
-                const id = input.getAttribute('data-id');
-                const savedDataUrl = localStorage.getItem(id);
-                if (savedDataUrl) {
-                    const imgElement = characterImages[id];
-                    if (imgElement) {
-                        imgElement.src = savedDataUrl;
+            // 画像データの読み込み（IndexedDB）
+            const transaction = db.transaction('data', 'readonly');
+            const objectStore = transaction.objectStore('data');
+            
+            document.querySelectorAll('input[type="file"]').forEach(input => {
+                const imageId = input.getAttribute('data-image-id');
+                const request = objectStore.get(imageId);
+                request.onsuccess = (event) => {
+                    const imageData = event.target.result;
+                    if (imageData) {
+                        const imgElement = document.getElementById(imageId);
+                        if (imgElement) {
+                            imgElement.src = imageData;
+                        }
                     }
-                }
+                };
             });
         }
 
         // データを自動保存
-        function saveData() {
-            editableElements.forEach(element => {
-                const id = element.getAttribute('data-id');
-                localStorage.setItem(id, element.innerHTML);
-            });
+        function saveData(id, value) {
+            localStorage.setItem(id, value);
         }
 
-        // 入力時のイベントリスナー
-        editableElements.forEach(element => {
-            element.addEventListener('input', saveData);
+        // 入力時のイベントリスナー（テキスト）
+        document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+            element.addEventListener('input', (e) => {
+                saveData(e.target.getAttribute('data-id'), e.target.innerHTML);
+            });
         });
 
-        // ファイル入力のイベントリスナー
-        fileInputs.forEach(input => {
+        // ファイル入力のイベントリスナー（画像）
+        document.querySelectorAll('input[type="file"]').forEach(input => {
             input.addEventListener('change', (e) => {
                 const file = e.target.files[0];
-                const id = e.target.getAttribute('data-id');
-                const imgElement = characterImages[id];
+                const imageId = e.target.getAttribute('data-image-id');
+                const imgElement = document.getElementById(imageId);
 
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
-                        // Data URL形式で画像を読み込む
                         const dataUrl = event.target.result;
                         imgElement.src = dataUrl;
-                        // Data URLをローカルストレージに保存
-                        localStorage.setItem(id, dataUrl);
+
+                        // IndexedDBに画像を保存
+                        const transaction = db.transaction('data', 'readwrite');
+                        const objectStore = transaction.objectStore('data');
+                        const putRequest = objectStore.put(dataUrl, imageId);
+
+                        putRequest.onsuccess = () => {
+                            console.log('Image saved to IndexedDB');
+                        };
+                        putRequest.onerror = () => {
+                            console.error('Error saving image to IndexedDB');
+                        };
                     };
                     reader.readAsDataURL(file);
                 }
             });
         });
-
-        // ページ読み込み時に実行
-        window.addEventListener('load', loadData);
     </script>
 </body>
 </html>
