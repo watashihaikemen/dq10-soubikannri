@@ -4,147 +4,235 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キャラクター編集ツール</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: #f0f2f5;
+            color: #333;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             padding: 20px;
             min-height: 100vh;
         }
+
         .container {
             width: 100%;
             max-width: 600px;
         }
+
         .card {
             background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: box-shadow 0.3s ease;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .card:hover {
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
         }
+
         .header {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
-        .avatar {
-            width: 80px;
-            height: 80px;
-            background-color: #ccc;
-            border-radius: 50%;
-            margin-right: 20px;
-            overflow: hidden;
+
+        .avatar-container {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            margin-right: 24px;
             flex-shrink: 0;
+            cursor: pointer;
         }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
+        .avatar-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            transition: background-color 0.2s ease;
+        }
+
+        .avatar-container:hover .avatar-icon {
+            background-color: #0056b3;
+        }
+
         .header-content {
             flex-grow: 1;
         }
+
         .character-name-group {
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }
-        .character-name-group h2 {
-            font-size: 24px;
-            margin: 0;
-            margin-right: 10px;
-        }
+
         .character-name-group input {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 4px 8px;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background-color: #f7f7f7;
             width: calc(100% - 100px);
-            max-width: 200px;
+            max-width: 250px;
         }
+
         .rank-box {
             display: flex;
             align-items: center;
             font-size: 18px;
+            color: #666;
         }
-        .rank {
-            background-color: #d9534f;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 6px;
+        
+        .rank-box .rank-value {
             font-weight: bold;
-            margin-right: 4px;
+            color: #d9534f;
+            padding: 4px 10px;
+            background-color: #fcecec;
+            border-radius: 6px;
+            margin-right: 6px;
         }
-        .total-rank {
+
+        .edit-icon {
+            margin-left: 8px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .edit-icon:hover {
             color: #333;
         }
-        .rating-box {
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
-            background-color: #f7f7f7;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 10px 0;
-            margin-bottom: 20px;
+
+        .divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 20px 0;
         }
+
+        .rating-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 16px;
+        }
+
         .rating-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            text-align: center;
+            background-color: #f9f9f9;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #eee;
         }
+
         .rating-label {
             font-size: 14px;
             color: #666;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
         }
-        .rating-grade {
-            font-size: 22px;
+
+        .rating-grade input {
+            font-size: 24px;
             font-weight: bold;
-            color: #333;
+            color: #555;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: center;
+            padding: 0;
         }
+
+        .skill-section {
+            margin-top: 24px;
+        }
+
+        .skill-section h3 {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        
         .skill-list {
             list-style: none;
             padding: 0;
             margin: 0;
         }
+        
         .skill-list li {
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
-        .skill-list input,
+        
         .skill-list textarea {
             width: 100%;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 8px;
+            border-radius: 8px;
+            padding: 12px;
             box-sizing: border-box;
             font-size: 16px;
             resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.2s ease;
+            line-height: 1.5;
         }
+
+        .skill-list textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
         .add-card-button {
             display: block;
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             background-color: #28a745;
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.2s ease, transform 0.2s ease;
         }
+
         .add-card-button:hover {
             background-color: #218838;
+            transform: translateY(-2px);
         }
+        
     </style>
 </head>
 <body>
@@ -152,36 +240,62 @@
     <div class="container">
         <div class="card" id="template-card" style="display: none;">
             <div class="header">
-                <div class="avatar">
-                    <img src="" alt="キャラクター画像" id="template-avatar-img">
+                <div class="avatar-container">
+                    <div class="avatar">
+                        <img src="" alt="キャラクター画像" id="template-avatar-img">
+                    </div>
+                    <div class="avatar-icon"><i class="fas fa-camera"></i></div>
                 </div>
                 <div class="header-content">
                     <div class="character-name-group">
                         <input type="text" placeholder="キャラクター名" id="template-character-name">
                     </div>
                     <div class="rank-box">
-                        <span class="rank" id="template-rank">?位</span>
-                        <span class="total-rank">/?位</span>
+                        <span class="rank-label">順位:</span>
+                        <span class="rank-value" id="template-rank">?位</span>
+                        <span class="total-rank">/??位</span>
                     </div>
                 </div>
             </div>
-            <div class="rating-box">
-                <div class="rating-item"><span class="rating-label">耐久</span><input type="text" class="rating-grade" placeholder="?" maxlength="2" id="template-durability"></div>
-                <div class="rating-item"><span class="rating-label">攻撃</span><input type="text" class="rating-grade" placeholder="?" maxlength="2" id="template-attack"></div>
-                <div class="rating-item"><span class="rating-label">安定性</span><input type="text" class="rating-grade" placeholder="?" maxlength="2" id="template-stability"></div>
-                <div class="rating-item"><span class="rating-label">機動力</span><input type="text" class="rating-grade" placeholder="?" maxlength="2" id="template-mobility"></div>
-                <div class="rating-item"><span class="rating-label">援護</span><input type="text" class="rating-grade" placeholder="?" maxlength="2" id="template-support"></div>
-            </div>
-            <ul class="skill-list">
-                <li><textarea rows="2" placeholder="スキルや評価を入力してください" id="template-skill-1"></textarea></li>
-                <li><textarea rows="2" placeholder="スキルや評価を入力してください" id="template-skill-2"></textarea></li>
-                <li><textarea rows="2" placeholder="スキルや評価を入力してください" id="template-skill-3"></textarea></li>
+            
+            <div class="divider"></div>
+
+            <ul class="rating-list">
+                <li class="rating-item">
+                    <span class="rating-label">耐久</span>
+                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-durability"></div>
+                </li>
+                <li class="rating-item">
+                    <span class="rating-label">攻撃</span>
+                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-attack"></div>
+                </li>
+                <li class="rating-item">
+                    <span class="rating-label">安定性</span>
+                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-stability"></div>
+                </li>
+                <li class="rating-item">
+                    <span class="rating-label">機動力</span>
+                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-mobility"></div>
+                </li>
+                <li class="rating-item">
+                    <span class="rating-label">援護</span>
+                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-support"></div>
+                </li>
             </ul>
+
+            <div class="skill-section">
+                <h3>スキル・評価</h3>
+                <ul class="skill-list">
+                    <li><textarea rows="2" placeholder="キャラクターのスキルや強み、評価を入力してください。" id="template-skill-1"></textarea></li>
+                    <li><textarea rows="2" placeholder="具体的な戦術や使用例などを入力してください。" id="template-skill-2"></textarea></li>
+                    <li><textarea rows="2" placeholder="総合的な評価や個人的な感想を入力してください。" id="template-skill-3"></textarea></li>
+                </ul>
+            </div>
         </div>
 
         <div id="card-container"></div>
 
-        <button class="add-card-button" id="add-card">カードを追加</button>
+        <button class="add-card-button" id="add-card"><i class="fas fa-plus-circle"></i> カードを追加</button>
 
     </div>
 
@@ -193,19 +307,20 @@
         // カードをローカルストレージに保存する関数
         function saveCards() {
             const cards = [];
-            document.querySelectorAll('.card').forEach(card => {
+            document.querySelectorAll('.card:not(#template-card)').forEach(card => {
                 const data = {
                     id: card.getAttribute('data-id'),
                     name: card.querySelector('.character-name-group input').value,
-                    rank: card.querySelector('.rank').textContent,
-                    durability: card.querySelector('.rating-item:nth-child(1) input').value,
-                    attack: card.querySelector('.rating-item:nth-child(2) input').value,
-                    stability: card.querySelector('.rating-item:nth-child(3) input').value,
-                    mobility: card.querySelector('.rating-item:nth-child(4) input').value,
-                    support: card.querySelector('.rating-item:nth-child(5) input').value,
-                    skill1: card.querySelector('.skill-list li:nth-child(1) textarea').value,
-                    skill2: card.querySelector('.skill-list li:nth-child(2) textarea').value,
-                    skill3: card.querySelector('.skill-list li:nth-child(3) textarea').value,
+                    rank: card.querySelector('.rank-value').textContent,
+                    durability: card.querySelector('#template-durability').value,
+                    attack: card.querySelector('#template-attack').value,
+                    stability: card.querySelector('#template-stability').value,
+                    mobility: card.querySelector('#template-mobility').value,
+                    support: card.querySelector('#template-support').value,
+                    skill1: card.querySelector('#template-skill-1').value,
+                    skill2: card.querySelector('#template-skill-2').value,
+                    skill3: card.querySelector('#template-skill-3').value,
+                    avatar: card.querySelector('.avatar img').src // 画像データを保存
                 };
                 cards.push(data);
             });
@@ -218,12 +333,18 @@
             const cardId = 'card-' + Date.now();
             newCard.id = cardId;
             newCard.style.display = 'block';
-            newCard.removeAttribute('data-id');
             newCard.setAttribute('data-id', cardId);
 
+            // テンプレートIDを削除して、新しいIDを付与
+            newCard.querySelectorAll('[id^="template-"]').forEach(element => {
+                const newId = element.id.replace('template-', '');
+                element.id = newId + '-' + Date.now();
+            });
+
+            const avatarContainer = newCard.querySelector('.avatar-container');
             const avatarImg = newCard.querySelector('.avatar img');
             const characterNameInput = newCard.querySelector('.character-name-group input');
-            const rankSpan = newCard.querySelector('.rank');
+            const rankSpan = newCard.querySelector('.rank-value');
             const durabilityInput = newCard.querySelector('.rating-item:nth-child(1) input');
             const attackInput = newCard.querySelector('.rating-item:nth-child(2) input');
             const stabilityInput = newCard.querySelector('.rating-item:nth-child(3) input');
@@ -244,10 +365,13 @@
                 skill1Textarea.value = data.skill1;
                 skill2Textarea.value = data.skill2;
                 skill3Textarea.value = data.skill3;
+                if (data.avatar) {
+                    avatarImg.src = data.avatar;
+                }
             }
 
             // 画像アップロード機能の追加
-            avatarImg.addEventListener('click', () => {
+            avatarContainer.addEventListener('click', () => {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
