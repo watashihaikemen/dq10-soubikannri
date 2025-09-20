@@ -205,25 +205,25 @@
         <label class="image-input">画像を選択</label>
         <input type="file" style="display: none;" accept="image/*" class="image-file-input">
         <div class="stats-table">
-            <div class="stats-item" contenteditable="true">
+            <div class="stats-item">
                 <div class="label">耐久</div>
-                <div class="value">?</div>
+                <div class="value" contenteditable="true">?</div>
             </div>
-            <div class="stats-item" contenteditable="true">
+            <div class="stats-item">
                 <div class="label">攻撃</div>
-                <div class="value">?</div>
+                <div class="value" contenteditable="true">?</div>
             </div>
-            <div class="stats-item" contenteditable="true">
+            <div class="stats-item">
                 <div class="label">安定性</div>
-                <div class="value">?</div>
+                <div class="value" contenteditable="true">?</div>
             </div>
-            <div class="stats-item" contenteditable="true">
+            <div class="stats-item">
                 <div class="label">機動力</div>
-                <div class="value">?</div>
+                <div class="value" contenteditable="true">?</div>
             </div>
-            <div class="stats-item" contenteditable="true">
+            <div class="stats-item">
                 <div class="label">援護</div>
-                <div class="value">?</div>
+                <div class="value" contenteditable="true">?</div>
             </div>
         </div>
         <ul class="skill-list">
@@ -262,9 +262,6 @@
         loadAllCards();
     };
 
-    // Card IDを管理
-    let cardIdCounter = 0;
-
     // --- データ保存と読み込みのロジック ---
     function saveCardData(cardId, key, value) {
         if (key.startsWith('image')) {
@@ -300,7 +297,7 @@
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key.startsWith(cardId + '_')) {
+            if (key && key.startsWith(cardId + '_')) {
                 keysToRemove.push(key);
             }
         }
