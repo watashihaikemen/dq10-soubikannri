@@ -193,7 +193,7 @@
     <input type="file" style="display: none;" accept="image/*" class="image-file-input">
     <div class="stats-table">
         <div class="stats-item">
-            <div class="label">変更耐久</div>
+            <div class="label">耐久</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -223,7 +223,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 4; // バージョンを上げて、古いデータをクリア
+    const dbVersion = 3; // バージョンを元に戻し、既存データを保持
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -234,15 +234,13 @@
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        // 既存のストアがあれば削除し、作り直す
-        if (db.objectStoreNames.contains('cardData')) {
-            db.deleteObjectStore('cardData');
+        // 既存のストアが存在しない場合のみ作成
+        if (!db.objectStoreNames.contains('cardData')) {
+            db.createObjectStore('cardData');
         }
-        if (db.objectStoreNames.contains('cardOrder')) {
-            db.deleteObjectStore('cardOrder');
+        if (!db.objectStoreNames.contains('cardOrder')) {
+            db.createObjectStore('cardOrder');
         }
-        db.createObjectStore('cardData');
-        db.createObjectStore('cardOrder');
     };
 
     request.onsuccess = (event) => {
@@ -273,7 +271,7 @@
                 resolve();
             };
             request.onerror = () => {
-                resolve(); // エラー時も処理を続行
+                resolve();
             };
         });
     }
@@ -326,25 +324,36 @@
     }
 
     function setupCardEventListeners(cardElement, cardId) {
-        const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
-        editableElements.forEach((elem, index) => {
-            elem.addEventListener('input', (e) => {
-                saveCardData(cardId, `text_${index}`, e.target.innerHTML);
-                if (e.target.classList.contains('character-rank')) {
-                    updateRankColor(e.target);
-                }
-            });
-        });
-
-        const fileInput = cardElement.querySelector('.image-file-input');
+        const characterNameElem = cardElement.querySelector('.character-name');
+        const rank1Elem = cardElement.querySelectorAll('.character-rank')[0];
+        const rankingTextElem = cardElement.querySelector('.ranking-text');
+        const rank2Elem = cardElement.querySelectorAll('.character-rank')[1];
+        const statValues = cardElement.querySelectorAll('.stats-item .value');
+        const skillItems = cardElement.querySelectorAll('.skill-list li');
+        const imageInput = cardElement.querySelector('.image-file-input');
         const imgContainer = cardElement.querySelector('.character-image');
         const imgElement = cardElement.querySelector('.card-image');
+        const deleteButton = cardElement.querySelector('.delete-button');
 
-        imgContainer.addEventListener('click', () => {
-            fileInput.click();
+        characterNameElem.addEventListener('input', () => saveCardData(cardId, 'name', characterNameElem.innerHTML));
+        rank1Elem.addEventListener('input', () => {
+            saveCardData(cardId, 'rank1', rank1Elem.innerHTML);
+            updateRankColor(rank1Elem);
+        });
+        rankingTextElem.addEventListener('input', () => saveCardData(cardId, 'ranking_text', rankingTextElem.innerHTML));
+        rank2Elem.addEventListener('input', () => {
+            saveCardData(cardId, 'rank2', rank2Elem.innerHTML);
+            updateRankColor(rank2Elem);
+        });
+        statValues.forEach((elem, index) => {
+            elem.addEventListener('input', () => saveCardData(cardId, `stat_${index}`, elem.innerHTML));
+        });
+        skillItems.forEach((elem, index) => {
+            elem.addEventListener('input', () => saveCardData(cardId, `skill_${index}`, elem.innerHTML));
         });
 
-        fileInput.addEventListener('change', (e) => {
+        imgContainer.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -355,8 +364,7 @@
                 reader.readAsDataURL(file);
             }
         });
-
-        cardElement.querySelector('.delete-button').addEventListener('click', () => {
+        deleteButton.addEventListener('click', () => {
             if (confirm('このカードを本当に削除しますか？')) {
                 deleteCard(cardId, cardElement);
             }
@@ -373,25 +381,35 @@
         setupCardEventListeners(cardClone, newCardId);
 
         if (isNew) {
-            // 初期値を設定
-            cardClone.querySelector('.character-name').innerHTML = 'キャラクター名';
-            cardClone.querySelectorAll('.character-rank')[0].innerHTML = '?';
-            cardClone.querySelector('.ranking-text').innerHTML = '/??位';
-            cardClone.querySelectorAll('.character-rank')[1].innerHTML = '?';
-            const statValues = cardClone.querySelectorAll('.stats-item .value');
-            statValues.forEach(el => el.innerHTML = '?');
-            const skillItems = cardClone.querySelectorAll('.skill-list li');
-            skillItems[0].innerHTML = 'スキルや評価を入力してください';
-            skillItems[1].innerHTML = '';
-            skillItems[2].innerHTML = '';
-            skillItems[3].innerHTML = '';
-
-            // ランクの色を初期化
+            const initialData = {
+                name: 'キャラクター名',
+                rank1: '?',
+                ranking_text: '/??位',
+                rank2: '?',
+                stats: ['?', '?', '?', '?', '?'],
+                skills: ['スキルや評価を入力してください', '', '', ''],
+                image: ''
+            };
+            
+            cardClone.querySelector('.character-name').innerHTML = initialData.name;
+            cardClone.querySelectorAll('.character-rank')[0].innerHTML = initialData.rank1;
+            cardClone.querySelector('.ranking-text').innerHTML = initialData.ranking_text;
+            cardClone.querySelectorAll('.character-rank')[1].innerHTML = initialData.rank2;
+            cardClone.querySelector('.card-image').src = initialData.image;
+            cardClone.querySelectorAll('.stats-item .value').forEach((el, i) => el.innerHTML = initialData.stats[i]);
+            cardClone.querySelectorAll('.skill-list li').forEach((el, i) => el.innerHTML = initialData.skills[i]);
+            
             updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
             updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
 
-            // 画像をリセット
-            cardClone.querySelector('.card-image').src = '';
+            // 初期データをDBに保存
+            saveCardData(newCardId, 'name', initialData.name);
+            saveCardData(newCardId, 'rank1', initialData.rank1);
+            saveCardData(newCardId, 'ranking_text', initialData.ranking_text);
+            saveCardData(newCardId, 'rank2', initialData.rank2);
+            initialData.stats.forEach((val, i) => saveCardData(newCardId, `stat_${i}`, val));
+            initialData.skills.forEach((val, i) => saveCardData(newCardId, `skill_${i}`, val));
+            saveCardData(newCardId, 'image', initialData.image);
         }
 
         document.getElementById('character-card-list').appendChild(cardClone);
@@ -409,21 +427,21 @@
 
         setupCardEventListeners(cardClone, cardId);
 
-        const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
-        const loadPromises = [];
-
-        // テキスト情報をロード
-        editableElements.forEach((elem, index) => {
-            loadPromises.push(loadCardData(cardId, `text_${index}`, elem));
-        });
-        loadPromises.push(loadCardData(cardId, 'image', cardClone.querySelector('.card-image')));
-
-        await Promise.all(loadPromises);
+        // 各要素のデータを個別にロード
+        await Promise.all([
+            loadCardData(cardId, 'name', cardClone.querySelector('.character-name')),
+            loadCardData(cardId, 'rank1', cardClone.querySelectorAll('.character-rank')[0]),
+            loadCardData(cardId, 'ranking_text', cardClone.querySelector('.ranking-text')),
+            loadCardData(cardId, 'rank2', cardClone.querySelectorAll('.character-rank')[1]),
+            loadCardData(cardId, 'image', cardClone.querySelector('.card-image')),
+            ...Array.from(cardClone.querySelectorAll('.stats-item .value')).map((el, i) => loadCardData(cardId, `stat_${i}`, el)),
+            ...Array.from(cardClone.querySelectorAll('.skill-list li')).map((el, i) => loadCardData(cardId, `skill_${i}`, el))
+        ]);
 
         document.getElementById('character-card-list').appendChild(cardClone);
         
-        const rankElements = cardClone.querySelectorAll('.character-rank');
-        rankElements.forEach(updateRankColor);
+        updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
+        updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
     }
 
     function deleteCard(cardId, cardElement) {
