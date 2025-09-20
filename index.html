@@ -413,6 +413,12 @@
                 }
             }
         };
+        request.onerror = () => {
+            // DBのデータ取得に失敗した場合もデフォルトで3枚作成
+            for (let i = 0; i < 3; i++) {
+                createCard();
+            }
+        };
     }
 
     function loadAllCards() {
