@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -64,17 +64,14 @@
             font-weight: bold;
             color: #4a4a4a;
         }
-
-        /* ランクの色を定義するCSSクラス */
-        .rank-ss { background-color: #d63031 !important; } /* 赤 */
-        .rank-s { background-color: #e67e22 !important; }  /* 橙 */
-        .rank-a { background-color: #f1c40f !important; }  /* 黄 */
-        .rank-b { background-color: #27ae60 !important; }  /* 緑 */
-        .rank-c { background-color: #3498db !important; }  /* 青 */
-        .rank-d { background-color: #9b59b6 !important; }  /* 紫 */
-        .rank-e { background-color: #34495e !important; }  /* 濃い青 */
-        .rank-default { background-color: #a42c2c !important; } /* デフォルト色 */
-
+        .rank-ss { background-color: #d63031 !important; }
+        .rank-s { background-color: #e67e22 !important; }
+        .rank-a { background-color: #f1c40f !important; }
+        .rank-b { background-color: #27ae60 !important; }
+        .rank-c { background-color: #3498db !important; }
+        .rank-d { background-color: #9b59b6 !important; }
+        .rank-e { background-color: #34495e !important; }
+        .rank-default { background-color: #a42c2c !important; }
         .character-rank {
             color: white;
             font-size: 24px;
@@ -460,6 +457,11 @@
                     for (let i = 0; i < 3; i++) {
                         await createCard();
                     }
+                }
+            };
+            request.onerror = () => {
+                for (let i = 0; i < 3; i++) {
+                    createCard(true);
                 }
             };
         }
