@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -197,7 +197,7 @@
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
-            <div class="label">攻撃</div>
+            <div class="label">変更攻撃</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -255,16 +255,22 @@
         const transaction = db.transaction('cardData', 'readonly');
         const objectStore = transaction.objectStore('cardData');
         const request = objectStore.get(`${cardId}_${key}`);
-        request.onsuccess = (event) => {
-            const savedData = event.target.result;
-            if (savedData !== undefined) {
-                if (key === 'image') {
-                    element.src = savedData;
-                } else {
-                    element.innerHTML = savedData;
+        return new Promise((resolve, reject) => {
+            request.onsuccess = (event) => {
+                const savedData = event.target.result;
+                if (savedData !== undefined) {
+                    if (key === 'image') {
+                        element.src = savedData;
+                    } else {
+                        element.innerHTML = savedData;
+                    }
                 }
-            }
-        };
+                resolve();
+            };
+            request.onerror = (event) => {
+                reject(event.target.error);
+            };
+        });
     }
 
     function deleteCardData(cardId) {
@@ -322,15 +328,10 @@
         editableElements.forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
                 saveCardData(cardId, `text_${index}`, e.target.innerHTML);
-            });
-            // ランク要素にのみ特別なイベントリスナーを追加
-            if (elem.classList.contains('character-rank')) {
-                elem.addEventListener('input', (e) => {
+                if (e.target.classList.contains('character-rank')) {
                     updateRankColor(e.target);
-                    // ランクの色情報を保存する
-                    saveCardData(cardId, `rank_color_${index}`, e.target.innerText.toUpperCase().trim().replace(/位$/, ''));
-                });
-            }
+                }
+            });
         });
 
         const fileInput = cardElement.querySelector('.image-file-input');
@@ -358,24 +359,9 @@
                 deleteCard(cardId, cardElement);
             }
         });
-        
-        // ページロード時にランクの色を復元
-        const rankElements = cardElement.querySelectorAll('.character-rank');
-        rankElements.forEach((elem, index) => {
-            const transaction = db.transaction('cardData', 'readonly');
-            const objectStore = transaction.objectStore('cardData');
-            const request = objectStore.get(`${cardId}_rank_color_${index}`);
-            request.onsuccess = (event) => {
-                const savedRank = event.target.result;
-                if (savedRank !== undefined) {
-                    elem.innerText = savedRank; // 保存されたランク値を設定
-                }
-                updateRankColor(elem); // 色を適用
-            };
-        });
     }
 
-    function createCard(isNew = true) {
+    async function createCard(isNew = true) {
         const template = document.getElementById('card-template');
         const cardClone = template.cloneNode(true);
         cardClone.classList.remove('card-template');
@@ -386,12 +372,18 @@
         setupCardEventListeners(cardClone, newCardId);
         document.getElementById('character-card-list').appendChild(cardClone);
 
+        // 新規作成時のみ、初期値を設定
         if (isNew) {
+            const rankElements = cardClone.querySelectorAll('.character-rank');
+            rankElements.forEach(elem => {
+                elem.innerText = '?';
+                updateRankColor(elem);
+            });
             saveCardOrder();
         }
     }
 
-    function loadCard(cardId) {
+    async function loadCard(cardId) {
         const template = document.getElementById('card-template');
         const cardClone = template.cloneNode(true);
         cardClone.classList.remove('card-template');
@@ -400,12 +392,22 @@
         setupCardEventListeners(cardClone, cardId);
 
         const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
+        
+        // すべてのテキスト情報を非同期でロード
+        const loadPromises = [];
         editableElements.forEach((elem, index) => {
-            loadCardData(cardId, `text_${index}`, elem);
+            loadPromises.push(loadCardData(cardId, `text_${index}`, elem));
         });
-        loadCardData(cardId, 'image', cardClone.querySelector('.card-image'));
+        loadPromises.push(loadCardData(cardId, 'image', cardClone.querySelector('.card-image')));
 
+        await Promise.all(loadPromises);
+
+        // すべてのデータがロードされた後にDOMに追加
         document.getElementById('character-card-list').appendChild(cardClone);
+        
+        // ランクの色を再適用
+        const rankElements = cardClone.querySelectorAll('.character-rank');
+        rankElements.forEach(updateRankColor);
     }
 
     function deleteCard(cardId, cardElement) {
@@ -421,21 +423,21 @@
         objectStore.put(cardIds, 'order');
     }
 
-    function loadAllCards() {
+    async function loadAllCards() {
         const transaction = db.transaction('cardOrder', 'readonly');
         const objectStore = transaction.objectStore('cardOrder');
         const request = objectStore.get('order');
 
-        request.onsuccess = (event) => {
+        request.onsuccess = async (event) => {
             const cardIds = event.target.result;
             if (cardIds && cardIds.length > 0) {
                 document.getElementById('character-card-list').innerHTML = '';
-                cardIds.forEach(cardId => {
-                    loadCard(cardId);
-                });
+                for (const cardId of cardIds) {
+                    await loadCard(cardId);
+                }
             } else {
                 for (let i = 0; i < 3; i++) {
-                    createCard();
+                    await createCard();
                 }
             }
         };
