@@ -3,399 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>キャラクターカードジェネレーター</title>
+    <title>Character Cards</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             padding: 20px;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
+        .card-container {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
             border-radius: 10px;
+            overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        h1 {
-            text-align: center;
-            color: #444;
-        }
-
-        .card-form, .edit-form {
-            display: grid;
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fafafa;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        input, textarea, select {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        
-        button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-        }
-
-        .add-btn {
-            background-color: #4CAF50;
-            color: white;
-            justify-self: end;
-        }
-
-        .add-btn:hover {
-            background-color: #45a049;
-        }
-
-        .card-list {
-            display: grid;
-            gap: 20px;
-        }
-
-        .character-card {
-            background-color: #f0f0f0;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-        
         .card-header {
+            background-color: #000;
+            color: #fff;
+            padding: 5px 15px;
+            font-size: 0.9em;
             display: flex;
+            justify-content: flex-end;
             align-items: center;
-            padding: 15px;
-            background-color: #e9e9e9;
         }
 
-        .card-image {
+        .card-header span {
+            margin-left: 10px;
+            background-color: #555;
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+
+        .card-main {
+            background-color: #fff;
+            display: flex;
+            padding: 15px;
+        }
+
+        .character-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding-right: 15px;
+            border-right: 1px solid #ddd;
+        }
+
+        .character-image {
             width: 80px;
             height: 80px;
+            background-color: #ccc;
             border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #fff;
+            margin-bottom: 10px;
+            position: relative;
         }
-        
-        .card-info {
-            flex-grow: 1;
+
+        .character-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .character-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 25px;
+            height: 25px;
+            background-color: #d11a1a;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8em;
+            color: #fff;
+        }
+
+        .character-info .rank {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #d11a1a;
+            line-height: 1;
+        }
+
+        .character-info .rank-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .character-info .rank-sub {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .character-info .rank-s {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: #d11a1a;
+            color: #fff;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.5em;
+            margin-top: 10px;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-left: 15px;
         }
-        
-        .card-info h2 {
-            margin: 0 0 5px;
-            font-size: 24px;
-            color: #222;
-        }
 
-        .card-info p {
-            margin: 0;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .card-stats {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+        .stats-table th, .stats-table td {
             text-align: center;
-            font-weight: bold;
-            border-bottom: 2px solid #ddd;
-        }
-
-        .card-stats .stat-item {
-            padding: 10px 0;
-            border-right: 1px solid #ccc;
-        }
-
-        .card-stats .stat-item:last-child {
-            border-right: none;
-        }
-
-        .stat-value-container {
+            font-size: 0.9em;
             padding: 5px 0;
         }
 
-        .stat-value {
-            font-size: 24px;
+        .stats-table th {
+            font-weight: bold;
+            color: #555;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .stats-table td {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .stats-table .rank-value {
+            font-size: 1.2em;
             font-weight: bold;
         }
 
-        .card-description {
+        .card-footer {
+            background-color: #fff;
             padding: 15px;
+            font-size: 0.9em;
+            border-top: 1px solid #ddd;
         }
 
-        .card-description ul {
-            list-style: none;
+        .card-footer ul {
+            list-style-type: none;
             padding: 0;
             margin: 0;
         }
 
-        .card-description li {
+        .card-footer li {
             margin-bottom: 10px;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
-        .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
+        .card-footer li::before {
+            content: '・';
+            color: #d11a1a;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
         }
 
-        .delete-btn:hover {
-            background-color: #c0392b;
+        .card-footer .source {
+            text-align: right;
+            font-size: 0.8em;
+            color: #aaa;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>キャラクターカードジェネレーター</h1>
-        <form id="card-form" class="card-form">
-            <h2>新しいカードを作成</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="char-name">キャラクター名</label>
-                    <input type="text" id="char-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="char-rank">順位/ランク</label>
-                    <input type="text" id="char-rank" required>
-                </div>
-                <div class="form-group">
-                    <label for="char-image">画像URL</label>
-                    <input type="text" id="char-image" placeholder="URLを貼り付け">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="stat-durability">耐久</label>
-                    <input type="text" id="stat-durability" required>
-                </div>
-                <div class="form-group">
-                    <label for="stat-attack">攻撃</label>
-                    <input type="text" id="stat-attack" required>
-                </div>
-                <div class="form-group">
-                    <label for="stat-stability">安定性</label>
-                    <input type="text" id="stat-stability" required>
-                </div>
-                <div class="form-group">
-                    <label for="stat-mobility">機動力</label>
-                    <input type="text" id="stat-mobility" required>
-                </div>
-                <div class="form-group">
-                    <label for="stat-support">援護</label>
-                    <input type="text" id="stat-support" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="char-desc">説明文 (箇条書き)</label>
-                <textarea id="char-desc" rows="4" placeholder="例:&#10;・説明文1&#10;・説明文2" required></textarea>
-            </div>
-            <button type="submit" class="add-btn">カードを追加</button>
-        </form>
 
-        <hr>
-
-        <div id="card-list" class="card-list">
+    <div class="card-container">
+        <div class="card-header">
+            <span>スライド 3/23</span>
+        </div>
+        <div class="card-main">
+            <div class="character-info">
+                <div class="character-image" style="background-image: url('https://via.placeholder.com/80?text=ウーブ');">
+                    </div>
+                <div class="rank">4<span style="font-size: 0.5em;">位</span></div>
+                <div class="rank-text">ウーブ</div>
+                <div class="rank-sub">/22位</div>
+                <div class="rank-s">S</div>
             </div>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>耐久</th>
+                        <th>攻撃</th>
+                        <th>安定性</th>
+                        <th>機動力</th>
+                        <th>援護</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rank-value">B</td>
+                        <td class="rank-value">SS</td>
+                        <td class="rank-value">A</td>
+                        <td class="rank-value">S</td>
+                        <td class="rank-value">B</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <ul>
+                <li>パッシブ「サイクロン」により技を使用するごとにラッシュの手数を増やすことが出来る</li>
+                <li>技1の範囲が広く追い込み性能が非常に高い</li>
+                <li>序盤の耐久だけが不安要素なので相手との距離を意識して戦う必要がある</li>
+                <li>技2は自身に依存するデバフを無効化する効果を持っており安定した機動力を保つことが出来る。</li>
+            </ul>
+            <div class="source">Honobonobonorist</div>
+        </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const cardForm = document.getElementById('card-form');
-            const cardList = document.getElementById('card-list');
+    <div class="card-container">
+        <div class="card-header">
+            <span>スライド 3/23</span>
+        </div>
+        <div class="card-main">
+            <div class="character-info">
+                <div class="character-image" style="background-image: url('https://via.placeholder.com/80?text=悟飯');">
+                    </div>
+                <div class="rank">5<span style="font-size: 0.5em;">位</span></div>
+                <div class="rank-text">悟飯</div>
+                <div class="rank-sub">/22位</div>
+                <div class="rank-s">S</div>
+            </div>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>耐久</th>
+                        <th>攻撃</th>
+                        <th>安定性</th>
+                        <th>機動力</th>
+                        <th>援護</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rank-value">A</td>
+                        <td class="rank-value">B</td>
+                        <td class="rank-value">A</td>
+                        <td class="rank-value">S</td>
+                        <td class="rank-value">SS</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <ul>
+                <li>パッシブ「友情ブースト」で近くにいる味方の攻撃力を上げる唯一無二の性能を持つ</li>
+                <li>パッシブ発動中は自身も耐久が上昇する強力な効果を持つので集団行動を意識した方がよい</li>
+                <li>基本的に味方依存なので単独での行動は難しいが、高い機動力を活かして敵の破壊神攻撃を仕掛けやすい。</li>
+                <li>吹き飛ばし系の技が2つあるのも非常に強力である。</li>
+            </ul>
+            <div class="source">Honobonobonorist</div>
+        </div>
+    </div>
 
-            // カードデータの配列
-            let cards = [];
+    <div class="card-container">
+        <div class="card-header">
+            <span>スライド 3/23</span>
+        </div>
+        <div class="card-main">
+            <div class="character-info">
+                <div class="character-image" style="background-image: url('https://via.placeholder.com/80?text=17号');">
+                    </div>
+                <div class="rank">6<span style="font-size: 0.5em;">位</span></div>
+                <div class="rank-text">17号</div>
+                <div class="rank-sub">/22位</div>
+                <div class="rank-s">S</div>
+            </div>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>耐久</th>
+                        <th>攻撃</th>
+                        <th>安定性</th>
+                        <th>機動力</th>
+                        <th>援護</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rank-value">A</td>
+                        <td class="rank-value">C</td>
+                        <td class="rank-value">A</td>
+                        <td class="rank-value">S</td>
+                        <td class="rank-value">SS</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <ul>
+                <li>技3で見方を守りつつ自身と味方の体力と移動速度上昇を付与することが出来る</li>
+                <li>技3で逃げ性能が格段に上がっているため一緒に行動している味方が攻めやすくなる</li>
+                <li>自身の攻撃力はそこまで高くないので挑戦するときは二人で行動することを意識する必要がある</li>
+                <li>自身の機動力が高いので敵がいない間に破壊神を攻撃しやすい</li>
+            </ul>
+            <div class="source">Honobonobonorist</div>
+        </div>
+    </div>
 
-            // ページロード時にローカルストレージからデータを読み込む
-            const savedCards = localStorage.getItem('characterCards');
-            if (savedCards) {
-                cards = JSON.parse(savedCards);
-                renderCards();
-            }
-
-            // カードの追加
-            cardForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-
-                const newCard = {
-                    name: document.getElementById('char-name').value,
-                    rank: document.getElementById('char-rank').value,
-                    image: document.getElementById('char-image').value,
-                    stats: {
-                        durability: document.getElementById('stat-durability').value.toUpperCase(),
-                        attack: document.getElementById('stat-attack').value.toUpperCase(),
-                        stability: document.getElementById('stat-stability').value.toUpperCase(),
-                        mobility: document.getElementById('stat-mobility').value.toUpperCase(),
-                        support: document.getElementById('stat-support').value.toUpperCase()
-                    },
-                    description: document.getElementById('char-desc').value.split('\n').filter(line => line.trim() !== '')
-                };
-
-                cards.push(newCard);
-                saveAndRenderCards();
-                cardForm.reset();
-            });
-
-            // カードの削除
-            cardList.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-btn')) {
-                    const cardIndex = e.target.closest('.character-card').dataset.index;
-                    cards.splice(cardIndex, 1);
-                    saveAndRenderCards();
-                }
-            });
-
-            // カードの編集 (シンプル版: クリックでフォームに値をセット)
-            cardList.addEventListener('click', (e) => {
-                const cardElement = e.target.closest('.character-card');
-                if (cardElement) {
-                    const index = cardElement.dataset.index;
-                    const card = cards[index];
-
-                    document.getElementById('char-name').value = card.name;
-                    document.getElementById('char-rank').value = card.rank;
-                    document.getElementById('char-image').value = card.image;
-                    document.getElementById('stat-durability').value = card.stats.durability;
-                    document.getElementById('stat-attack').value = card.stats.attack;
-                    document.getElementById('stat-stability').value = card.stats.stability;
-                    document.getElementById('stat-mobility').value = card.stats.mobility;
-                    document.getElementById('stat-support').value = card.stats.support;
-                    document.getElementById('char-desc').value = card.description.join('\n');
-                    
-                    // 編集中のカードを削除してから、新しいカードとして追加する
-                    cardForm.onsubmit = (e) => {
-                        e.preventDefault();
-                        cards.splice(index, 1);
-                        const updatedCard = {
-                            name: document.getElementById('char-name').value,
-                            rank: document.getElementById('char-rank').value,
-                            image: document.getElementById('char-image').value,
-                            stats: {
-                                durability: document.getElementById('stat-durability').value.toUpperCase(),
-                                attack: document.getElementById('stat-attack').value.toUpperCase(),
-                                stability: document.getElementById('stat-stability').value.toUpperCase(),
-                                mobility: document.getElementById('stat-mobility').value.toUpperCase(),
-                                support: document.getElementById('stat-support').value.toUpperCase()
-                            },
-                            description: document.getElementById('char-desc').value.split('\n').filter(line => line.trim() !== '')
-                        };
-                        cards.splice(index, 0, updatedCard);
-                        saveAndRenderCards();
-                        cardForm.reset();
-                        // フォームの送信ハンドラを元の状態に戻す
-                        cardForm.onsubmit = null;
-                    };
-                }
-            });
-
-            // カードを描画する関数
-            function renderCards() {
-                cardList.innerHTML = '';
-                cards.forEach((card, index) => {
-                    const cardElement = document.createElement('div');
-                    cardElement.classList.add('character-card');
-                    cardElement.dataset.index = index;
-                    cardElement.innerHTML = `
-                        <div class="card-header">
-                            <img src="${card.image || 'https://via.placeholder.com/80'}" alt="${card.name}" class="card-image">
-                            <div class="card-info">
-                                <h2>${card.name}</h2>
-                                <p>${card.rank}</p>
-                            </div>
-                        </div>
-                        <div class="card-stats">
-                            <div class="stat-item">
-                                耐久
-                                <div class="stat-value-container">
-                                    <span class="stat-value">${card.stats.durability}</span>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                攻撃
-                                <div class="stat-value-container">
-                                    <span class="stat-value">${card.stats.attack}</span>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                安定性
-                                <div class="stat-value-container">
-                                    <span class="stat-value">${card.stats.stability}</span>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                機動力
-                                <div class="stat-value-container">
-                                    <span class="stat-value">${card.stats.mobility}</span>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                援護
-                                <div class="stat-value-container">
-                                    <span class="stat-value">${card.stats.support}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-description">
-                            <ul>
-                                ${card.description.map(desc => `<li>・${desc}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <button class="delete-btn">削除</button>
-                    `;
-                    cardList.appendChild(cardElement);
-                });
-            }
-
-            // データをローカルストレージに保存して、カードを再描画
-            function saveAndRenderCards() {
-                localStorage.setItem('characterCards', JSON.stringify(cards));
-                renderCards();
-            }
-        });
-    </script>
 </body>
 </html>
