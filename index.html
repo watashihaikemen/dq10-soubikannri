@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -45,7 +45,7 @@
             border-radius: 50%;
         }
         .character-image::after {
-            display: none; /* ここを変更しました */
+            display: none;
             content: attr(data-rank);
             position: absolute;
             bottom: -5px;
@@ -144,17 +144,28 @@
             position: absolute;
             top: 0;
             right: 0;
-            width: 50px; /* タップしやすいように大きさを確保 */
+            width: 50px;
             height: 50px;
-            background-color: transparent; /* 背景を透明に */
-            color: transparent; /* 文字色を透明に */
+            background-color: transparent;
+            color: transparent;
             border: none;
             cursor: pointer;
-            z-index: 10; /* 他の要素の上に配置 */
+            z-index: 10;
         }
         .card-template {
             display: none;
         }
+
+        /* ランクごとのスタイル */
+        .rank-ss { background-color: #e74c3c; color: white !important; } /* 赤 */
+        .rank-s { background-color: #e67e22; color: white !important; }  /* 橙 */
+        .rank-a { background-color: #f1c40f; color: black !important; }  /* 黄 */
+        .rank-b { background-color: #2ecc71; color: black !important; }  /* 緑 */
+        .rank-c { background-color: #3498db; color: white !important; }  /* 青 */
+        .rank-d { background-color: #9b59b6; color: white !important; }  /* 紫 */
+        .rank-e { background-color: #bdc3c7; color: black !important; }  /* 灰 */
+        .rank-default { background-color: #3b5998; color: white !important; } /* デフォルトの色 */
+
     </style>
 </head>
 <body>
@@ -214,7 +225,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 3; 
+    const dbVersion = 3;
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -228,7 +239,9 @@
         if (!db.objectStoreNames.contains('cardData')) {
             db.createObjectStore('cardData');
         }
-        const cardOrderStore = db.createObjectStore('cardOrder');
+        if (!db.objectStoreNames.contains('cardOrder')) {
+             db.createObjectStore('cardOrder');
+        }
     };
 
     request.onsuccess = (event) => {
@@ -274,11 +287,48 @@
         };
     }
 
+    // ランクの色を更新する関数
+    function updateRankColor(element) {
+        const rank = element.textContent.trim().toUpperCase();
+        element.classList.remove('rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e', 'rank-default');
+        
+        switch(rank) {
+            case 'SS':
+                element.classList.add('rank-ss');
+                break;
+            case 'S':
+                element.classList.add('rank-s');
+                break;
+            case 'A':
+                element.classList.add('rank-a');
+                break;
+            case 'B':
+                element.classList.add('rank-b');
+                break;
+            case 'C':
+                element.classList.add('rank-c');
+                break;
+            case 'D':
+                element.classList.add('rank-d');
+                break;
+            case 'E':
+                element.classList.add('rank-e');
+                break;
+            default:
+                element.classList.add('rank-default');
+                break;
+        }
+    }
+
     function setupCardEventListeners(cardElement, cardId) {
         const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
         editableElements.forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
                 saveCardData(cardId, `text_${index}`, e.target.innerHTML);
+                // ランクの要素にinputイベントを追加
+                if (e.target.classList.contains('character-rank')) {
+                    updateRankColor(e.target);
+                }
             });
         });
 
@@ -336,6 +386,20 @@
         const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
         editableElements.forEach((elem, index) => {
             loadCardData(cardId, `text_${index}`, elem);
+            if (elem.classList.contains('character-rank')) {
+                elem.addEventListener('input', () => updateRankColor(elem));
+                // 読み込み時にも色を適用
+                const transaction = db.transaction('cardData', 'readonly');
+                const objectStore = transaction.objectStore('cardData');
+                const request = objectStore.get(`${cardId}_text_${index}`);
+                request.onsuccess = (event) => {
+                    const savedData = event.target.result;
+                    if (savedData !== undefined) {
+                        elem.innerHTML = savedData;
+                        updateRankColor(elem);
+                    }
+                };
+            }
         });
         loadCardData(cardId, 'image', cardClone.querySelector('.card-image'));
         
