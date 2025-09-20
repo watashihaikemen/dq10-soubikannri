@@ -314,7 +314,15 @@
 
             const savedCards = JSON.parse(localStorage.getItem('characterCards')) || [];
             if (savedCards.length > 0) {
-                savedCards.forEach(data => createCardElement(data));
+                // localStorageに保存されている古いデータを読み込む際に、新しい項目（power）が存在しない場合に古い項目（attack）を参照する
+                savedCards.forEach(data => {
+                    if (!data.stats.power && data.stats.attack) {
+                        data.stats.power = data.stats.attack;
+                        // 古い項目は削除
+                        delete data.stats.attack;
+                    }
+                    createCardElement(data);
+                });
                 sortCards();
             }
 
@@ -337,7 +345,8 @@
                 const charPosition = parseInt(form['char-position'].value);
                 
                 if (!imageDataURL || isNaN(charPosition)) {
-                    alert('画像と順位の両方を入力してください。');
+                    // alert()ではなく、より柔軟なメッセージ表示にすることを推奨
+                    console.error('画像と順位の両方を入力してください。');
                     return;
                 }
 
@@ -407,6 +416,10 @@
                 const card = document.createElement('div');
                 card.className = 'character-card';
                 card.dataset.position = data.position;
+                
+                // データが古い形式か新しい形式かを確認
+                const powerRank = data.stats.power || data.stats.attack;
+
                 card.innerHTML = `
                     <div class="card-header">
                         <img src="${data.image}" alt="${data.name}" class="char-image">
@@ -431,7 +444,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><span class="rank-${data.stats.power}">${data.stats.power}</span></td>
+                                    <td><span class="rank-${powerRank}">${powerRank}</span></td>
                                     <td><span class="rank-${data.stats.endurance}">${data.stats.endurance}</span></td>
                                     <td><span class="rank-${data.stats.stability}">${data.stats.stability}</span></td>
                                     <td><span class="rank-${data.stats.mobility}">${data.stats.mobility}</span></td>
@@ -477,8 +490,11 @@
                 rankSpan.className = `card-rank rank-${data.rank}`;
                 rankSpan.textContent = `総合評価:${data.rank}`;
                 
-                card.querySelector('td:nth-child(1) span').className = `rank-${data.stats.power}`;
-                card.querySelector('td:nth-child(1) span').textContent = data.stats.power;
+                // データが古い形式か新しい形式かを確認
+                const powerRank = data.stats.power || data.stats.attack;
+
+                card.querySelector('td:nth-child(1) span').className = `rank-${powerRank}`;
+                card.querySelector('td:nth-child(1) span').textContent = powerRank;
                 
                 card.querySelector('td:nth-child(2) span').className = `rank-${data.stats.endurance}`;
                 card.querySelector('td:nth-child(2) span').textContent = data.stats.endurance;
@@ -501,7 +517,10 @@
                 document.getElementById('char-name').value = data.name;
                 document.getElementById('char-position').value = data.position;
                 document.getElementById('char-rank').value = data.rank;
-                document.getElementById('status-power').value = data.stats.power;
+                
+                // データが古い形式か新しい形式かを確認
+                document.getElementById('status-power').value = data.stats.power || data.stats.attack;
+                
                 document.getElementById('status-endurance').value = data.stats.endurance;
                 document.getElementById('status-stability').value = data.stats.stability;
                 document.getElementById('status-mobility').value = data.stats.mobility;
