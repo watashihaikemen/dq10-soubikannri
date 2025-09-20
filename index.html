@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>キャラクター評価</title>
+    <title>キャラクター評価（編集可能）</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -65,7 +65,7 @@
             padding: 8px 12px;
             border-radius: 8px;
             display: inline-block;
-            margin-left: 20px;
+            margin-left: 10px;
         }
         .ranking-text {
             font-size: 18px;
@@ -124,27 +124,40 @@
             border-radius: 5px;
             font-size: 14px;
         }
+
+        /* 編集用のスタイル */
+        .editable {
+            border: 1px dashed #ccc;
+            padding: 2px;
+        }
+        .image-input {
+            margin-top: 10px;
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
 
-    <div class="slide-info">スライド 3/23</div>
+    <div class="slide-info" contenteditable="true">スライド 3/23</div>
 
     <div class="character-card">
         <div class="card-header">
             <div class="character-image" data-rank="2">
-                <img src="ウーブの画像URLをここに貼り付け" alt="ウーブ">
+                <img src="https://i.imgur.com/example_oob.png" alt="ウーブ" id="oob-image">
             </div>
             <div>
-                <div class="character-name">ウーブ</div>
+                <div class="character-name" contenteditable="true">ウーブ</div>
                 <div style="display: flex; align-items: baseline;">
-                    <span class="character-rank">4位</span>
-                    <span class="ranking-text">/22位</span>
-                    <span class="character-rank" style="background-color: #3b5998; margin-left: 10px;">S</span>
+                    <span class="character-rank" contenteditable="true">4位</span>
+                    <span class="ranking-text" contenteditable="true">/22位</span>
+                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">S</span>
                 </div>
             </div>
         </div>
-        <div class="stats-table">
+        <input type="text" class="image-input" placeholder="画像のURLを貼り付け" oninput="document.getElementById('oob-image').src = this.value">
+        <div class="stats-table" contenteditable="true">
             <div class="stats-item">
                 <div class="label">耐久</div>
                 <div class="value">B</div>
@@ -166,7 +179,7 @@
                 <div class="value">B</div>
             </div>
         </div>
-        <ul class="skill-list">
+        <ul class="skill-list" contenteditable="true">
             <li>パッシブ「サイクロン」により技を使用することにラッシュの手数を増やすことが出来る</li>
             <li>技1の範囲が広く追い込み性能が非常に高い</li>
             <li>序盤の耐久だけが不安要素なので相手との距離を意識して戦う必要がある</li>
@@ -177,18 +190,19 @@
     <div class="character-card">
         <div class="card-header">
             <div class="character-image" data-rank="1">
-                <img src="悟飯の画像URLをここに貼り付け" alt="悟飯">
+                <img src="https://i.imgur.com/example_gohan.png" alt="悟飯" id="gohan-image">
             </div>
             <div>
-                <div class="character-name">悟飯</div>
+                <div class="character-name" contenteditable="true">悟飯</div>
                 <div style="display: flex; align-items: baseline;">
-                    <span class="character-rank">5位</span>
-                    <span class="ranking-text">/22位</span>
-                    <span class="character-rank" style="background-color: #3b5998; margin-left: 10px;">S</span>
+                    <span class="character-rank" contenteditable="true">5位</span>
+                    <span class="ranking-text" contenteditable="true">/22位</span>
+                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">S</span>
                 </div>
             </div>
         </div>
-        <div class="stats-table">
+        <input type="text" class="image-input" placeholder="画像のURLを貼り付け" oninput="document.getElementById('gohan-image').src = this.value">
+        <div class="stats-table" contenteditable="true">
             <div class="stats-item">
                 <div class="label">耐久</div>
                 <div class="value">A</div>
@@ -210,7 +224,7 @@
                 <div class="value">SS</div>
             </div>
         </div>
-        <ul class="skill-list">
+        <ul class="skill-list" contenteditable="true">
             <li>パッシブ「友情ブースト」で近くにいる味方の攻撃力を上げる唯一無二の性能を持つ</li>
             <li>パッシブ発動中は自身も耐久力が上昇する強力な効果を持つので集団行動を意識した方がよい</li>
             <li>基本的に味方依存なので単独での行動は難しいが、高い機動力を活かして敵の破壊神攻撃を仕掛けやすい。</li>
@@ -221,18 +235,19 @@
     <div class="character-card">
         <div class="card-header">
             <div class="character-image" data-rank="2">
-                <img src="17号の画像URLをここに貼り付け" alt="17号">
+                <img src="https://i.imgur.com/example_17.png" alt="17号" id="17-image">
             </div>
             <div>
-                <div class="character-name">17号</div>
+                <div class="character-name" contenteditable="true">17号</div>
                 <div style="display: flex; align-items: baseline;">
-                    <span class="character-rank">6位</span>
-                    <span class="ranking-text">/22位</span>
-                    <span class="character-rank" style="background-color: #3b5998; margin-left: 10px;">S</span>
+                    <span class="character-rank" contenteditable="true">6位</span>
+                    <span class="ranking-text" contenteditable="true">/22位</span>
+                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">S</span>
                 </div>
             </div>
         </div>
-        <div class="stats-table">
+        <input type="text" class="image-input" placeholder="画像のURLを貼り付け" oninput="document.getElementById('17-image').src = this.value">
+        <div class="stats-table" contenteditable="true">
             <div class="stats-item">
                 <div class="label">耐久</div>
                 <div class="value">A</div>
@@ -254,7 +269,7 @@
                 <div class="value">SS</div>
             </div>
         </div>
-        <ul class="skill-list">
+        <ul class="skill-list" contenteditable="true">
             <li>技3で見方を守りつつ自身と味方の体力と移動速度上昇を付与することが出来る</li>
             <li>技3で逃げ性能が格段に上がっているため一緒に行動している味方が攻めやすくなる</li>
             <li>自身の攻撃力はそこまで高くないので抗戦するときは二人で行動することを意識する必要がある</li>
