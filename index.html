@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -45,7 +45,7 @@
             border-radius: 50%;
         }
         .character-image::after {
-            display: none;
+            display: none; /* ここを変更しました */
             content: attr(data-rank);
             position: absolute;
             bottom: -5px;
@@ -139,17 +139,18 @@
         .add-button:hover {
             background-color: #45a049;
         }
+        /* 削除ボタンを透明にして見えなくする */
         .delete-button {
             position: absolute;
             top: 0;
             right: 0;
-            width: 50px;
+            width: 50px; /* タップしやすいように大きさを確保 */
             height: 50px;
-            background-color: transparent;
-            color: transparent;
+            background-color: transparent; /* 背景を透明に */
+            color: transparent; /* 文字色を透明に */
             border: none;
             cursor: pointer;
-            z-index: 10;
+            z-index: 10; /* 他の要素の上に配置 */
         }
         .card-template {
             display: none;
@@ -160,7 +161,7 @@
 
 <div class="container">
     <div id="character-card-list">
-    </div>
+        </div>
     <button class="add-button" id="add-card-button">カードを追加</button>
 </div>
 
@@ -183,7 +184,7 @@
     <input type="file" style="display: none;" accept="image/*" class="image-file-input">
     <div class="stats-table">
         <div class="stats-item">
-            <div class="label">耐久</div>
+            <div class="label">変更耐久</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -212,21 +213,29 @@
 </div>
 
 <script>
-    const dbName = 'characterDB_new';
-    const dbVersion = 4;
+    const dbName = 'characterDB';
+    const dbVersion = 4; // バージョンを上げました
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
 
-    request.onupgradeneeded = (event) => {
-        db = event.target.result;
-        if (!db.objectStoreNames.contains('cardData')) {
-            db.createObjectStore('cardData', { keyPath: 'id' });
-        }
-    };
-
     request.onerror = (event) => {
         console.error('IndexedDB error:', event.target.errorCode);
+    };
+
+    request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        
+        // cardData object storeが存在しない場合にのみ作成
+        if (!db.objectStoreNames.contains('cardData')) {
+            // keyPathにidを指定して、カードごとのデータを一括で保存できるようにする
+            db.createObjectStore('cardData', { keyPath: 'id' });
+        }
+
+        // cardOrder object storeが存在しない場合にのみ作成
+        if (!db.objectStoreNames.contains('cardOrder')) {
+            db.createObjectStore('cardOrder', { keyPath: 'orderKey' });
+        }
     };
 
     request.onsuccess = (event) => {
@@ -234,128 +243,84 @@
         loadAllCards();
     };
 
-    function saveCard(cardId) {
-        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`);
-        if (!cardElement) return;
-
-        const cardData = {
-            id: cardId,
-            name: cardElement.querySelector('.character-name').innerHTML,
-            rank: cardElement.querySelector('.character-rank:nth-of-type(1)').innerHTML,
-            rankingText: cardElement.querySelector('.ranking-text').innerHTML,
-            rankSecondary: cardElement.querySelector('.character-rank:nth-of-type(2)').innerHTML,
-            durability: cardElement.querySelector('.stats-item:nth-of-type(1) .value').innerHTML,
-            attack: cardElement.querySelector('.stats-item:nth-of-type(2) .value').innerHTML,
-            stability: cardElement.querySelector('.stats-item:nth-of-type(3) .value').innerHTML,
-            mobility: cardElement.querySelector('.stats-item:nth-of-type(4) .value').innerHTML,
-            support: cardElement.querySelector('.stats-item:nth-of-type(5) .value').innerHTML,
-            skills: Array.from(cardElement.querySelectorAll('.skill-list li')).map(li => li.innerHTML),
-            image: cardElement.querySelector('.card-image').src
-        };
-
+    function saveCardData(cardId, data) {
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
-        objectStore.put(cardData);
-    }
-
-    function loadCard(cardData) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.cloneNode(true);
-        cardClone.classList.remove('card-template');
-        cardClone.setAttribute('data-card-id', cardData.id);
-
-        cardClone.querySelector('.character-name').innerHTML = cardData.name;
-        cardClone.querySelector('.character-rank:nth-of-type(1)').innerHTML = cardData.rank;
-        cardClone.querySelector('.ranking-text').innerHTML = cardData.rankingText;
-        cardClone.querySelector('.character-rank:nth-of-type(2)').innerHTML = cardData.rankSecondary;
-        cardClone.querySelector('.stats-item:nth-of-type(1) .value').innerHTML = cardData.durability;
-        cardClone.querySelector('.stats-item:nth-of-type(2) .value').innerHTML = cardData.attack;
-        cardClone.querySelector('.stats-item:nth-of-type(3) .value').innerHTML = cardData.stability;
-        cardClone.querySelector('.stats-item:nth-of-type(4) .value').innerHTML = cardData.mobility;
-        cardClone.querySelector('.stats-item:nth-of-type(5) .value').innerHTML = cardData.support;
-        cardClone.querySelector('.card-image').src = cardData.image || '';
-
-        const skillList = cardClone.querySelector('.skill-list');
-        skillList.innerHTML = '';
-        cardData.skills.forEach(skill => {
-            const li = document.createElement('li');
-            li.setAttribute('contenteditable', 'true');
-            li.innerHTML = skill;
-            skillList.appendChild(li);
-        });
-
-        setupCardEventListeners(cardClone, cardData.id);
-        document.getElementById('character-card-list').appendChild(cardClone);
-    }
-
-    function createCard() {
-        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const cardData = {
-            id: newCardId,
-            name: '新しいキャラクター',
-            rank: '?位',
-            rankingText: '/??位',
-            rankSecondary: '?',
-            durability: '?',
-            attack: '?',
-            stability: '?',
-            mobility: '?',
-            support: '?',
-            skills: ['スキルや評価を入力してください', '', '', ''],
-            image: ''
-        };
         
-        loadCard(cardData);
-        saveCard(newCardId);
+        // IDを指定してデータを保存
+        objectStore.put({ id: cardId, data: data });
     }
 
-    function deleteCard(cardId, cardElement) {
-        if (confirm('このカードを本当に削除しますか？')) {
-            cardElement.remove();
-            const transaction = db.transaction('cardData', 'readwrite');
+    function loadCardData(cardId, element) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction('cardData', 'readonly');
             const objectStore = transaction.objectStore('cardData');
-            objectStore.delete(cardId);
-        }
-    }
-
-    function loadAllCards() {
-        const transaction = db.transaction('cardData', 'readonly');
-        const objectStore = transaction.objectStore('cardData');
-        const request = objectStore.getAll();
-
-        request.onsuccess = (event) => {
-            const cardDatas = event.target.result;
-            if (cardDatas && cardDatas.length > 0) {
-                document.getElementById('character-card-list').innerHTML = '';
-                cardDatas.forEach(cardData => {
-                    loadCard(cardData);
-                });
-            } else {
-                for (let i = 0; i < 3; i++) {
-                    createCard();
+            const request = objectStore.get(cardId);
+            
+            request.onsuccess = (event) => {
+                const savedData = event.target.result;
+                if (savedData) {
+                    // 保存されたデータを要素に反映
+                    element.querySelector('.card-image').src = savedData.data.image;
+                    element.querySelector('.character-name').innerHTML = savedData.data.name;
+                    element.querySelector('.character-rank').innerHTML = savedData.data.rank;
+                    element.querySelector('.ranking-text').innerHTML = savedData.data.rankingText;
+                    element.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML = savedData.data.value1;
+                    const statsValues = element.querySelectorAll('.stats-item .value');
+                    statsValues[0].innerHTML = savedData.data.value2;
+                    statsValues[1].innerHTML = savedData.data.value3;
+                    statsValues[2].innerHTML = savedData.data.value4;
+                    statsValues[3].innerHTML = savedData.data.value5;
+                    statsValues[4].innerHTML = savedData.data.value6;
+                    
+                    const skillListItems = element.querySelectorAll('.skill-list li');
+                    skillListItems.forEach((li, index) => {
+                        if (savedData.data[`skill${index}`]) {
+                            li.innerHTML = savedData.data[`skill${index}`];
+                        }
+                    });
                 }
-            }
-        };
+                resolve();
+            };
 
-        request.onerror = (event) => {
-            console.error('Failed to load all cards:', event.target.errorCode);
-            for (let i = 0; i < 3; i++) {
-                createCard();
-            }
-        };
+            request.onerror = () => reject('Data not found');
+        });
     }
-    
+
+    function deleteCardData(cardId) {
+        const transaction = db.transaction('cardData', 'readwrite');
+        const objectStore = transaction.objectStore('cardData');
+        objectStore.delete(cardId);
+    }
+
     function setupCardEventListeners(cardElement, cardId) {
         const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
-        editableElements.forEach(elem => {
-            elem.addEventListener('input', () => {
-                saveCard(cardId);
-            });
-        });
-
-        const fileInput = cardElement.querySelector('.image-file-input');
         const imgContainer = cardElement.querySelector('.character-image');
         const imgElement = cardElement.querySelector('.card-image');
+        const fileInput = cardElement.querySelector('.image-file-input');
+        
+        const saveData = () => {
+            const data = {
+                image: imgElement.src,
+                name: cardElement.querySelector('.character-name').innerHTML,
+                rank: cardElement.querySelector('.character-rank').innerHTML,
+                rankingText: cardElement.querySelector('.ranking-text').innerHTML,
+                value1: cardElement.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML,
+                value2: cardElement.querySelectorAll('.stats-item .value')[0].innerHTML,
+                value3: cardElement.querySelectorAll('.stats-item .value')[1].innerHTML,
+                value4: cardElement.querySelectorAll('.stats-item .value')[2].innerHTML,
+                value5: cardElement.querySelectorAll('.stats-item .value')[3].innerHTML,
+                value6: cardElement.querySelectorAll('.stats-item .value')[4].innerHTML,
+            };
+            cardElement.querySelectorAll('.skill-list li').forEach((li, index) => {
+                data[`skill${index}`] = li.innerHTML;
+            });
+            saveCardData(cardId, data);
+        };
+
+        editableElements.forEach((elem) => {
+            elem.addEventListener('input', saveData);
+        });
 
         imgContainer.addEventListener('click', () => {
             fileInput.click();
@@ -367,19 +332,100 @@
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     imgElement.src = event.target.result;
-                    saveCard(cardId);
+                    saveData();
                 };
                 reader.readAsDataURL(file);
             }
         });
-
+        
         cardElement.querySelector('.delete-button').addEventListener('click', () => {
-            deleteCard(cardId, cardElement);
+            if (confirm('このカードを本当に削除しますか？')) {
+                deleteCard(cardId, cardElement);
+            }
         });
     }
 
-    document.getElementById('add-card-button').addEventListener('click', createCard);
+    async function createCard(isNew = true, cardData = null) {
+        const template = document.getElementById('card-template');
+        const cardClone = template.cloneNode(true);
+        cardClone.classList.remove('card-template');
+        
+        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        cardClone.setAttribute('data-card-id', newCardId);
+        
+        document.getElementById('character-card-list').appendChild(cardClone);
+        setupCardEventListeners(cardClone, newCardId);
 
+        if (cardData) {
+            // 既存のデータをロード
+            await loadCardData(cardData, cardClone);
+        } else if (isNew) {
+            // 新しいカードを保存
+            const emptyData = {
+                image: '',
+                name: 'キャラクター名',
+                rank: '?位',
+                rankingText: '/??位',
+                value1: '?',
+                value2: '?',
+                value3: '?',
+                value4: '?',
+                value5: '?',
+                value6: '?',
+                skill0: 'スキルや評価を入力してください',
+                skill1: '',
+                skill2: '',
+                skill3: ''
+            };
+            saveCardData(newCardId, emptyData);
+        }
+
+        if (isNew) {
+            saveCardOrder();
+        }
+    }
+
+    function deleteCard(cardId, cardElement) {
+        cardElement.remove();
+        deleteCardData(cardId);
+        saveCardOrder();
+    }
+
+    function saveCardOrder() {
+        const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)')).map(card => card.getAttribute('data-card-id'));
+        const transaction = db.transaction('cardOrder', 'readwrite');
+        const objectStore = transaction.objectStore('cardOrder');
+        objectStore.put(cardIds, 'order');
+    }
+
+    function loadAllCards() {
+        const transaction = db.transaction('cardOrder', 'readonly');
+        const objectStore = transaction.objectStore('cardOrder');
+        const request = objectStore.get('order');
+
+        request.onsuccess = (event) => {
+            const cardIds = event.target.result;
+            if (cardIds && cardIds.length > 0) {
+                document.getElementById('character-card-list').innerHTML = '';
+                cardIds.forEach(cardId => {
+                    createCard(false, cardId);
+                });
+            } else {
+                for (let i = 0; i < 3; i++) {
+                    createCard();
+                }
+            }
+        };
+
+        request.onerror = (event) => {
+            console.error('Failed to load card order:', event.target.errorCode);
+            for (let i = 0; i < 3; i++) {
+                createCard();
+            }
+        };
+    }
+
+    document.getElementById('add-card-button').addEventListener('click', () => createCard());
 </script>
 </body>
 </html>
