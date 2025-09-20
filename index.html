@@ -36,6 +36,8 @@
             border: 3px solid #f9d71c;
             position: relative;
             background-color: #e0e0e0;
+            /* カーソルをポインターにして、クリック可能であることを示す */
+            cursor: pointer;
         }
         .character-image img {
             width: 100%;
@@ -186,8 +188,7 @@
 
 <script>
     const dbName = 'characterDB';
-    // バージョンを上げてonupgradeneededイベントを発生させる
-    const dbVersion = 3; 
+    const dbVersion = 4; // バージョンを上げてonupgradeneededイベントを発生させる
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -198,17 +199,16 @@
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        // カードごとのデータを保存するストア
         if (!db.objectStoreNames.contains('cardData')) {
             db.createObjectStore('cardData');
         }
-        // カードIDのリストを保存するストア。バージョンアップごとに作成/更新
-        const cardOrderStore = db.createObjectStore('cardOrder');
+        if (!db.objectStoreNames.contains('cardOrder')) {
+            db.createObjectStore('cardOrder');
+        }
     };
 
     request.onsuccess = (event) => {
         db = event.target.result;
-        // データベースが正常に開かれた後にカードを読み込む
         loadAllCards();
     };
 
@@ -253,7 +253,6 @@
 
     // --- カード管理のロジック ---
     function setupCardEventListeners(cardElement, cardId) {
-        // テキスト入力のイベント
         const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
         editableElements.forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
@@ -261,13 +260,23 @@
             });
         });
 
-        // 画像入力のイベント
         const fileInput = cardElement.querySelector('.image-file-input');
         const imgElement = cardElement.querySelector('.card-image');
-        // 画像アップロード機能を維持するため、キャラクター画像のクリックイベントを追加
         const imageDiv = cardElement.querySelector('.character-image');
+
+        // クリックで画像アップロード
         imageDiv.addEventListener('click', () => {
             fileInput.click();
+        });
+
+        // ダブルクリックでカード削除
+        imageDiv.addEventListener('dblclick', (e) => {
+            // ダブルクリックが画像そのものか、その親要素で発生したかを確認
+            if (e.target.closest('.character-image') === imageDiv) {
+                if (confirm('このカードを本当に削除しますか？')) {
+                    deleteCard(cardId, cardElement);
+                }
+            }
         });
 
         fileInput.addEventListener('change', (e) => {
@@ -282,12 +291,6 @@
             }
         });
 
-        // 画像選択ラベルのクリックイベント
-        cardElement.querySelector('.image-input').addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        // 削除ボタンのイベント
         cardElement.querySelector('.delete-button').addEventListener('click', () => {
             if (confirm('このカードを本当に削除しますか？')) {
                 deleteCard(cardId, cardElement);
@@ -349,7 +352,6 @@
         request.onsuccess = (event) => {
             const cardIds = event.target.result;
             if (cardIds && cardIds.length > 0) {
-                // 既存のカードをすべて削除してから読み込み
                 document.getElementById('character-card-list').innerHTML = '';
                 cardIds.forEach(cardId => {
                     loadCard(cardId);
@@ -369,7 +371,6 @@
         };
     }
 
-    // イベントリスナー設定
     document.getElementById('add-card-button').addEventListener('click', () => createCard());
 </script>
 </body>
