@@ -108,20 +108,14 @@
         }
 
         /* ランクごとの文字色 */
-        .rank-SS { color: #ffd700; }
-        .rank-S\\+ { color: #8B0000; }
-        .rank-S { color: #ff0000; }
-        .rank-A\\+ { color: #ff8c00; }
-        .rank-A { color: #ffa500; }
-        .rank-B\\+ { color: #006400; }
-        .rank-B { color: #2e8b57; }
-        .rank-C\\+ { color: #00008b; }
-        .rank-C { color: #00bfff; }
-        .rank-D\\+ { color: #4b0082; }
-        .rank-D { color: #9400d3; }
-        .rank-E\\+ { color: #191970; }
-        .rank-E { color: #808080; }
-
+        .rank-SS { color: #ff8c00; } /* 橙 */
+        .rank-S { color: #ffd700; }  /* 黄 */
+        .rank-A { color: #dc143c; }  /* 赤 */
+        .rank-B { color: #2e8b57; }  /* 緑 */
+        .rank-C { color: #0000ff; }  /* 青 */
+        .rank-D { color: #8a2be2; }  /* 紫 */
+        .rank-E { color: #191970; }  /* 濃い青 */
+        
         /* ステータスセルの文字色 */
         .card-stats td {
             font-weight: bold;
@@ -230,17 +224,11 @@
                     <label for="char-rank">総合評価:</label>
                     <select id="char-rank" name="char-rank">
                         <option value="SS">SS</option>
-                        <option value="S+">S+</option>
                         <option value="S">S</option>
-                        <option value="A+">A+</option>
                         <option value="A">A</option>
-                        <option value="B+">B+</option>
                         <option value="B">B</option>
-                        <option value="C+">C+</option>
                         <option value="C">C</option>
-                        <option value="D+">D+</option>
                         <option value="D">D</option>
-                        <option value="E+">E+</option>
                         <option value="E">E</option>
                     </select>
                 </div>
@@ -248,17 +236,11 @@
                     <label for="status-endurance">耐久:</label>
                     <select id="status-endurance" name="status-endurance">
                         <option value="SS">SS</option>
-                        <option value="S+">S+</option>
                         <option value="S">S</option>
-                        <option value="A+">A+</option>
                         <option value="A">A</option>
-                        <option value="B+">B+</option>
                         <option value="B">B</option>
-                        <option value="C+">C+</option>
                         <option value="C">C</option>
-                        <option value="D+">D+</option>
                         <option value="D">D</option>
-                        <option value="E+">E+</option>
                         <option value="E">E</option>
                     </select>
                 </div>
@@ -266,17 +248,11 @@
                     <label for="status-attack">攻撃:</label>
                     <select id="status-attack" name="status-attack">
                         <option value="SS">SS</option>
-                        <option value="S+">S+</option>
                         <option value="S">S</option>
-                        <option value="A+">A+</option>
                         <option value="A">A</option>
-                        <option value="B+">B+</option>
                         <option value="B">B</option>
-                        <option value="C+">C+</option>
                         <option value="C">C</option>
-                        <option value="D+">D+</option>
                         <option value="D">D</option>
-                        <option value="E+">E+</option>
                         <option value="E">E</option>
                     </select>
                 </div>
@@ -284,17 +260,11 @@
                     <label for="status-stability">安定性:</label>
                     <select id="status-stability" name="status-stability">
                         <option value="SS">SS</option>
-                        <option value="S+">S+</option>
                         <option value="S">S</option>
-                        <option value="A+">A+</option>
                         <option value="A">A</option>
-                        <option value="B+">B+</option>
                         <option value="B">B</option>
-                        <option value="C+">C+</option>
                         <option value="C">C</option>
-                        <option value="D+">D+</option>
                         <option value="D">D</option>
-                        <option value="E+">E+</option>
                         <option value="E">E</option>
                     </select>
                 </div>
@@ -302,17 +272,11 @@
                     <label for="status-mobility">機動力:</label>
                     <select id="status-mobility" name="status-mobility">
                         <option value="SS">SS</option>
-                        <option value="S+">S+</option>
                         <option value="S">S</option>
-                        <option value="A+">A+</option>
                         <option value="A">A</option>
-                        <option value="B+">B+</option>
                         <option value="B">B</option>
-                        <option value="C+">C+</option>
                         <option value="C">C</option>
-                        <option value="D+">D+</option>
                         <option value="D">D</option>
-                        <option value="E+">E+</option>
                         <option value="E">E</option>
                     </select>
                 </div>
@@ -320,17 +284,11 @@
                     <label for="status-support">援護:</label>
                     <select id="status-support" name="status-support">
                         <option value="SS">SS</option>
-                        <option value="S+">S+</option>
                         <option value="S">S</option>
-                        <option value="A+">A+</option>
                         <option value="A">A</option>
-                        <option value="B+">B+</option>
                         <option value="B">B</option>
-                        <option value="C+">C+</option>
                         <option value="C">C</option>
-                        <option value="D+">D+</option>
                         <option value="D">D</option>
-                        <option value="E+">E+</option>
                         <option value="E">E</option>
                     </select>
                 </div>
@@ -403,8 +361,13 @@
                     if (cardIndex > -1) {
                         savedCards[cardIndex] = data;
                     }
+                    const cardElement = document.querySelector(`.card-container[data-position="${editingCardData.position}"]`);
+                    updateCardElement(cardElement, data);
+                    editingCardData = null;
+                    document.getElementById('submit-button').textContent = 'カードを更新';
                 } else {
                     savedCards.push(data);
+                    createCardElement(data);
                 }
 
                 localStorage.setItem('characterCards', JSON.stringify(savedCards));
@@ -413,8 +376,6 @@
                 imagePreview.style.display = 'none';
                 imagePreview.src = '';
                 sortCards();
-                document.getElementById('submit-button').textContent = 'カードを作成';
-                editingCardData = null;
             });
 
             function updateCardCount() {
@@ -437,7 +398,7 @@
                 
                 updateCardCount();
             }
-            
+
             function createCardElement(data) {
                 const cardContainer = document.createElement('div');
                 cardContainer.className = 'card-container';
@@ -446,9 +407,6 @@
                 const card = document.createElement('div');
                 card.className = 'character-card';
                 card.dataset.position = data.position;
-
-                const getRankClass = (rank) => rank.replace('+', '\\+');
-
                 card.innerHTML = `
                     <div class="card-header">
                         <img src="${data.image}" alt="${data.name}" class="char-image">
@@ -456,7 +414,7 @@
                             <div class="card-name">${data.name}</div>
                             <div class="card-ranking">
                                 <span class="card-position">${data.position}位/0位</span>
-                                <span class="card-rank rank-${getRankClass(data.rank)}">総合評価:${data.rank}</span>
+                                <span class="card-rank rank-${data.rank}">総合評価:${data.rank}</span>
                             </div>
                         </div>
                     </div>
@@ -473,11 +431,11 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><span class="rank-${getRankClass(data.stats.endurance)}">${data.stats.endurance}</span></td>
-                                    <td><span class="rank-${getRankClass(data.stats.attack)}">${data.stats.attack}</span></td>
-                                    <td><span class="rank-${getRankClass(data.stats.stability)}">${data.stats.stability}</span></td>
-                                    <td><span class="rank-${getRankClass(data.stats.mobility)}">${data.stats.mobility}</span></td>
-                                    <td><span class="rank-${getRankClass(data.stats.support)}">${data.stats.support}</span></td>
+                                    <td><span class="rank-${data.stats.endurance}">${data.stats.endurance}</span></td>
+                                    <td><span class="rank-${data.stats.attack}">${data.stats.attack}</span></td>
+                                    <td><span class="rank-${data.stats.stability}">${data.stats.stability}</span></td>
+                                    <td><span class="rank-${data.stats.mobility}">${data.stats.mobility}</span></td>
+                                    <td><span class="rank-${data.stats.support}">${data.stats.support}</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -509,6 +467,35 @@
                 cardList.appendChild(cardContainer);
             }
 
+            function updateCardElement(cardContainer, data) {
+                const card = cardContainer.querySelector('.character-card');
+                card.dataset.position = data.position;
+                card.querySelector('.char-image').src = data.image;
+                card.querySelector('.card-name').textContent = data.name;
+                
+                const rankSpan = card.querySelector('.card-rank');
+                rankSpan.className = `card-rank rank-${data.rank}`;
+                rankSpan.textContent = `総合評価:${data.rank}`;
+                
+                card.querySelector('td:nth-child(1) span').className = `rank-${data.stats.endurance}`;
+                card.querySelector('td:nth-child(1) span').textContent = data.stats.endurance;
+                
+                card.querySelector('td:nth-child(2) span').className = `rank-${data.stats.attack}`;
+                card.querySelector('td:nth-child(2) span').textContent = data.stats.attack;
+
+                card.querySelector('td:nth-child(3) span').className = `rank-${data.stats.stability}`;
+                card.querySelector('td:nth-child(3) span').textContent = data.stats.stability;
+
+                card.querySelector('td:nth-child(4) span').className = `rank-${data.stats.mobility}`;
+                card.querySelector('td:nth-child(4) span').textContent = data.stats.mobility;
+
+                card.querySelector('td:nth-child(5) span').className = `rank-${data.stats.support}`;
+                card.querySelector('td:nth-child(5) span').textContent = data.stats.support;
+                
+                card.querySelector('.card-description ul').innerHTML = `<li>${data.description.split('\n').join('</li><li>')}</li>`;
+                
+                card.querySelector('.card-position').textContent = `${data.position}位/0位`;
+            }
 
             function startEditing(data) {
                 document.getElementById('char-name').value = data.name;
