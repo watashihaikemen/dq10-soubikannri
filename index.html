@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>キャラクター評価（IndexedDB対応）</title>
+    <title>キャラクター評価（空白テンプレート）</title>
     <style>
         body {
             font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
@@ -31,6 +31,7 @@
             margin-right: 15px;
             border: 3px solid #f9d71c;
             position: relative;
+            background-color: #e0e0e0; /* 画像がない場合の背景色 */
         }
         .character-image img {
             width: 100%;
@@ -136,139 +137,139 @@
 
     <div class="character-card">
         <div class="card-header">
-            <div class="character-image" data-rank="2">
-                <img src="" alt="ウーブ" id="oob-image">
+            <div class="character-image" data-rank="?">
+                <img src="" alt="" id="char1-image">
             </div>
             <div>
-                <div class="character-name" contenteditable="true" data-id="oob-name">ウーブ</div>
+                <div class="character-name" contenteditable="true" data-id="char1-name">キャラクター名</div>
                 <div style="display: flex; align-items: baseline;">
-                    <span class="character-rank" contenteditable="true" data-id="oob-rank">4位</span>
-                    <span class="ranking-text" contenteditable="true" data-id="oob-rank-total">/22位</span>
-                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true" data-id="oob-tier">S</span>
+                    <span class="character-rank" contenteditable="true" data-id="char1-rank">?位</span>
+                    <span class="ranking-text" contenteditable="true" data-id="char1-rank-total">/??位</span>
+                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true" data-id="char1-tier">?</span>
                 </div>
             </div>
         </div>
-        <label for="oob-file" class="image-input">画像を選択</label>
-        <input type="file" id="oob-file" style="display: none;" accept="image/*" data-image-id="oob-image">
-        <div class="stats-table" contenteditable="true" data-id="oob-stats">
+        <label for="char1-file" class="image-input">画像を選択</label>
+        <input type="file" id="char1-file" style="display: none;" accept="image/*" data-image-id="char1-image">
+        <div class="stats-table" contenteditable="true" data-id="char1-stats">
             <div class="stats-item">
                 <div class="label">耐久</div>
-                <div class="value">B</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">攻撃</div>
-                <div class="value">SS</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">安定性</div>
-                <div class="value">A</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">機動力</div>
-                <div class="value">S</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">援護</div>
-                <div class="value">B</div>
+                <div class="value">?</div>
             </div>
         </div>
-        <ul class="skill-list" contenteditable="true" data-id="oob-skills">
-            <li>パッシブ「サイクロン」により技を使用することにラッシュの手数を増やすことが出来る</li>
-            <li>技1の範囲が広く追い込み性能が非常に高い</li>
-            <li>序盤の耐久だけが不安要素なので相手との距離を意識して戦う必要がある</li>
-            <li>技2は自身に依存するデバフを無効化する効果を持っており安定した機動力を保つことが出来る。</li>
+        <ul class="skill-list" contenteditable="true" data-id="char1-skills">
+            <li>ここにスキルや評価を入力してください</li>
+            <li></li>
+            <li></li>
+            <li></li>
         </ul>
     </div>
 
     <div class="character-card">
         <div class="card-header">
-            <div class="character-image" data-rank="1">
-                <img src="" alt="悟飯" id="gohan-image">
+            <div class="character-image" data-rank="?">
+                <img src="" alt="" id="char2-image">
             </div>
             <div>
-                <div class="character-name" contenteditable="true" data-id="gohan-name">悟飯</div>
+                <div class="character-name" contenteditable="true" data-id="char2-name">キャラクター名</div>
                 <div style="display: flex; align-items: baseline;">
-                    <span class="character-rank" contenteditable="true" data-id="gohan-rank">5位</span>
-                    <span class="ranking-text" contenteditable="true" data-id="gohan-rank-total">/22位</span>
-                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true" data-id="gohan-tier">S</span>
+                    <span class="character-rank" contenteditable="true" data-id="char2-rank">?位</span>
+                    <span class="ranking-text" contenteditable="true" data-id="char2-rank-total">/??位</span>
+                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true" data-id="char2-tier">?</span>
                 </div>
             </div>
         </div>
-        <label for="gohan-file" class="image-input">画像を選択</label>
-        <input type="file" id="gohan-file" style="display: none;" accept="image/*" data-image-id="gohan-image">
-        <div class="stats-table" contenteditable="true" data-id="gohan-stats">
+        <label for="char2-file" class="image-input">画像を選択</label>
+        <input type="file" id="char2-file" style="display: none;" accept="image/*" data-image-id="char2-image">
+        <div class="stats-table" contenteditable="true" data-id="char2-stats">
             <div class="stats-item">
                 <div class="label">耐久</div>
-                <div class="value">A</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">攻撃</div>
-                <div class="value">B</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">安定性</div>
-                <div class="value">A</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">機動力</div>
-                <div class="value">S</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">援護</div>
-                <div class="value">SS</div>
+                <div class="value">?</div>
             </div>
         </div>
-        <ul class="skill-list" contenteditable="true" data-id="gohan-skills">
-            <li>パッシブ「友情ブースト」で近くにいる味方の攻撃力を上げる唯一無二の性能を持つ</li>
-            <li>パッシブ発動中は自身も耐久力が上昇する強力な効果を持つので集団行動を意識した方がよい</li>
-            <li>基本的に味方依存なので単独での行動は難しいが、高い機動力を活かして敵の破壊神攻撃を仕掛けやすい。</li>
-            <li>吹き飛ばし系の技が2つあるのも非常に強力である。</li>
+        <ul class="skill-list" contenteditable="true" data-id="char2-skills">
+            <li>ここにスキルや評価を入力してください</li>
+            <li></li>
+            <li></li>
+            <li></li>
         </ul>
     </div>
 
     <div class="character-card">
         <div class="card-header">
-            <div class="character-image" data-rank="2">
-                <img src="" alt="17号" id="17-image">
+            <div class="character-image" data-rank="?">
+                <img src="" alt="" id="char3-image">
             </div>
             <div>
-                <div class="character-name" contenteditable="true" data-id="17-name">17号</div>
+                <div class="character-name" contenteditable="true" data-id="char3-name">キャラクター名</div>
                 <div style="display: flex; align-items: baseline;">
-                    <span class="character-rank" contenteditable="true" data-id="17-rank">6位</span>
-                    <span class="ranking-text" contenteditable="true" data-id="17-rank-total">/22位</span>
-                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true" data-id="17-tier">S</span>
+                    <span class="character-rank" contenteditable="true" data-id="char3-rank">?位</span>
+                    <span class="ranking-text" contenteditable="true" data-id="char3-rank-total">/??位</span>
+                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true" data-id="char3-tier">?</span>
                 </div>
             </div>
         </div>
-        <label for="17-file" class="image-input">画像を選択</label>
-        <input type="file" id="17-file" style="display: none;" accept="image/*" data-image-id="17-image">
-        <div class="stats-table" contenteditable="true" data-id="17-stats">
+        <label for="char3-file" class="image-input">画像を選択</label>
+        <input type="file" id="char3-file" style="display: none;" accept="image/*" data-image-id="char3-image">
+        <div class="stats-table" contenteditable="true" data-id="char3-stats">
             <div class="stats-item">
                 <div class="label">耐久</div>
-                <div class="value">A</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">攻撃</div>
-                <div class="value">C</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">安定性</div>
-                <div class="value">A</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">機動力</div>
-                <div class="value">S</div>
+                <div class="value">?</div>
             </div>
             <div class="stats-item">
                 <div class="label">援護</div>
-                <div class="value">SS</div>
+                <div class="value">?</div>
             </div>
         </div>
-        <ul class="skill-list" contenteditable="true" data-id="17-skills">
-            <li>技3で見方を守りつつ自身と味方の体力と移動速度上昇を付与することが出来る</li>
-            <li>技3で逃げ性能が格段に上がっているため一緒に行動している味方が攻めやすくなる</li>
-            <li>自身の攻撃力はそこまで高くないので抗戦するときは二人で行動することを意識する必要がある</li>
-            <li>自身の機動力が高いので敵がいない間に破壊神を攻撃しやすい</li>
+        <ul class="skill-list" contenteditable="true" data-id="char3-skills">
+            <li>ここにスキルや評価を入力してください</li>
+            <li></li>
+            <li></li>
+            <li></li>
         </ul>
     </div>
 
@@ -367,6 +368,9 @@
                 }
             });
         });
+
+        // ページ読み込み時に実行
+        window.addEventListener('load', loadAllData);
     </script>
 </body>
 </html>
