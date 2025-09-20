@@ -180,6 +180,15 @@
             text-align: left;
         }
         
+        /* 説明文の箇条書きのインデントを調整 */
+        .card-description ul {
+            padding-left: 15px;
+            margin: 0;
+        }
+        .card-description li {
+            padding-left: 5px;
+        }
+
         .card-actions {
             padding: 10px;
             text-align: right;
@@ -355,7 +364,7 @@
                     const cardElement = document.querySelector(`.card-container[data-position="${editingCardData.position}"]`);
                     updateCardElement(cardElement, data);
                     editingCardData = null;
-                    document.getElementById('submit-button').textContent = 'カードを作成';
+                    document.getElementById('submit-button').textContent = 'カードを更新';
                 } else {
                     savedCards.push(data);
                     createCardElement(data);
@@ -432,7 +441,9 @@
                         </table>
                     </div>
                     <div class="card-description">
-                        <p>${data.description.split('\n').join('<br>')}</p>
+                        <ul>
+                            <li>${data.description.split('\n').join('</li><li>')}</li>
+                        </ul>
                     </div>
                 `;
 
@@ -481,7 +492,7 @@
                 card.querySelector('td:nth-child(5) span').className = `rank-${data.stats.support}`;
                 card.querySelector('td:nth-child(5) span').textContent = data.stats.support;
                 
-                card.querySelector('.card-description p').innerHTML = data.description.split('\n').join('<br>');
+                card.querySelector('.card-description ul').innerHTML = `<li>${data.description.split('\n').join('</li><li>')}</li>`;
                 
                 card.querySelector('.card-position').textContent = `${data.position}位/0位`;
             }
