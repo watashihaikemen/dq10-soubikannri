@@ -172,7 +172,16 @@
             padding: 15px;
             font-size: 14px;
             line-height: 1.5;
-            text-align: left; /* 左揃えに設定 */
+            text-align: left;
+        }
+        
+        /* 説明文の箇条書きのインデントを調整 */
+        .card-description ul {
+            padding-left: 15px; /* インデントを減らす */
+            margin: 0;
+        }
+        .card-description li {
+            padding-left: 5px; /* 箇条書きマーカーを調整 */
         }
 
         .card-actions {
@@ -281,7 +290,7 @@
             const cardList = document.getElementById('card-list');
             const imageUpload = document.getElementById('char-image-upload');
             const imagePreview = document.getElementById('image-preview');
-            let editingCardData = null; // 編集中のカードデータを保持
+            let editingCardData = null;
 
             const savedCards = JSON.parse(localStorage.getItem('characterCards')) || [];
             if (savedCards.length > 0) {
@@ -332,7 +341,7 @@
                     if (cardIndex > -1) {
                         savedCards[cardIndex] = data;
                     }
-                    const cardElement = document.querySelector(`.character-card[data-position="${editingCardData.position}"]`).parentElement;
+                    const cardElement = document.querySelector(`.card-container[data-position="${editingCardData.position}"]`);
                     updateCardElement(cardElement, data);
                     editingCardData = null;
                     document.getElementById('submit-button').textContent = 'カードを作成';
