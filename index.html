@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Character Cards</title>
+    <title>Character Card Editor</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f2f5;
@@ -21,27 +23,10 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-header {
-            background-color: #000;
-            color: #fff;
-            padding: 5px 15px;
-            font-size: 0.9em;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-
-        .card-header span {
-            margin-left: 10px;
-            background-color: #555;
-            padding: 2px 5px;
-            border-radius: 5px;
+            background-color: #fff;
         }
 
         .card-main {
-            background-color: #fff;
             display: flex;
             padding: 15px;
         }
@@ -59,24 +44,18 @@
         .character-image {
             width: 80px;
             height: 80px;
-            background-color: #ccc;
             border-radius: 50%;
             margin-bottom: 10px;
             position: relative;
-        }
-
-        .character-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
         }
 
         .character-image::after {
-            content: '';
+            content: attr(data-rank-number);
             position: absolute;
-            bottom: 0;
-            right: 0;
+            bottom: -5px;
+            right: -5px;
             width: 25px;
             height: 25px;
             background-color: #d11a1a;
@@ -86,6 +65,7 @@
             justify-content: center;
             align-items: center;
             font-size: 0.8em;
+            font-weight: bold;
             color: #fff;
         }
 
@@ -146,13 +126,7 @@
             font-size: 1.2em;
         }
 
-        .stats-table .rank-value {
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-
         .card-footer {
-            background-color: #fff;
             padding: 15px;
             font-size: 0.9em;
             border-top: 1px solid #ddd;
@@ -183,145 +157,232 @@
             font-size: 0.8em;
             color: #aaa;
             margin-top: 10px;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        /* Edit form styles */
+        .editor-form {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .editor-form label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .editor-form input, .editor-form textarea {
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .editor-form textarea {
+            height: 100px;
+        }
+        .editor-form .button-group {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .editor-form button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .editor-form button.save {
+            background-color: #d11a1a;
+            color: #fff;
+            margin-left: 10px;
+        }
+        .editor-form button.cancel {
+            background-color: #ddd;
         }
     </style>
 </head>
 <body>
 
-    <div class="card-container">
-        <div class="card-header">
-            <span>スライド 3/23</span>
+    <div class="card-display" id="card-display">
         </div>
-        <div class="card-main">
-            <div class="character-info">
-                <div class="character-image" style="background-image: url('https://via.placeholder.com/80?text=ウーブ');">
-                    </div>
-                <div class="rank">4<span style="font-size: 0.5em;">位</span></div>
-                <div class="rank-text">ウーブ</div>
-                <div class="rank-sub">/22位</div>
-                <div class="rank-s">S</div>
-            </div>
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>耐久</th>
-                        <th>攻撃</th>
-                        <th>安定性</th>
-                        <th>機動力</th>
-                        <th>援護</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="rank-value">B</td>
-                        <td class="rank-value">SS</td>
-                        <td class="rank-value">A</td>
-                        <td class="rank-value">S</td>
-                        <td class="rank-value">B</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
-            <ul>
-                <li>パッシブ「サイクロン」により技を使用するごとにラッシュの手数を増やすことが出来る</li>
-                <li>技1の範囲が広く追い込み性能が非常に高い</li>
-                <li>序盤の耐久だけが不安要素なので相手との距離を意識して戦う必要がある</li>
-                <li>技2は自身に依存するデバフを無効化する効果を持っており安定した機動力を保つことが出来る。</li>
-            </ul>
-            <div class="source">Honobonobonorist</div>
+
+    <div class="editor-form" id="editor-form">
+        <h2>カードの編集</h2>
+        <label for="edit-image-url">キャラクター画像URL:</label>
+        <input type="text" id="edit-image-url">
+
+        <label for="edit-rank-number">順位:</label>
+        <input type="number" id="edit-rank-number">
+
+        <label for="edit-character-name">キャラクター名:</label>
+        <input type="text" id="edit-character-name">
+
+        <label for="edit-total-rank">総合順位:</label>
+        <input type="text" id="edit-total-rank" placeholder="例: /22位">
+
+        <label for="edit-tier-rank">ティアランク (例: S):</label>
+        <input type="text" id="edit-tier-rank">
+
+        <label for="edit-durability">耐久:</label>
+        <input type="text" id="edit-durability">
+
+        <label for="edit-attack">攻撃:</label>
+        <input type="text" id="edit-attack">
+
+        <label for="edit-stability">安定性:</label>
+        <input type="text" id="edit-stability">
+
+        <label for="edit-mobility">機動力:</label>
+        <input type="text" id="edit-mobility">
+
+        <label for="edit-support">援護:</label>
+        <input type="text" id="edit-support">
+
+        <label for="edit-footer-text">詳細情報 (改行はカンマ「,」で区切る):</label>
+        <textarea id="edit-footer-text"></textarea>
+
+        <label for="edit-source">出典:</label>
+        <input type="text" id="edit-source">
+
+        <div class="button-group">
+            <button class="cancel" onclick="toggleForm()">キャンセル</button>
+            <button class="save" onclick="saveCard()">保存</button>
         </div>
     </div>
 
-    <div class="card-container">
-        <div class="card-header">
-            <span>スライド 3/23</span>
-        </div>
-        <div class="card-main">
-            <div class="character-info">
-                <div class="character-image" style="background-image: url('https://via.placeholder.com/80?text=悟飯');">
-                    </div>
-                <div class="rank">5<span style="font-size: 0.5em;">位</span></div>
-                <div class="rank-text">悟飯</div>
-                <div class="rank-sub">/22位</div>
-                <div class="rank-s">S</div>
-            </div>
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>耐久</th>
-                        <th>攻撃</th>
-                        <th>安定性</th>
-                        <th>機動力</th>
-                        <th>援護</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="rank-value">A</td>
-                        <td class="rank-value">B</td>
-                        <td class="rank-value">A</td>
-                        <td class="rank-value">S</td>
-                        <td class="rank-value">SS</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
-            <ul>
-                <li>パッシブ「友情ブースト」で近くにいる味方の攻撃力を上げる唯一無二の性能を持つ</li>
-                <li>パッシブ発動中は自身も耐久が上昇する強力な効果を持つので集団行動を意識した方がよい</li>
-                <li>基本的に味方依存なので単独での行動は難しいが、高い機動力を活かして敵の破壊神攻撃を仕掛けやすい。</li>
-                <li>吹き飛ばし系の技が2つあるのも非常に強力である。</li>
-            </ul>
-            <div class="source">Honobonobonorist</div>
-        </div>
-    </div>
+    <script>
+        const cardDisplay = document.getElementById('card-display');
+        const editorForm = document.getElementById('editor-form');
 
-    <div class="card-container">
-        <div class="card-header">
-            <span>スライド 3/23</span>
-        </div>
-        <div class="card-main">
-            <div class="character-info">
-                <div class="character-image" style="background-image: url('https://via.placeholder.com/80?text=17号');">
+        const cardData = {
+            imageUrl: 'https://via.placeholder.com/80?text=ウーブ',
+            rankNumber: '2',
+            rank: '4',
+            characterName: 'ウーブ',
+            totalRank: '/22位',
+            tierRank: 'S',
+            stats: {
+                durability: 'B',
+                attack: 'SS',
+                stability: 'A',
+                mobility: 'S',
+                support: 'B'
+            },
+            footerText: [
+                'パッシブ「サイクロン」により技を使用するごとにラッシュの手数を増やすことが出来る',
+                '技1の範囲が広く追い込み性能が非常に高い',
+                '序盤の耐久だけが不安要素なので相手との距離を意識して戦う必要がある',
+                '技2は自身に依存するデバフを無効化する効果を持っており安定した機動力を保つことが出来る。'
+            ],
+            source: 'Perfect Troll'
+        };
+
+        function renderCard() {
+            const footerItems = cardData.footerText.map(item => `<li>${item}</li>`).join('');
+            
+            cardDisplay.innerHTML = `
+                <div class="card-container">
+                    <div class="card-main">
+                        <div class="character-info">
+                            <div class="character-image" style="background-image: url('${cardData.imageUrl}');" data-rank-number="${cardData.rankNumber}"></div>
+                            <div class="rank">${cardData.rank}<span style="font-size: 0.5em;">位</span></div>
+                            <div class="rank-text">${cardData.characterName}</div>
+                            <div class="rank-sub">${cardData.totalRank}</div>
+                            <div class="rank-s">${cardData.tierRank}</div>
+                        </div>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>耐久</th>
+                                    <th>攻撃</th>
+                                    <th>安定性</th>
+                                    <th>機動力</th>
+                                    <th>援護</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>${cardData.stats.durability}</td>
+                                    <td>${cardData.stats.attack}</td>
+                                    <td>${cardData.stats.stability}</td>
+                                    <td>${cardData.stats.mobility}</td>
+                                    <td>${cardData.stats.support}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                <div class="rank">6<span style="font-size: 0.5em;">位</span></div>
-                <div class="rank-text">17号</div>
-                <div class="rank-sub">/22位</div>
-                <div class="rank-s">S</div>
-            </div>
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>耐久</th>
-                        <th>攻撃</th>
-                        <th>安定性</th>
-                        <th>機動力</th>
-                        <th>援護</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="rank-value">A</td>
-                        <td class="rank-value">C</td>
-                        <td class="rank-value">A</td>
-                        <td class="rank-value">S</td>
-                        <td class="rank-value">SS</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
-            <ul>
-                <li>技3で見方を守りつつ自身と味方の体力と移動速度上昇を付与することが出来る</li>
-                <li>技3で逃げ性能が格段に上がっているため一緒に行動している味方が攻めやすくなる</li>
-                <li>自身の攻撃力はそこまで高くないので挑戦するときは二人で行動することを意識する必要がある</li>
-                <li>自身の機動力が高いので敵がいない間に破壊神を攻撃しやすい</li>
-            </ul>
-            <div class="source">Honobonobonorist</div>
-        </div>
-    </div>
+                    <div class="card-footer">
+                        <ul>${footerItems}</ul>
+                        <div class="source">${cardData.source}</div>
+                    </div>
+                </div>
+            `;
+            const editButton = document.createElement('button');
+            editButton.textContent = 'このカードを編集';
+            editButton.style.marginTop = '20px';
+            editButton.style.padding = '10px 20px';
+            editButton.style.border = 'none';
+            editButton.style.borderRadius = '5px';
+            editButton.style.backgroundColor = '#d11a1a';
+            editButton.style.color = '#fff';
+            editButton.style.cursor = 'pointer';
+            editButton.onclick = toggleForm;
+            cardDisplay.appendChild(editButton);
+        }
+
+        function toggleForm() {
+            if (editorForm.style.display === 'flex') {
+                editorForm.style.display = 'none';
+                cardDisplay.style.display = 'block';
+            } else {
+                editorForm.style.display = 'flex';
+                cardDisplay.style.display = 'none';
+                // フォームに現在のデータをセット
+                document.getElementById('edit-image-url').value = cardData.imageUrl;
+                document.getElementById('edit-rank-number').value = cardData.rankNumber;
+                document.getElementById('edit-rank-number').value = cardData.rank;
+                document.getElementById('edit-character-name').value = cardData.characterName;
+                document.getElementById('edit-total-rank').value = cardData.totalRank;
+                document.getElementById('edit-tier-rank').value = cardData.tierRank;
+                document.getElementById('edit-durability').value = cardData.stats.durability;
+                document.getElementById('edit-attack').value = cardData.stats.attack;
+                document.getElementById('edit-stability').value = cardData.stats.stability;
+                document.getElementById('edit-mobility').value = cardData.stats.mobility;
+                document.getElementById('edit-support').value = cardData.stats.support;
+                document.getElementById('edit-footer-text').value = cardData.footerText.join(', ');
+                document.getElementById('edit-source').value = cardData.source;
+            }
+        }
+
+        function saveCard() {
+            cardData.imageUrl = document.getElementById('edit-image-url').value;
+            cardData.rankNumber = document.getElementById('edit-rank-number').value;
+            cardData.rank = document.getElementById('edit-rank-number').value;
+            cardData.characterName = document.getElementById('edit-character-name').value;
+            cardData.totalRank = document.getElementById('edit-total-rank').value;
+            cardData.tierRank = document.getElementById('edit-tier-rank').value;
+            cardData.stats.durability = document.getElementById('edit-durability').value;
+            cardData.stats.attack = document.getElementById('edit-attack').value;
+            cardData.stats.stability = document.getElementById('edit-stability').value;
+            cardData.stats.mobility = document.getElementById('edit-mobility').value;
+            cardData.stats.support = document.getElementById('edit-support').value;
+            cardData.footerText = document.getElementById('edit-footer-text').value.split(',').map(item => item.trim());
+            cardData.source = document.getElementById('edit-source').value;
+            
+            renderCard();
+            toggleForm();
+        }
+        
+        // 最初のカード表示
+        renderCard();
+    </script>
 
 </body>
 </html>
