@@ -108,19 +108,19 @@
         }
 
         /* ランクごとの文字色 */
-        .rank-SS { color: #ffd700; }  /* 黄色 */
-        .rank-S\\+ { color: #8B0000; } /* 濃い赤色 */
-        .rank-S { color: #ff0000; }    /* 赤色 */
-        .rank-A\\+ { color: #ff8c00; } /* 濃い橙 */
-        .rank-A { color: #ffa500; }    /* 橙 */
-        .rank-B\\+ { color: #006400; } /* 濃い緑 */
-        .rank-B { color: #2e8b57; }    /* 緑 */
-        .rank-C\\+ { color: #00008b; } /* 青色 */
-        .rank-C { color: #00bfff; }    /* 水色 */
-        .rank-D\\+ { color: #4b0082; } /* 紫 */
-        .rank-D { color: #9400d3; }    /* 濃い紫 */
-        .rank-E\\+ { color: #191970; } /* 濃い青 */
-        .rank-E { color: #808080; }    /* 灰色 */
+        .rank-SS { color: #ffd700; }
+        .rank-S\\+ { color: #8B0000; }
+        .rank-S { color: #ff0000; }
+        .rank-A\\+ { color: #ff8c00; }
+        .rank-A { color: #ffa500; }
+        .rank-B\\+ { color: #006400; }
+        .rank-B { color: #2e8b57; }
+        .rank-C\\+ { color: #00008b; }
+        .rank-C { color: #00bfff; }
+        .rank-D\\+ { color: #4b0082; }
+        .rank-D { color: #9400d3; }
+        .rank-E\\+ { color: #191970; }
+        .rank-E { color: #808080; }
 
         /* ステータスセルの文字色 */
         .card-stats td {
@@ -403,8 +403,6 @@
                     if (cardIndex > -1) {
                         savedCards[cardIndex] = data;
                     }
-                    const cardElement = document.querySelector(`.card-container[data-position="${editingCardData.position}"]`);
-                    // updateCardElementの呼び出しを削除して、sortCardsを直接呼び出す
                 } else {
                     savedCards.push(data);
                 }
@@ -418,7 +416,7 @@
                 document.getElementById('submit-button').textContent = 'カードを作成';
                 editingCardData = null;
             });
-            
+
             function updateCardCount() {
                 const totalCards = savedCards.length;
                 const cards = document.querySelectorAll('.character-card');
@@ -448,6 +446,9 @@
                 const card = document.createElement('div');
                 card.className = 'character-card';
                 card.dataset.position = data.position;
+
+                const getRankClass = (rank) => rank.replace('+', '\\+');
+
                 card.innerHTML = `
                     <div class="card-header">
                         <img src="${data.image}" alt="${data.name}" class="char-image">
@@ -455,7 +456,7 @@
                             <div class="card-name">${data.name}</div>
                             <div class="card-ranking">
                                 <span class="card-position">${data.position}位/0位</span>
-                                <span class="card-rank rank-${data.rank.replace('+', '\\+')}">総合評価:${data.rank}</span>
+                                <span class="card-rank rank-${getRankClass(data.rank)}">総合評価:${data.rank}</span>
                             </div>
                         </div>
                     </div>
@@ -472,11 +473,11 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><span class="rank-${data.stats.endurance.replace('+', '\\+')}">${data.stats.endurance}</span></td>
-                                    <td><span class="rank-${data.stats.attack.replace('+', '\\+')}">${data.stats.attack}</span></td>
-                                    <td><span class="rank-${data.stats.stability.replace('+', '\\+')}">${data.stats.stability}</span></td>
-                                    <td><span class="rank-${data.stats.mobility.replace('+', '\\+')}">${data.stats.mobility}</span></td>
-                                    <td><span class="rank-${data.stats.support.replace('+', '\\+')}">${data.stats.support}</span></td>
+                                    <td><span class="rank-${getRankClass(data.stats.endurance)}">${data.stats.endurance}</span></td>
+                                    <td><span class="rank-${getRankClass(data.stats.attack)}">${data.stats.attack}</span></td>
+                                    <td><span class="rank-${getRankClass(data.stats.stability)}">${data.stats.stability}</span></td>
+                                    <td><span class="rank-${getRankClass(data.stats.mobility)}">${data.stats.mobility}</span></td>
+                                    <td><span class="rank-${getRankClass(data.stats.support)}">${data.stats.support}</span></td>
                                 </tr>
                             </tbody>
                         </table>
