@@ -7,11 +7,11 @@
     <style>
         /* スタイルの最適化 */
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
-            color: #333; /* 基本テキストカラーの指定 */
+            color: #333;
         }
         .container {
             max-width: 800px;
@@ -24,7 +24,6 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
-            /* Flexboxで内部を整理 */
             display: flex;
             flex-direction: column;
         }
@@ -41,7 +40,7 @@
             border: 3px solid #f9d71c;
             position: relative;
             background-color: #e0e0e0;
-            overflow: hidden; /* 画像のはみ出しを防ぐ */
+            overflow: hidden;
         }
         .character-image img {
             width: 100%;
@@ -70,7 +69,7 @@
         .ranking-info {
             display: flex;
             align-items: baseline;
-            margin-top: 5px; /* 名前との間隔 */
+            margin-top: 5px;
         }
         .character-rank {
             color: white;
@@ -80,7 +79,7 @@
             border-radius: 8px;
             display: inline-block;
             margin-left: 10px;
-            transition: background-color 0.3s ease; /* 色変化を滑らかに */
+            transition: background-color 0.3s ease;
         }
         .ranking-text {
             font-size: 18px;
@@ -89,7 +88,7 @@
         }
         .stats-table {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5列のグリッドレイアウト */
+            grid-template-columns: repeat(5, 1fr);
             background-color: #e0e0e0;
             border-radius: 8px;
             overflow: hidden;
@@ -183,23 +182,31 @@
         .card-template {
             display: none;
         }
+
+        /* ランクごとの色を定義 */
+        .rank-ss { background-color: #ff4500; }
+        .rank-s { background-color: #f9d71c; }
+        .rank-a { background-color: #32cd32; }
+        .rank-b { background-color: #1e90ff; }
+        .rank-c { background-color: #8a2be2; }
+        .rank-d { background-color: #ff8c00; }
+        .rank-e { background-color: #a42c2c; }
+        .rank-default { background-color: #999; }
+        
         /* 順位ごとの色を定義 */
-        .rank-1 { background-color: #FFD700; } /* 1位: 金 */
-        .rank-2 { background-color: #C0C0C0; } /* 2位: 銀 */
-        .rank-3 { background-color: #CD7F32; } /* 3位: 銅 */
-        .rank-4-10 { background-color: #FF4500; } /* 4-10位: 赤 */
-        .rank-11-20 { background-color: #FF8C00; } /* 11-20位: オレンジ */
-        .rank-21-30 { background-color: #f9d71c; } /* 21-30位: 黄色 */
-        .rank-31-40 { background-color: #32cd32; } /* 31-40位: 緑 */
-        .rank-41-50 { background-color: #1e90ff; } /* 41-50位: 青 */
-        .rank-default { background-color: #999; } /* その他: グレー */
+        .rank-color-1-5 { background-color: #e74c3c; } /* 1-5位: 赤 */
+        .rank-color-6-10 { background-color: #f39c12; } /* 6-10位: オレンジ */
+        .rank-color-11-15 { background-color: #f1c40f; } /* 11-15位: 黄色 */
+        .rank-color-16-20 { background-color: #2ecc71; } /* 16-20位: 緑 */
+        .rank-color-21-plus { background-color: #3498db; } /* 21位以上: 青 */
+        
     </style>
 </head>
 <body>
 
 <main class="container">
     <section id="character-card-list">
-        </section>
+    </section>
     <button type="button" class="add-button" id="add-card-button">カードを追加</button>
 </main>
 
@@ -302,6 +309,8 @@
                     element.innerHTML = savedData;
                     if (element.classList.contains('character-rank')) {
                         updateRankColor(element);
+                    } else if (element.classList.contains('ranking-text')) {
+                        updateRankingColor(element);
                     }
                 }
             }
@@ -326,12 +335,11 @@
     function createCard(isNew = true) {
         const template = document.getElementById('card-template');
         const cardClone = template.content.cloneNode(true);
-        
+
         const newCardId = `card_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
         const articleElement = cardClone.querySelector('article');
         articleElement.setAttribute('data-card-id', newCardId);
-        
-        // input要素のIDをユニークにする
+
         const fileInput = cardClone.querySelector('.image-file-input');
         const imageLabel = cardClone.querySelector('.image-input');
         const uniqueId = `file-input-${newCardId}`;
@@ -366,7 +374,7 @@
             loadCardData(cardId, `text_${index}`, elem);
         });
         loadCardData(cardId, 'image', articleElement.querySelector('.card-image'));
-        
+
         document.getElementById('character-card-list').appendChild(cardClone);
     }
 
@@ -377,6 +385,8 @@
                 saveCardData(cardId, `text_${index}`, innerText);
                 if (e.target.classList.contains('character-rank')) {
                     updateRankColor(e.target);
+                } else if (e.target.classList.contains('ranking-text')) {
+                    updateRankingColor(e.target);
                 }
             });
         });
@@ -406,9 +416,11 @@
             }
         });
 
-        // ロード時にランクの色を更新
+        // ロード時にランクと順位の色を更新
         const rankElements = cardElement.querySelectorAll('.character-rank');
         rankElements.forEach(updateRankColor);
+        const rankingTextElement = cardElement.querySelector('.ranking-text');
+        updateRankingColor(rankingTextElement);
     }
 
     function deleteCard(cardId, cardElement) {
@@ -455,30 +467,63 @@
      * @param {HTMLElement} element - ランクテキストを含む要素
      */
     function updateRankColor(element) {
-        const rankText = element.innerText.trim();
-        const rank = parseInt(rankText, 10);
-        
-        element.style.backgroundColor = ''; // スタイルをリセット
-        element.className = 'character-rank'; // クラスもリセット
+        const rank = element.innerText.trim().toUpperCase();
+        element.style.backgroundColor = '';
+        element.className = 'character-rank';
 
-        if (rank === 1) {
-            element.classList.add('rank-1');
-        } else if (rank === 2) {
-            element.classList.add('rank-2');
-        } else if (rank === 3) {
-            element.classList.add('rank-3');
-        } else if (rank >= 4 && rank <= 10) {
-            element.classList.add('rank-4-10');
-        } else if (rank >= 11 && rank <= 20) {
-            element.classList.add('rank-11-20');
-        } else if (rank >= 21 && rank <= 30) {
-            element.classList.add('rank-21-30');
-        } else if (rank >= 31 && rank <= 40) {
-            element.classList.add('rank-31-40');
-        } else if (rank >= 41 && rank <= 50) {
-            element.classList.add('rank-41-50');
-        } else {
-            element.classList.add('rank-default');
+        switch(rank) {
+            case 'SS':
+                element.classList.add('rank-ss');
+                break;
+            case 'S':
+                element.classList.add('rank-s');
+                break;
+            case 'A':
+                element.classList.add('rank-a');
+                break;
+            case 'B':
+                element.classList.add('rank-b');
+                break;
+            case 'C':
+                element.classList.add('rank-c');
+                break;
+            case 'D':
+                element.classList.add('rank-d');
+                break;
+            case 'E':
+                element.classList.add('rank-e');
+                break;
+            default:
+                element.classList.add('rank-default');
+                break;
+        }
+    }
+
+    /**
+     * 順位のテキストに基づいて要素の色を更新する
+     * @param {HTMLElement} element - 順位テキストを含む要素
+     */
+    function updateRankingColor(element) {
+        const text = element.innerText.trim();
+        const match = text.match(/^(\d+)/);
+        if (!match) {
+            element.style.color = '#777'; // 色をリセット
+            return;
+        }
+        const rankValue = parseInt(match[1]);
+
+        element.classList.remove('rank-color-1-5', 'rank-color-6-10', 'rank-color-11-15', 'rank-color-16-20', 'rank-color-21-plus');
+
+        if (rankValue >= 1 && rankValue <= 5) {
+            element.classList.add('rank-color-1-5');
+        } else if (rankValue >= 6 && rankValue <= 10) {
+            element.classList.add('rank-color-6-10');
+        } else if (rankValue >= 11 && rankValue <= 15) {
+            element.classList.add('rank-color-11-15');
+        } else if (rankValue >= 16 && rankValue <= 20) {
+            element.classList.add('rank-color-16-20');
+        } else if (rankValue > 20) {
+            element.classList.add('rank-color-21-plus');
         }
     }
 
