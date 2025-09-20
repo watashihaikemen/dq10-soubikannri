@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -214,7 +214,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 6; // 確実に再初期化するため、バージョンを上げました
+    const dbVersion = 1; // バージョンを固定
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -226,17 +226,13 @@
     request.onupgradeneeded = (event) => {
         db = event.target.result;
         
-        // 既存のストアを削除して作り直すことで、過去のデータ問題を回避
-        if (db.objectStoreNames.contains('cardData')) {
-            db.deleteObjectStore('cardData');
+        // ストアがまだ存在しない場合のみ作成
+        if (!db.objectStoreNames.contains('cardData')) {
+            db.createObjectStore('cardData', { keyPath: 'id' });
         }
-        if (db.objectStoreNames.contains('cardOrder')) {
-            db.deleteObjectStore('cardOrder');
+        if (!db.objectStoreNames.contains('cardOrder')) {
+            db.createObjectStore('cardOrder');
         }
-        
-        // 新しいストアを初期化
-        db.createObjectStore('cardData', { keyPath: 'id' });
-        db.createObjectStore('cardOrder');
     };
 
     request.onsuccess = (event) => {
@@ -410,16 +406,24 @@
                     createCard(cardId);
                 });
             } else {
-                for (let i = 0; i < 3; i++) {
-                    createCard();
+                // 初回アクセス時のみ3枚のカードを作成
+                const currentCards = document.querySelectorAll('.character-card:not(.card-template)');
+                if (currentCards.length === 0) {
+                    for (let i = 0; i < 3; i++) {
+                        createCard();
+                    }
                 }
             }
         };
 
         request.onerror = (event) => {
             console.error('Failed to load card order:', event.target.errorCode);
-            for (let i = 0; i < 3; i++) {
-                createCard();
+            // エラー時も初回アクセス時のみカードを作成
+            const currentCards = document.querySelectorAll('.character-card:not(.card-template)');
+            if (currentCards.length === 0) {
+                for (let i = 0; i < 3; i++) {
+                    createCard();
+                }
             }
         };
     }
