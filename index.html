@@ -36,6 +36,7 @@
             border: 3px solid #f9d71c;
             position: relative;
             background-color: #e0e0e0;
+            cursor: pointer; /* マウスオーバー時にカーソルをポインタに変更 */
         }
         .character-image img {
             width: 100%;
@@ -119,14 +120,10 @@
             left: 0;
             color: #4a4a4a;
         }
-        /* --- 修正箇所 --- */
-        /* 「画像を選択」テキストと「×」ボタンを非表示にする */
-        .image-input,
-        .delete-button {
+        /* 画像選択のラベルは不要になったので非表示のまま */
+        .image-input {
             display: none;
         }
-        /* --- 修正ここまで --- */
-
         .add-button {
             width: 100%;
             padding: 15px;
@@ -142,7 +139,27 @@
         .add-button:hover {
             background-color: #45a049;
         }
-        /* カードテンプレートは非表示にする */
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .delete-button:hover {
+            transform: scale(1.1);
+        }
         .card-template {
             display: none;
         }
@@ -157,7 +174,7 @@
 </div>
 
 <div id="card-template" class="character-card card-template">
-    <button class="delete-button" title="カードを削除">&times;</button>
+    <button class="delete-button" title="カードを削除">削除</button>
     <div class="card-header">
         <div class="character-image" data-rank="?">
             <img src="" alt="" class="card-image">
@@ -274,7 +291,14 @@
         });
 
         const fileInput = cardElement.querySelector('.image-file-input');
+        const imgContainer = cardElement.querySelector('.character-image');
         const imgElement = cardElement.querySelector('.card-image');
+
+        // 画像コンテナをクリックしたときにファイル入力欄を開く
+        imgContainer.addEventListener('click', () => {
+            fileInput.click();
+        });
+
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -286,9 +310,7 @@
                 reader.readAsDataURL(file);
             }
         });
-
-        // 削除ボタンの非表示化
-        // 削除ボタンのイベントリスナーはそのまま残す
+        
         cardElement.querySelector('.delete-button').addEventListener('click', () => {
             if (confirm('このカードを本当に削除しますか？')) {
                 deleteCard(cardId, cardElement);
