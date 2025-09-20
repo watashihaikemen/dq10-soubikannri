@@ -73,33 +73,7 @@
             border-radius: 8px;
             display: inline-block;
             margin-left: 10px;
-            /* 遷移を滑らかにする */
-            transition: background-color 0.3s ease;
         }
-        
-        /* ランクごとの色分けを追加 */
-        .character-rank.rank-ss {
-            background-color: #a42c2c !important; /* 赤 */
-        }
-        .character-rank.rank-s {
-            background-color: #e67e22 !important; /* 橙 */
-        }
-        .character-rank.rank-a {
-            background-color: #f1c40f !important; /* 黄 */
-        }
-        .character-rank.rank-b {
-            background-color: #2ecc71 !important; /* 緑 */
-        }
-        .character-rank.rank-c {
-            background-color: #3498db !important; /* 青 */
-        }
-        .character-rank.rank-d {
-            background-color: #9b59b6 !important; /* 紫 */
-        }
-        .character-rank.rank-e {
-            background-color: #bdc3c7 !important; /* 灰 */
-        }
-
         .ranking-text {
             font-size: 18px;
             color: #777;
@@ -279,10 +253,6 @@
                     element.src = savedData;
                 } else {
                     element.innerHTML = savedData;
-                    // ランクの要素の場合、色を更新
-                    if (element.classList.contains('character-rank')) {
-                        updateRankColor(element);
-                    }
                 }
             }
         };
@@ -304,44 +274,11 @@
         };
     }
 
-    function updateRankColor(element) {
-        const text = element.textContent.trim().toUpperCase();
-        const rankClasses = ['rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e'];
-        
-        // 既存のランククラスをすべて削除
-        element.classList.remove(...rankClasses);
-
-        let rank = '';
-        if (text.includes('SS')) {
-            rank = 'ss';
-        } else if (text.includes('S')) {
-            rank = 's';
-        } else if (text.includes('A')) {
-            rank = 'a';
-        } else if (text.includes('B')) {
-            rank = 'b';
-        } else if (text.includes('C')) {
-            rank = 'c';
-        } else if (text.includes('D')) {
-            rank = 'd';
-        } else if (text.includes('E')) {
-            rank = 'e';
-        }
-
-        if (rank) {
-            element.classList.add(`rank-${rank}`);
-        }
-    }
-
     function setupCardEventListeners(cardElement, cardId) {
         const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
         editableElements.forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
                 saveCardData(cardId, `text_${index}`, e.target.innerHTML);
-                // ランクの要素の場合、色を更新
-                if (e.target.classList.contains('character-rank')) {
-                    updateRankColor(e.target);
-                }
             });
         });
 
