@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -214,7 +214,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 5; // バージョンを上げました
+    const dbVersion = 6; // 確実に再初期化するため、バージョンを上げました
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -226,14 +226,17 @@
     request.onupgradeneeded = (event) => {
         db = event.target.result;
         
-        // データストアが存在しない場合にのみ作成
-        if (!db.objectStoreNames.contains('cardData')) {
-            db.createObjectStore('cardData', { keyPath: 'id' });
+        // 既存のストアを削除して作り直すことで、過去のデータ問題を回避
+        if (db.objectStoreNames.contains('cardData')) {
+            db.deleteObjectStore('cardData');
         }
-
-        if (!db.objectStoreNames.contains('cardOrder')) {
-            db.createObjectStore('cardOrder');
+        if (db.objectStoreNames.contains('cardOrder')) {
+            db.deleteObjectStore('cardOrder');
         }
+        
+        // 新しいストアを初期化
+        db.createObjectStore('cardData', { keyPath: 'id' });
+        db.createObjectStore('cardOrder');
     };
 
     request.onsuccess = (event) => {
@@ -242,6 +245,7 @@
     };
 
     function saveCardData(cardId, data) {
+        if (!db) return;
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
         
@@ -250,6 +254,7 @@
 
     function loadCardData(cardId) {
         return new Promise((resolve, reject) => {
+            if (!db) return reject('DB not initialized');
             const transaction = db.transaction('cardData', 'readonly');
             const objectStore = transaction.objectStore('cardData');
             const request = objectStore.get(cardId);
@@ -263,6 +268,7 @@
     }
 
     function deleteCardData(cardId) {
+        if (!db) return;
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
         objectStore.delete(cardId);
@@ -383,6 +389,7 @@
     }
 
     function saveCardOrder() {
+        if (!db) return;
         const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)')).map(card => card.getAttribute('data-card-id'));
         const transaction = db.transaction('cardOrder', 'readwrite');
         const objectStore = transaction.objectStore('cardOrder');
@@ -390,6 +397,7 @@
     }
 
     function loadAllCards() {
+        if (!db) return;
         const transaction = db.transaction('cardOrder', 'readonly');
         const objectStore = transaction.objectStore('cardOrder');
         const request = objectStore.get('order');
