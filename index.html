@@ -6,7 +6,7 @@
     <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -45,7 +45,7 @@
             border-radius: 50%;
         }
         .character-image::after {
-            display: none; /* ここを変更しました */
+            display: none;
             content: attr(data-rank);
             position: absolute;
             bottom: -5px;
@@ -139,18 +139,17 @@
         .add-button:hover {
             background-color: #45a049;
         }
-        /* 削除ボタンを透明にして見えなくする */
         .delete-button {
             position: absolute;
             top: 0;
             right: 0;
-            width: 50px; /* タップしやすいように大きさを確保 */
+            width: 50px;
             height: 50px;
-            background-color: transparent; /* 背景を透明に */
-            color: transparent; /* 文字色を透明に */
+            background-color: transparent;
+            color: transparent;
             border: none;
             cursor: pointer;
-            z-index: 10; /* 他の要素の上に配置 */
+            z-index: 10;
         }
         .card-template {
             display: none;
@@ -161,7 +160,7 @@
 
 <div class="container">
     <div id="character-card-list">
-        </div>
+    </div>
     <button class="add-button" id="add-card-button">カードを追加</button>
 </div>
 
@@ -213,22 +212,21 @@
 </div>
 
 <script>
-    const dbName = 'characterDB';
-    const dbVersion = 3; 
+    const dbName = 'characterDB_new';
+    const dbVersion = 4;
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
 
-    request.onerror = (event) => {
-        console.error('IndexedDB error:', event.target.errorCode);
-    };
-
     request.onupgradeneeded = (event) => {
         db = event.target.result;
         if (!db.objectStoreNames.contains('cardData')) {
-            db.createObjectStore('cardData');
+            db.createObjectStore('cardData', { keyPath: 'id' });
         }
-        const cardOrderStore = db.createObjectStore('cardOrder');
+    };
+
+    request.onerror = (event) => {
+        console.error('IndexedDB error:', event.target.errorCode);
     };
 
     request.onsuccess = (event) => {
@@ -236,49 +234,122 @@
         loadAllCards();
     };
 
-    function saveCardData(cardId, key, value) {
+    function saveCard(cardId) {
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`);
+        if (!cardElement) return;
+
+        const cardData = {
+            id: cardId,
+            name: cardElement.querySelector('.character-name').innerHTML,
+            rank: cardElement.querySelector('.character-rank:nth-of-type(1)').innerHTML,
+            rankingText: cardElement.querySelector('.ranking-text').innerHTML,
+            rankSecondary: cardElement.querySelector('.character-rank:nth-of-type(2)').innerHTML,
+            durability: cardElement.querySelector('.stats-item:nth-of-type(1) .value').innerHTML,
+            attack: cardElement.querySelector('.stats-item:nth-of-type(2) .value').innerHTML,
+            stability: cardElement.querySelector('.stats-item:nth-of-type(3) .value').innerHTML,
+            mobility: cardElement.querySelector('.stats-item:nth-of-type(4) .value').innerHTML,
+            support: cardElement.querySelector('.stats-item:nth-of-type(5) .value').innerHTML,
+            skills: Array.from(cardElement.querySelectorAll('.skill-list li')).map(li => li.innerHTML),
+            image: cardElement.querySelector('.card-image').src
+        };
+
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
-        objectStore.put(value, `${cardId}_${key}`);
+        objectStore.put(cardData);
     }
 
-    function loadCardData(cardId, key, element) {
+    function loadCard(cardData) {
+        const template = document.getElementById('card-template');
+        const cardClone = template.cloneNode(true);
+        cardClone.classList.remove('card-template');
+        cardClone.setAttribute('data-card-id', cardData.id);
+
+        cardClone.querySelector('.character-name').innerHTML = cardData.name;
+        cardClone.querySelector('.character-rank:nth-of-type(1)').innerHTML = cardData.rank;
+        cardClone.querySelector('.ranking-text').innerHTML = cardData.rankingText;
+        cardClone.querySelector('.character-rank:nth-of-type(2)').innerHTML = cardData.rankSecondary;
+        cardClone.querySelector('.stats-item:nth-of-type(1) .value').innerHTML = cardData.durability;
+        cardClone.querySelector('.stats-item:nth-of-type(2) .value').innerHTML = cardData.attack;
+        cardClone.querySelector('.stats-item:nth-of-type(3) .value').innerHTML = cardData.stability;
+        cardClone.querySelector('.stats-item:nth-of-type(4) .value').innerHTML = cardData.mobility;
+        cardClone.querySelector('.stats-item:nth-of-type(5) .value').innerHTML = cardData.support;
+        cardClone.querySelector('.card-image').src = cardData.image || '';
+
+        const skillList = cardClone.querySelector('.skill-list');
+        skillList.innerHTML = '';
+        cardData.skills.forEach(skill => {
+            const li = document.createElement('li');
+            li.setAttribute('contenteditable', 'true');
+            li.innerHTML = skill;
+            skillList.appendChild(li);
+        });
+
+        setupCardEventListeners(cardClone, cardData.id);
+        document.getElementById('character-card-list').appendChild(cardClone);
+    }
+
+    function createCard() {
+        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const cardData = {
+            id: newCardId,
+            name: '新しいキャラクター',
+            rank: '?位',
+            rankingText: '/??位',
+            rankSecondary: '?',
+            durability: '?',
+            attack: '?',
+            stability: '?',
+            mobility: '?',
+            support: '?',
+            skills: ['スキルや評価を入力してください', '', '', ''],
+            image: ''
+        };
+        
+        loadCard(cardData);
+        saveCard(newCardId);
+    }
+
+    function deleteCard(cardId, cardElement) {
+        if (confirm('このカードを本当に削除しますか？')) {
+            cardElement.remove();
+            const transaction = db.transaction('cardData', 'readwrite');
+            const objectStore = transaction.objectStore('cardData');
+            objectStore.delete(cardId);
+        }
+    }
+
+    function loadAllCards() {
         const transaction = db.transaction('cardData', 'readonly');
         const objectStore = transaction.objectStore('cardData');
-        const request = objectStore.get(`${cardId}_${key}`);
+        const request = objectStore.getAll();
+
         request.onsuccess = (event) => {
-            const savedData = event.target.result;
-            if (savedData !== undefined) {
-                if (key === 'image') {
-                    element.src = savedData;
-                } else {
-                    element.innerHTML = savedData;
+            const cardDatas = event.target.result;
+            if (cardDatas && cardDatas.length > 0) {
+                document.getElementById('character-card-list').innerHTML = '';
+                cardDatas.forEach(cardData => {
+                    loadCard(cardData);
+                });
+            } else {
+                for (let i = 0; i < 3; i++) {
+                    createCard();
                 }
             }
         };
-    }
 
-    function deleteCardData(cardId) {
-        const transaction = db.transaction('cardData', 'readwrite');
-        const objectStore = transaction.objectStore('cardData');
-        
-        const request = objectStore.openCursor();
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (cursor.key.startsWith(`${cardId}_`)) {
-                    cursor.delete();
-                }
-                cursor.continue();
+        request.onerror = (event) => {
+            console.error('Failed to load all cards:', event.target.errorCode);
+            for (let i = 0; i < 3; i++) {
+                createCard();
             }
         };
     }
-
+    
     function setupCardEventListeners(cardElement, cardId) {
         const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
-        editableElements.forEach((elem, index) => {
-            elem.addEventListener('input', (e) => {
-                saveCardData(cardId, `text_${index}`, e.target.innerHTML);
+        editableElements.forEach(elem => {
+            elem.addEventListener('input', () => {
+                saveCard(cardId);
             });
         });
 
@@ -296,93 +367,19 @@
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     imgElement.src = event.target.result;
-                    saveCardData(cardId, 'image', event.target.result);
+                    saveCard(cardId);
                 };
                 reader.readAsDataURL(file);
             }
         });
-        
+
         cardElement.querySelector('.delete-button').addEventListener('click', () => {
-            if (confirm('このカードを本当に削除しますか？')) {
-                deleteCard(cardId, cardElement);
-            }
+            deleteCard(cardId, cardElement);
         });
     }
 
-    function createCard(isNew = true) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.cloneNode(true);
-        cardClone.classList.remove('card-template');
-        
-        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        cardClone.setAttribute('data-card-id', newCardId);
-        
-        setupCardEventListeners(cardClone, newCardId);
-        document.getElementById('character-card-list').appendChild(cardClone);
+    document.getElementById('add-card-button').addEventListener('click', createCard);
 
-        if (isNew) {
-            saveCardOrder();
-        }
-    }
-
-    function loadCard(cardId) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.cloneNode(true);
-        cardClone.classList.remove('card-template');
-        cardClone.setAttribute('data-card-id', cardId);
-
-        setupCardEventListeners(cardClone, cardId);
-
-        const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
-        editableElements.forEach((elem, index) => {
-            loadCardData(cardId, `text_${index}`, elem);
-        });
-        loadCardData(cardId, 'image', cardClone.querySelector('.card-image'));
-        
-        document.getElementById('character-card-list').appendChild(cardClone);
-    }
-
-    function deleteCard(cardId, cardElement) {
-        cardElement.remove();
-        deleteCardData(cardId);
-        saveCardOrder();
-    }
-
-    function saveCardOrder() {
-        const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)')).map(card => card.getAttribute('data-card-id'));
-        const transaction = db.transaction('cardOrder', 'readwrite');
-        const objectStore = transaction.objectStore('cardOrder');
-        objectStore.put(cardIds, 'order');
-    }
-
-    function loadAllCards() {
-        const transaction = db.transaction('cardOrder', 'readonly');
-        const objectStore = transaction.objectStore('cardOrder');
-        const request = objectStore.get('order');
-
-        request.onsuccess = (event) => {
-            const cardIds = event.target.result;
-            if (cardIds && cardIds.length > 0) {
-                document.getElementById('character-card-list').innerHTML = '';
-                cardIds.forEach(cardId => {
-                    loadCard(cardId);
-                });
-            } else {
-                for (let i = 0; i < 3; i++) {
-                    createCard();
-                }
-            }
-        };
-
-        request.onerror = (event) => {
-            console.error('Failed to load card order:', event.target.errorCode);
-            for (let i = 0; i < 3; i++) {
-                    createCard();
-                }
-        };
-    }
-
-    document.getElementById('add-card-button').addEventListener('click', () => createCard());
 </script>
 </body>
 </html>
