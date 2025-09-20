@@ -7,11 +7,11 @@
     <style>
         /* スタイルの最適化 */
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
-            color: #333; /* 基本テキストカラーの指定 */
+            color: #333;
         }
         .container {
             max-width: 800px;
@@ -24,7 +24,6 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
-            /* Flexboxで内部を整理 */
             display: flex;
             flex-direction: column;
         }
@@ -41,7 +40,7 @@
             border: 3px solid #f9d71c;
             position: relative;
             background-color: #e0e0e0;
-            overflow: hidden; /* 画像のはみ出しを防ぐ */
+            overflow: hidden;
         }
         .character-image img {
             width: 100%;
@@ -70,7 +69,7 @@
         .ranking-info {
             display: flex;
             align-items: baseline;
-            margin-top: 5px; /* 名前との間隔 */
+            margin-top: 5px;
         }
         .character-rank {
             color: white;
@@ -80,7 +79,7 @@
             border-radius: 8px;
             display: inline-block;
             margin-left: 10px;
-            transition: background-color 0.3s ease; /* 色変化を滑らかに */
+            transition: background-color 0.3s ease;
         }
         .ranking-text {
             font-size: 18px;
@@ -89,7 +88,7 @@
         }
         .stats-table {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5列のグリッドレイアウト */
+            grid-template-columns: repeat(5, 1fr);
             background-color: #e0e0e0;
             border-radius: 8px;
             overflow: hidden;
@@ -184,14 +183,14 @@
             display: none;
         }
         /* ランクごとの色を定義 */
-        .rank-ss { background-color: #ff4500; } /* SS: 赤 */
-        .rank-s { background-color: #ff8c00; } /* S: オレンジ */
-        .rank-a { background-color: #f9d71c; } /* A: 黄色 */
-        .rank-b { background-color: #32cd32; } /* B: 緑 */
-        .rank-c { background-color: #1e90ff; } /* C: 青 */
-        .rank-d { background-color: #8a2be2; } /* D: 紫 */
-        .rank-e { background-color: #a42c2c; } /* E: 茶 */
-        .rank-default { background-color: #999; } /* デフォルト: グレー */
+        .rank-ss { background-color: #ff4500; }
+        .rank-s { background-color: #ff8c00; }
+        .rank-a { background-color: #f9d71c; }
+        .rank-b { background-color: #32cd32; }
+        .rank-c { background-color: #1e90ff; }
+        .rank-d { background-color: #8a2be2; }
+        .rank-e { background-color: #a42c2c; }
+        .rank-default { background-color: #999; }
     </style>
 </head>
 <body>
@@ -253,18 +252,23 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 2;
+    const dbVersion = 3; // ★重要：バージョンを2から3に上げてください
+
     let db;
 
+    // IndexedDBを開く
     const request = indexedDB.open(dbName, dbVersion);
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
+        
         if (!db.objectStoreNames.contains('cardData')) {
             db.createObjectStore('cardData');
         }
+        
+        // 'cardOrder' ストア: キーパスを 'id' に設定して作成
         if (!db.objectStoreNames.contains('cardOrder')) {
-            db.createObjectStore('cardOrder');
+            db.createObjectStore('cardOrder', { keyPath: 'id' });
         }
     };
 
@@ -330,7 +334,6 @@
         const articleElement = cardClone.querySelector('article');
         articleElement.setAttribute('data-card-id', newCardId);
         
-        // input要素のIDをユニークにする
         const fileInput = cardClone.querySelector('.image-file-input');
         const imageLabel = cardClone.querySelector('.image-input');
         const uniqueId = `file-input-${newCardId}`;
@@ -405,7 +408,6 @@
             }
         });
 
-        // ロード時にランクの色を更新
         const rankElements = cardElement.querySelectorAll('.character-rank');
         rankElements.forEach(updateRankColor);
     }
@@ -420,9 +422,12 @@
         if (!db) return;
         const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)'))
             .map(card => card.getAttribute('data-card-id'));
+        
         const transaction = db.transaction('cardOrder', 'readwrite');
         const store = transaction.objectStore('cardOrder');
-        store.put(cardIds, 'order');
+        
+        // ★修正点: オブジェクト形式で保存
+        store.put({ id: 'order', cardIds: cardIds });
     }
 
     function loadAllCards() {
@@ -432,9 +437,10 @@
         const request = store.get('order');
 
         request.onsuccess = (event) => {
-            const cardIds = event.target.result;
-            if (cardIds && cardIds.length > 0) {
-                cardIds.forEach(loadCard);
+            const data = event.target.result;
+            // ★修正点: オブジェクトからカードIDの配列を取得
+            if (data && data.cardIds && data.cardIds.length > 0) {
+                data.cardIds.forEach(loadCard);
             } else {
                 for (let i = 0; i < 3; i++) {
                     createCard();
@@ -443,20 +449,17 @@
         };
 
         request.onerror = () => {
+            console.error('Failed to load card order.');
             for (let i = 0; i < 3; i++) {
                 createCard();
             }
         };
     }
 
-    /**
-     * ランクのテキストに基づいて要素の背景色を更新する
-     * @param {HTMLElement} element - ランクテキストを含む要素
-     */
     function updateRankColor(element) {
         const rank = element.innerText.trim().toUpperCase();
-        element.style.backgroundColor = ''; // スタイルをリセット
-        element.className = 'character-rank'; // クラスもリセット
+        element.style.backgroundColor = '';
+        element.className = 'character-rank';
 
         switch(rank) {
             case 'SS':
