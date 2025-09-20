@@ -94,20 +94,21 @@
         }
 
         .card-header {
+            background-color: #f5f5f5;
             padding: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        /* ランクごとの背景色 */
-        .rank-SS { background-color: #ff8c00; } /* 橙 */
-        .rank-S { background-color: #ffd700; }  /* 黄 */
-        .rank-A { background-color: #dc143c; }  /* 赤 */
-        .rank-B { background-color: #2e8b57; }  /* 緑 */
-        .rank-C { background-color: #0000ff; }  /* 青 */
-        .rank-D { background-color: #8a2be2; }  /* 紫 */
-        .rank-E { background-color: #191970; }  /* 濃い青 */
+        /* ランクごとの文字色 */
+        .rank-SS { color: #ff8c00; } /* 橙 */
+        .rank-S { color: #ffd700; }  /* 黄 */
+        .rank-A { color: #dc143c; }  /* 赤 */
+        .rank-B { color: #2e8b57; }  /* 緑 */
+        .rank-C { color: #0000ff; }  /* 青 */
+        .rank-D { color: #8a2be2; }  /* 紫 */
+        .rank-E { color: #191970; }  /* 濃い青 */
 
         .card-header .char-image {
             width: 80px;
@@ -128,7 +129,6 @@
 
         .card-ranking {
             font-size: 16px;
-            color: white; /* ヘッダー色が暗くなるため、文字色を白に */
             font-weight: bold;
             display: flex;
             align-items: baseline;
@@ -137,6 +137,7 @@
         
         .card-position {
             font-size: 14px;
+            color: #333;
             font-weight: normal;
         }
 
@@ -356,13 +357,13 @@
                 card.className = 'character-card';
                 card.dataset.position = data.position;
                 card.innerHTML = `
-                    <div class="card-header rank-${data.rank}">
+                    <div class="card-header">
                         <img src="${data.image}" alt="${data.name}" class="char-image">
                         <div class="char-details">
                             <div class="card-name">${data.name}</div>
                             <div class="card-ranking">
                                 <span class="card-position">${data.position}位/0位</span>
-                                <span class="card-rank">総合評価:${data.rank}</span>
+                                <span class="card-rank rank-${data.rank}">総合評価:${data.rank}</span>
                             </div>
                         </div>
                     </div>
@@ -411,10 +412,13 @@
             }
 
             function updateCard(card, data) {
-                card.querySelector('.card-header').className = `card-header rank-${data.rank}`;
                 card.querySelector('.char-image').src = data.image;
                 card.querySelector('.card-name').textContent = data.name;
-                card.querySelector('.card-rank').textContent = `総合評価:${data.rank}`;
+                
+                const rankSpan = card.querySelector('.card-rank');
+                rankSpan.className = `card-rank rank-${data.rank}`;
+                rankSpan.textContent = `総合評価:${data.rank}`;
+                
                 card.querySelector('.card-stats td:nth-child(1)').textContent = data.stats.endurance;
                 card.querySelector('.card-stats td:nth-child(2)').textContent = data.stats.attack;
                 card.querySelector('.card-stats td:nth-child(3)').textContent = data.stats.stability;
