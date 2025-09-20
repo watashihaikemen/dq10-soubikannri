@@ -64,8 +64,18 @@
             font-weight: bold;
             color: #4a4a4a;
         }
+
+        /* ランクの色を定義するCSSクラス */
+        .rank-ss { background-color: #d63031; } /* 赤 */
+        .rank-s { background-color: #e67e22; }  /* 橙 */
+        .rank-a { background-color: #f1c40f; }  /* 黄 */
+        .rank-b { background-color: #27ae60; }  /* 緑 */
+        .rank-c { background-color: #3498db; }  /* 青 */
+        .rank-d { background-color: #9b59b6; }  /* 紫 */
+        .rank-e { background-color: #34495e; }  /* 濃い青 */
+        .rank-default { background-color: #a42c2c; } /* デフォルト色 */
+
         .character-rank {
-            background-color: #a42c2c;
             color: white;
             font-size: 24px;
             font-weight: bold;
@@ -139,7 +149,6 @@
         .add-button:hover {
             background-color: #45a049;
         }
-        /* 削除ボタンを透明にして見えなくする */
         .delete-button {
             position: absolute;
             top: 0;
@@ -155,24 +164,13 @@
         .card-template {
             display: none;
         }
-
-        /* ランクごとのスタイル */
-        .rank-ss { background-color: #e74c3c; color: white !important; } /* 赤 */
-        .rank-s { background-color: #e67e22; color: white !important; }  /* 橙 */
-        .rank-a { background-color: #f1c40f; color: black !important; }  /* 黄 */
-        .rank-b { background-color: #2ecc71; color: black !important; }  /* 緑 */
-        .rank-c { background-color: #3498db; color: white !important; }  /* 青 */
-        .rank-d { background-color: #9b59b6; color: white !important; }  /* 紫 */
-        .rank-e { background-color: #bdc3c7; color: black !important; }  /* 灰 */
-        .rank-default { background-color: #3b5998; color: white !important; } /* デフォルトの色 */
-
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="character-card-list">
-        </div>
+    </div>
     <button class="add-button" id="add-card-button">カードを追加</button>
 </div>
 
@@ -185,7 +183,7 @@
         <div>
             <div class="character-name" contenteditable="true">キャラクター名</div>
             <div style="display: flex; align-items: baseline;">
-                <span class="character-rank" contenteditable="true">?位</span>
+                <span class="character-rank" contenteditable="true">?</span>
                 <span class="ranking-text" contenteditable="true">/??位</span>
                 <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">?</span>
             </div>
@@ -239,9 +237,7 @@
         if (!db.objectStoreNames.contains('cardData')) {
             db.createObjectStore('cardData');
         }
-        if (!db.objectStoreNames.contains('cardOrder')) {
-             db.createObjectStore('cardOrder');
-        }
+        const cardOrderStore = db.createObjectStore('cardOrder');
     };
 
     request.onsuccess = (event) => {
@@ -274,7 +270,7 @@
     function deleteCardData(cardId) {
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
-        
+
         const request = objectStore.openCursor();
         request.onsuccess = (event) => {
             const cursor = event.target.result;
@@ -287,36 +283,34 @@
         };
     }
 
-    // ランクの色を更新する関数
-    function updateRankColor(element) {
-        const rank = element.textContent.trim().toUpperCase();
-        element.classList.remove('rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e', 'rank-default');
-        
-        switch(rank) {
+    function updateRankColor(rankElement) {
+        const rankValue = rankElement.innerText.toUpperCase().trim().replace(/位$/, '');
+        rankElement.classList.remove('rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e', 'rank-default');
+
+        switch (rankValue) {
             case 'SS':
-                element.classList.add('rank-ss');
+                rankElement.classList.add('rank-ss');
                 break;
             case 'S':
-                element.classList.add('rank-s');
+                rankElement.classList.add('rank-s');
                 break;
             case 'A':
-                element.classList.add('rank-a');
+                rankElement.classList.add('rank-a');
                 break;
             case 'B':
-                element.classList.add('rank-b');
+                rankElement.classList.add('rank-b');
                 break;
             case 'C':
-                element.classList.add('rank-c');
+                rankElement.classList.add('rank-c');
                 break;
             case 'D':
-                element.classList.add('rank-d');
+                rankElement.classList.add('rank-d');
                 break;
             case 'E':
-                element.classList.add('rank-e');
+                rankElement.classList.add('rank-e');
                 break;
             default:
-                element.classList.add('rank-default');
-                break;
+                rankElement.classList.add('rank-default');
         }
     }
 
@@ -325,7 +319,7 @@
         editableElements.forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
                 saveCardData(cardId, `text_${index}`, e.target.innerHTML);
-                // ランクの要素にinputイベントを追加
+
                 if (e.target.classList.contains('character-rank')) {
                     updateRankColor(e.target);
                 }
@@ -351,22 +345,25 @@
                 reader.readAsDataURL(file);
             }
         });
-        
+
         cardElement.querySelector('.delete-button').addEventListener('click', () => {
             if (confirm('このカードを本当に削除しますか？')) {
                 deleteCard(cardId, cardElement);
             }
         });
+
+        const rankElements = cardElement.querySelectorAll('.character-rank');
+        rankElements.forEach(updateRankColor);
     }
 
     function createCard(isNew = true) {
         const template = document.getElementById('card-template');
         const cardClone = template.cloneNode(true);
         cardClone.classList.remove('card-template');
-        
+
         const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         cardClone.setAttribute('data-card-id', newCardId);
-        
+
         setupCardEventListeners(cardClone, newCardId);
         document.getElementById('character-card-list').appendChild(cardClone);
 
@@ -386,23 +383,9 @@
         const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
         editableElements.forEach((elem, index) => {
             loadCardData(cardId, `text_${index}`, elem);
-            if (elem.classList.contains('character-rank')) {
-                elem.addEventListener('input', () => updateRankColor(elem));
-                // 読み込み時にも色を適用
-                const transaction = db.transaction('cardData', 'readonly');
-                const objectStore = transaction.objectStore('cardData');
-                const request = objectStore.get(`${cardId}_text_${index}`);
-                request.onsuccess = (event) => {
-                    const savedData = event.target.result;
-                    if (savedData !== undefined) {
-                        elem.innerHTML = savedData;
-                        updateRankColor(elem);
-                    }
-                };
-            }
         });
         loadCardData(cardId, 'image', cardClone.querySelector('.card-image'));
-        
+
         document.getElementById('character-card-list').appendChild(cardClone);
     }
 
@@ -441,8 +424,8 @@
         request.onerror = (event) => {
             console.error('Failed to load card order:', event.target.errorCode);
             for (let i = 0; i < 3; i++) {
-                    createCard();
-                }
+                createCard();
+            }
         };
     }
 
