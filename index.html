@@ -3,413 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>キャラクター編集ツール</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>キャラクターカードジェネレーター</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f4f4f9;
             color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
             padding: 20px;
-            min-height: 100vh;
         }
 
         .container {
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .card {
+            max-width: 900px;
+            margin: 0 auto;
             background-color: #fff;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            padding: 24px;
-            margin-bottom: 24px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        h1 {
+            text-align: center;
+            color: #444;
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .avatar-container {
-            position: relative;
-            width: 96px;
-            height: 96px;
-            margin-right: 24px;
-            flex-shrink: 0;
-            cursor: pointer;
-        }
-
-        .avatar {
-            width: 100%;
-            height: 100%;
-            background-color: #e0e0e0;
-            border-radius: 50%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .avatar-icon {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background-color: #007bff;
-            color: #fff;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fff;
-            transition: background-color 0.2s ease;
-        }
-
-        .avatar-container:hover .avatar-icon {
-            background-color: #0056b3;
-        }
-
-        .header-content {
-            flex-grow: 1;
-        }
-
-        .character-name-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .character-name-group input {
-            font-size: 28px;
-            font-weight: bold;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            background-color: #f7f7f7;
-            width: calc(100% - 100px);
-            max-width: 250px;
-        }
-
-        .rank-box {
-            display: flex;
-            align-items: center;
-            font-size: 18px;
-            color: #666;
-        }
-        
-        .rank-box .rank-value {
-            font-weight: bold;
-            color: #d9534f;
-            padding: 4px 10px;
-            background-color: #fcecec;
-            border-radius: 6px;
-            margin-right: 6px;
-        }
-
-        .edit-icon {
-            margin-left: 8px;
-            color: #999;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-
-        .edit-icon:hover {
-            color: #333;
-        }
-
-        .divider {
-            height: 1px;
-            background-color: #eee;
-            margin: 20px 0;
-        }
-
-        .rating-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        .card-form, .edit-form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 16px;
-        }
-
-        .rating-item {
-            text-align: center;
-            background-color: #f9f9f9;
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid #eee;
-        }
-
-        .rating-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .rating-grade input {
-            font-size: 24px;
-            font-weight: bold;
-            color: #555;
-            border: none;
-            background: transparent;
-            width: 100%;
-            text-align: center;
-            padding: 0;
-        }
-
-        .skill-section {
-            margin-top: 24px;
-        }
-
-        .skill-section h3 {
-            font-size: 18px;
-            color: #555;
-            margin-bottom: 12px;
-        }
-        
-        .skill-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .skill-list li {
-            margin-bottom: 16px;
-        }
-        
-        .skill-list textarea {
-            width: 100%;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 12px;
-            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, textarea, select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             font-size: 16px;
-            resize: vertical;
-            min-height: 80px;
-            transition: border-color 0.2s ease;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-btn {
+            background-color: #4CAF50;
+            color: white;
+            justify-self: end;
+        }
+
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+
+        .card-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .character-card {
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #e9e9e9;
+        }
+
+        .card-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+        }
+        
+        .card-info {
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+        
+        .card-info h2 {
+            margin: 0 0 5px;
+            font-size: 24px;
+            color: #222;
+        }
+
+        .card-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .card-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .card-stats .stat-item {
+            padding: 10px 0;
+            border-right: 1px solid #ccc;
+        }
+
+        .card-stats .stat-item:last-child {
+            border-right: none;
+        }
+
+        .stat-value-container {
+            padding: 5px 0;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .card-description {
+            padding: 15px;
+        }
+
+        .card-description ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .card-description li {
+            margin-bottom: 10px;
             line-height: 1.5;
         }
 
-        .skill-list textarea:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-
-        .add-card-button {
-            display: block;
-            width: 100%;
-            padding: 18px;
-            background-color: #28a745;
-            color: #fff;
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #e74c3c;
+            color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.2s ease;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
         }
 
-        .add-card-button:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
+        .delete-btn:hover {
+            background-color: #c0392b;
         }
-        
     </style>
 </head>
 <body>
-
     <div class="container">
-        <div class="card" id="template-card" style="display: none;">
-            <div class="header">
-                <div class="avatar-container">
-                    <div class="avatar">
-                        <img src="" alt="キャラクター画像" id="template-avatar-img">
-                    </div>
-                    <div class="avatar-icon"><i class="fas fa-camera"></i></div>
+        <h1>キャラクターカードジェネレーター</h1>
+        <form id="card-form" class="card-form">
+            <h2>新しいカードを作成</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="char-name">キャラクター名</label>
+                    <input type="text" id="char-name" required>
                 </div>
-                <div class="header-content">
-                    <div class="character-name-group">
-                        <input type="text" placeholder="キャラクター名" id="template-character-name">
-                    </div>
-                    <div class="rank-box">
-                        <span class="rank-label">順位:</span>
-                        <span class="rank-value" id="template-rank">?位</span>
-                        <span class="total-rank">/??位</span>
-                    </div>
+                <div class="form-group">
+                    <label for="char-rank">順位/ランク</label>
+                    <input type="text" id="char-rank" required>
+                </div>
+                <div class="form-group">
+                    <label for="char-image">画像URL</label>
+                    <input type="text" id="char-image" placeholder="URLを貼り付け">
                 </div>
             </div>
-            
-            <div class="divider"></div>
-
-            <ul class="rating-list">
-                <li class="rating-item">
-                    <span class="rating-label">耐久</span>
-                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-durability"></div>
-                </li>
-                <li class="rating-item">
-                    <span class="rating-label">攻撃</span>
-                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-attack"></div>
-                </li>
-                <li class="rating-item">
-                    <span class="rating-label">安定性</span>
-                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-stability"></div>
-                </li>
-                <li class="rating-item">
-                    <span class="rating-label">機動力</span>
-                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-mobility"></div>
-                </li>
-                <li class="rating-item">
-                    <span class="rating-label">援護</span>
-                    <div class="rating-grade"><input type="number" placeholder="?" maxlength="2" id="template-support"></div>
-                </li>
-            </ul>
-
-            <div class="skill-section">
-                <h3>スキル・評価</h3>
-                <ul class="skill-list">
-                    <li><textarea rows="2" placeholder="キャラクターのスキルや強み、評価を入力してください。" id="template-skill-1"></textarea></li>
-                    <li><textarea rows="2" placeholder="具体的な戦術や使用例などを入力してください。" id="template-skill-2"></textarea></li>
-                    <li><textarea rows="2" placeholder="総合的な評価や個人的な感想を入力してください。" id="template-skill-3"></textarea></li>
-                </ul>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="stat-durability">耐久</label>
+                    <input type="text" id="stat-durability" required>
+                </div>
+                <div class="form-group">
+                    <label for="stat-attack">攻撃</label>
+                    <input type="text" id="stat-attack" required>
+                </div>
+                <div class="form-group">
+                    <label for="stat-stability">安定性</label>
+                    <input type="text" id="stat-stability" required>
+                </div>
+                <div class="form-group">
+                    <label for="stat-mobility">機動力</label>
+                    <input type="text" id="stat-mobility" required>
+                </div>
+                <div class="form-group">
+                    <label for="stat-support">援護</label>
+                    <input type="text" id="stat-support" required>
+                </div>
             </div>
-        </div>
+            <div class="form-group">
+                <label for="char-desc">説明文 (箇条書き)</label>
+                <textarea id="char-desc" rows="4" placeholder="例:&#10;・説明文1&#10;・説明文2" required></textarea>
+            </div>
+            <button type="submit" class="add-btn">カードを追加</button>
+        </form>
 
-        <div id="card-container"></div>
+        <hr>
 
-        <button class="add-card-button" id="add-card"><i class="fas fa-plus-circle"></i> カードを追加</button>
-
+        <div id="card-list" class="card-list">
+            </div>
     </div>
 
     <script>
-        const cardContainer = document.getElementById('card-container');
-        const addCardButton = document.getElementById('add-card');
-        const templateCard = document.getElementById('template-card');
+        document.addEventListener('DOMContentLoaded', () => {
+            const cardForm = document.getElementById('card-form');
+            const cardList = document.getElementById('card-list');
 
-        // カードをローカルストレージに保存する関数
-        function saveCards() {
-            const cards = [];
-            document.querySelectorAll('.card:not(#template-card)').forEach(card => {
-                const data = {
-                    id: card.getAttribute('data-id'),
-                    name: card.querySelector('.character-name-group input').value,
-                    rank: card.querySelector('.rank-value').textContent,
-                    durability: card.querySelector('#template-durability').value,
-                    attack: card.querySelector('#template-attack').value,
-                    stability: card.querySelector('#template-stability').value,
-                    mobility: card.querySelector('#template-mobility').value,
-                    support: card.querySelector('#template-support').value,
-                    skill1: card.querySelector('#template-skill-1').value,
-                    skill2: card.querySelector('#template-skill-2').value,
-                    skill3: card.querySelector('#template-skill-3').value,
-                    avatar: card.querySelector('.avatar img').src // 画像データを保存
+            // カードデータの配列
+            let cards = [];
+
+            // ページロード時にローカルストレージからデータを読み込む
+            const savedCards = localStorage.getItem('characterCards');
+            if (savedCards) {
+                cards = JSON.parse(savedCards);
+                renderCards();
+            }
+
+            // カードの追加
+            cardForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const newCard = {
+                    name: document.getElementById('char-name').value,
+                    rank: document.getElementById('char-rank').value,
+                    image: document.getElementById('char-image').value,
+                    stats: {
+                        durability: document.getElementById('stat-durability').value.toUpperCase(),
+                        attack: document.getElementById('stat-attack').value.toUpperCase(),
+                        stability: document.getElementById('stat-stability').value.toUpperCase(),
+                        mobility: document.getElementById('stat-mobility').value.toUpperCase(),
+                        support: document.getElementById('stat-support').value.toUpperCase()
+                    },
+                    description: document.getElementById('char-desc').value.split('\n').filter(line => line.trim() !== '')
                 };
-                cards.push(data);
-            });
-            localStorage.setItem('characterCards', JSON.stringify(cards));
-        }
 
-        // 新しいカードを追加する関数
-        function addCard(data = null) {
-            const newCard = templateCard.cloneNode(true);
-            const cardId = 'card-' + Date.now();
-            newCard.id = cardId;
-            newCard.style.display = 'block';
-            newCard.setAttribute('data-id', cardId);
-
-            // テンプレートIDを削除して、新しいIDを付与
-            newCard.querySelectorAll('[id^="template-"]').forEach(element => {
-                const newId = element.id.replace('template-', '');
-                element.id = newId + '-' + Date.now();
+                cards.push(newCard);
+                saveAndRenderCards();
+                cardForm.reset();
             });
 
-            const avatarContainer = newCard.querySelector('.avatar-container');
-            const avatarImg = newCard.querySelector('.avatar img');
-            const characterNameInput = newCard.querySelector('.character-name-group input');
-            const rankSpan = newCard.querySelector('.rank-value');
-            const durabilityInput = newCard.querySelector('.rating-item:nth-child(1) input');
-            const attackInput = newCard.querySelector('.rating-item:nth-child(2) input');
-            const stabilityInput = newCard.querySelector('.rating-item:nth-child(3) input');
-            const mobilityInput = newCard.querySelector('.rating-item:nth-child(4) input');
-            const supportInput = newCard.querySelector('.rating-item:nth-child(5) input');
-            const skill1Textarea = newCard.querySelector('.skill-list li:nth-child(1) textarea');
-            const skill2Textarea = newCard.querySelector('.skill-list li:nth-child(2) textarea');
-            const skill3Textarea = newCard.querySelector('.skill-list li:nth-child(3) textarea');
-
-            if (data) {
-                characterNameInput.value = data.name;
-                rankSpan.textContent = data.rank;
-                durabilityInput.value = data.durability;
-                attackInput.value = data.attack;
-                stabilityInput.value = data.stability;
-                mobilityInput.value = data.mobility;
-                supportInput.value = data.support;
-                skill1Textarea.value = data.skill1;
-                skill2Textarea.value = data.skill2;
-                skill3Textarea.value = data.skill3;
-                if (data.avatar) {
-                    avatarImg.src = data.avatar;
+            // カードの削除
+            cardList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const cardIndex = e.target.closest('.character-card').dataset.index;
+                    cards.splice(cardIndex, 1);
+                    saveAndRenderCards();
                 }
-            }
+            });
 
-            // 画像アップロード機能の追加
-            avatarContainer.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            avatarImg.src = e.target.result;
-                            saveCards();
+            // カードの編集 (シンプル版: クリックでフォームに値をセット)
+            cardList.addEventListener('click', (e) => {
+                const cardElement = e.target.closest('.character-card');
+                if (cardElement) {
+                    const index = cardElement.dataset.index;
+                    const card = cards[index];
+
+                    document.getElementById('char-name').value = card.name;
+                    document.getElementById('char-rank').value = card.rank;
+                    document.getElementById('char-image').value = card.image;
+                    document.getElementById('stat-durability').value = card.stats.durability;
+                    document.getElementById('stat-attack').value = card.stats.attack;
+                    document.getElementById('stat-stability').value = card.stats.stability;
+                    document.getElementById('stat-mobility').value = card.stats.mobility;
+                    document.getElementById('stat-support').value = card.stats.support;
+                    document.getElementById('char-desc').value = card.description.join('\n');
+                    
+                    // 編集中のカードを削除してから、新しいカードとして追加する
+                    cardForm.onsubmit = (e) => {
+                        e.preventDefault();
+                        cards.splice(index, 1);
+                        const updatedCard = {
+                            name: document.getElementById('char-name').value,
+                            rank: document.getElementById('char-rank').value,
+                            image: document.getElementById('char-image').value,
+                            stats: {
+                                durability: document.getElementById('stat-durability').value.toUpperCase(),
+                                attack: document.getElementById('stat-attack').value.toUpperCase(),
+                                stability: document.getElementById('stat-stability').value.toUpperCase(),
+                                mobility: document.getElementById('stat-mobility').value.toUpperCase(),
+                                support: document.getElementById('stat-support').value.toUpperCase()
+                            },
+                            description: document.getElementById('char-desc').value.split('\n').filter(line => line.trim() !== '')
                         };
-                        reader.readAsDataURL(file);
-                    }
-                };
-                input.click();
+                        cards.splice(index, 0, updatedCard);
+                        saveAndRenderCards();
+                        cardForm.reset();
+                        // フォームの送信ハンドラを元の状態に戻す
+                        cardForm.onsubmit = null;
+                    };
+                }
             });
 
-            newCard.querySelectorAll('input, textarea').forEach(input => {
-                input.addEventListener('input', saveCards);
-            });
-
-            cardContainer.appendChild(newCard);
-        }
-
-        // ページ読み込み時にローカルストレージからデータをロードする
-        function loadCards() {
-            const savedCards = JSON.parse(localStorage.getItem('characterCards'));
-            if (savedCards && savedCards.length > 0) {
-                savedCards.forEach(data => addCard(data));
-            } else {
-                addCard(); // データがなければ空のカードを1枚追加
+            // カードを描画する関数
+            function renderCards() {
+                cardList.innerHTML = '';
+                cards.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('character-card');
+                    cardElement.dataset.index = index;
+                    cardElement.innerHTML = `
+                        <div class="card-header">
+                            <img src="${card.image || 'https://via.placeholder.com/80'}" alt="${card.name}" class="card-image">
+                            <div class="card-info">
+                                <h2>${card.name}</h2>
+                                <p>${card.rank}</p>
+                            </div>
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                耐久
+                                <div class="stat-value-container">
+                                    <span class="stat-value">${card.stats.durability}</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                攻撃
+                                <div class="stat-value-container">
+                                    <span class="stat-value">${card.stats.attack}</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                安定性
+                                <div class="stat-value-container">
+                                    <span class="stat-value">${card.stats.stability}</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                機動力
+                                <div class="stat-value-container">
+                                    <span class="stat-value">${card.stats.mobility}</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                援護
+                                <div class="stat-value-container">
+                                    <span class="stat-value">${card.stats.support}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-description">
+                            <ul>
+                                ${card.description.map(desc => `<li>・${desc}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <button class="delete-btn">削除</button>
+                    `;
+                    cardList.appendChild(cardElement);
+                });
             }
-        }
 
-        addCardButton.addEventListener('click', () => addCard());
-
-        window.onload = loadCards;
+            // データをローカルストレージに保存して、カードを再描画
+            function saveAndRenderCards() {
+                localStorage.setItem('characterCards', JSON.stringify(cards));
+                renderCards();
+            }
+        });
     </script>
-
 </body>
 </html>
