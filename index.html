@@ -90,18 +90,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            position: relative; /* 順位の絶対位置指定のため */
-        }
-
-        .card-rank-display {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: #007BFF;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 50%;
-            font-weight: bold;
+            position: relative;
         }
 
         .card-header {
@@ -132,6 +121,20 @@
         .card-ranking {
             font-size: 16px;
             color: #ffc107;
+            font-weight: bold;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        
+        .card-position {
+            font-size: 14px;
+            color: #333;
+            font-weight: normal;
+        }
+
+        .card-rank {
+            font-size: 16px;
             font-weight: bold;
         }
 
@@ -189,7 +192,7 @@
                     <input type="number" id="char-position" name="char-position" min="1" required>
                 </div>
                 <div class="form-row">
-                    <label for="char-rank">ランク:</label>
+                    <label for="char-rank">総合評価:</label>
                     <select id="char-rank" name="char-rank">
                         <option value="S">S</option>
                         <option value="A">A</option>
@@ -280,7 +283,7 @@
                 const imageDataURL = imagePreview.src;
                 const charPosition = parseInt(form['char-position'].value);
                 
-                if (!imageDataURL || !charPosition) {
+                if (!imageDataURL || isNaN(charPosition)) {
                     alert('画像と順位の両方を入力してください。');
                     return;
                 }
@@ -311,7 +314,7 @@
                 form.reset();
                 imagePreview.style.display = 'none';
                 imagePreview.src = '';
-                sortCards(); // カードの並び替え
+                sortCards();
             });
 
             function updateCardCount() {
@@ -341,7 +344,7 @@
             function createCard(data) {
                 const card = document.createElement('div');
                 card.className = 'character-card';
-                card.dataset.position = data.position; // 順位をデータ属性として保存
+                card.dataset.position = data.position;
                 card.innerHTML = `
                     <div class="card-header">
                         <img src="${data.image}" alt="${data.name}" class="char-image">
@@ -349,7 +352,7 @@
                             <div class="card-name">${data.name}</div>
                             <div class="card-ranking">
                                 <span class="card-position">${data.position}位/0位</span>
-                                <span class="card-rank">${data.rank}</span>
+                                <span class="card-rank">総合評価:${data.rank}</span>
                             </div>
                         </div>
                     </div>
@@ -400,7 +403,7 @@
             function updateCard(card, data) {
                 card.querySelector('.char-image').src = data.image;
                 card.querySelector('.card-name').textContent = data.name;
-                card.querySelector('.card-rank').textContent = data.rank;
+                card.querySelector('.card-rank').textContent = `総合評価:${data.rank}`;
                 card.querySelector('.card-stats td:nth-child(1)').textContent = data.stats.endurance;
                 card.querySelector('.card-stats td:nth-child(2)').textContent = data.stats.attack;
                 card.querySelector('.card-stats td:nth-child(3)').textContent = data.stats.stability;
@@ -416,7 +419,7 @@
 
             function startEditing(card, data) {
                 document.getElementById('char-name').value = data.name;
-                document.getElementById('char-position').value = card.dataset.position; // 編集時に順位をフォームにセット
+                document.getElementById('char-position').value = card.dataset.position;
                 document.getElementById('char-rank').value = data.rank;
                 document.getElementById('status-endurance').value = data.stats.endurance;
                 document.getElementById('status-attack').value = data.stats.attack;
@@ -434,7 +437,7 @@
 
             function deleteCard(card) {
                 card.remove();
-                sortCards(); // 削除後も並び替えと総枚数更新
+                sortCards();
             }
         });
     </script>
