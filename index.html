@@ -377,6 +377,8 @@
         const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         cardClone.setAttribute('data-card-id', newCardId);
         
+        setupCardEventListeners(cardClone, newCardId);
+
         if (isNew) {
             const initialData = {
                 name: 'キャラクター名',
@@ -399,7 +401,6 @@
             updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
             updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
 
-            // 初期データをDBに保存
             saveCardData(newCardId, 'name', initialData.name);
             saveCardData(newCardId, 'rank1', initialData.rank1);
             saveCardData(newCardId, 'ranking_text', initialData.ranking_text);
@@ -410,7 +411,6 @@
         }
 
         document.getElementById('character-card-list').appendChild(cardClone);
-        setupCardEventListeners(cardClone, newCardId);
         
         if (isNew) {
             saveCardOrder();
