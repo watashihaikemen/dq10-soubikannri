@@ -231,9 +231,9 @@
 </div>
 
 <script>
-    // IndexedDBのセットアップ
     const dbName = 'characterDB';
-    const dbVersion = 2; // バージョンを上げて新しいストアを作成
+    // バージョンを上げてonupgradeneededイベントを発生させる
+    const dbVersion = 3; 
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -248,14 +248,13 @@
         if (!db.objectStoreNames.contains('cardData')) {
             db.createObjectStore('cardData');
         }
-        // カードIDのリストを保存するストア
-        if (!db.objectStoreNames.contains('cardOrder')) {
-            db.createObjectStore('cardOrder');
-        }
+        // カードIDのリストを保存するストア。バージョンアップごとに作成/更新
+        const cardOrderStore = db.createObjectStore('cardOrder');
     };
 
     request.onsuccess = (event) => {
         db = event.target.result;
+        // データベースが正常に開かれた後にカードを読み込む
         loadAllCards();
     };
 
@@ -272,7 +271,7 @@
         const request = objectStore.get(`${cardId}_${key}`);
         request.onsuccess = (event) => {
             const savedData = event.target.result;
-            if (savedData) {
+            if (savedData !== undefined) {
                 if (key === 'image') {
                     element.src = savedData;
                 } else {
@@ -286,7 +285,6 @@
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
         
-        // 当該カードIDに関連する全てのデータを削除
         const request = objectStore.openCursor();
         request.onsuccess = (event) => {
             const cursor = event.target.result;
@@ -391,6 +389,8 @@
         request.onsuccess = (event) => {
             const cardIds = event.target.result;
             if (cardIds && cardIds.length > 0) {
+                // 既存のカードをすべて削除してから読み込み
+                document.getElementById('character-card-list').innerHTML = '';
                 cardIds.forEach(cardId => {
                     loadCard(cardId);
                 });
@@ -403,7 +403,6 @@
 
         request.onerror = (event) => {
             console.error('Failed to load card order:', event.target.errorCode);
-            // エラー時もデフォルトカードを作成
             for (let i = 0; i < 3; i++) {
                 createCard();
             }
