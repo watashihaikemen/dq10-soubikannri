@@ -3,399 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>キャラクターカード</title>
+    <title>キャラクター評価</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
         }
-        .card-container {
-            width: 100%;
-            max-width: 400px;
-            background-color: #fff;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .character-card {
+            background-color: white;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
         .card-header {
             display: flex;
-            align-items: flex-start;
-            padding: 20px;
-            position: relative;
+            align-items: center;
+            margin-bottom: 15px;
         }
-        .profile-image-frame {
-            position: relative;
+        .character-image {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            border: 2px solid #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-            cursor: pointer;
-            overflow: hidden;
+            margin-right: 15px;
+            border: 3px solid #f9d71c;
+            position: relative;
+            background-color: #e0e0e0;
         }
-        .profile-image-frame img {
+        .character-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 50%;
         }
-        .profile-image-frame::after {
-            content: '?';
+        .character-image::after {
+            content: attr(data-rank);
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #999;
-            font-size: 24px;
-            pointer-events: none;
-        }
-        .profile-image-frame img:not([src=""]) + .profile-image-frame::after {
-            display: none;
-        }
-        .header-content {
-            flex-grow: 1;
-            margin-left: 20px;
-        }
-        .character-name-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            bottom: -5px;
+            right: -5px;
+            background-color: #a42c2c;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 2px solid white;
+            line-height: 1;
         }
         .character-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4a4a4a;
+        }
+        .character-rank {
+            background-color: #a42c2c;
+            color: white;
             font-size: 24px;
             font-weight: bold;
-            color: #333;
-            cursor: text;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-left: 10px;
         }
-        .rank-info {
-            display: flex;
-            align-items: center;
-            margin-top: 4px;
-        }
-        .rank-box {
-            background-color: #a52a2a;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: text;
-        }
-        .total-rank {
-            margin: 0 8px;
-            color: #555;
-            font-size: 14px;
-        }
-        .info-box {
-            background-color: #1e90ff;
-            color: #fff;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .close-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #ff4500;
-            color: #fff;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
+        .ranking-text {
             font-size: 18px;
-            font-weight: bold;
-            line-height: 1;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .close-button:hover {
-            background-color: #e03d00;
-        }
-        .divider {
-            height: 1px;
-            background-color: #e0e0e0;
-            margin: 0 20px;
-        }
-        .select-image-text {
-            text-align: center;
             color: #777;
-            padding: 10px;
-            font-size: 14px;
+            margin-left: 10px;
         }
         .stats-table {
             display: flex;
-            justify-content: space-around;
-            padding: 10px 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .stat-item {
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
             text-align: center;
         }
-        .stat-label {
-            color: #777;
-            font-size: 12px;
-            white-space: nowrap;
+        .stats-item {
+            flex: 1;
+            padding: 8px;
         }
-        .stat-value {
-            font-size: 18px;
+        .stats-item:first-child {
+            background-color: #c9c9c9;
             font-weight: bold;
-            color: #333;
-            margin-top: 4px;
-            cursor: text;
         }
-        .skill-section {
-            padding: 20px;
+        .stats-item .label {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .stats-item .value {
+            font-size: 20px;
+            font-weight: bold;
         }
         .skill-list {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-        .skill-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
+        .skill-list li {
+            position: relative;
+            padding-left: 1.5em;
+            margin-bottom: 10px;
+            line-height: 1.6;
         }
-        .skill-item::before {
+        .skill-list li::before {
             content: '・';
-            color: #555;
-            margin-right: 5px;
-            font-weight: bold;
-            font-size: 20px;
-            line-height: 1;
+            position: absolute;
+            left: 0;
+            color: #4a4a4a;
         }
-        .skill-text {
-            color: #555;
-            font-size: 14px;
-            flex-grow: 1;
-            cursor: text;
-            min-height: 20px;
+        .image-input {
+            margin-top: 10px;
+            padding: 5px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            width: 100%;
         }
-        .add-card-button {
-            width: calc(100% - 40px);
-            margin: 20px;
+        .image-input:hover {
+            background-color: #e9e9e9;
+        }
+        .add-button {
+            width: 100%;
             padding: 15px;
             background-color: #4CAF50;
-            color: #fff;
+            color: white;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 18px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease;
+            transition: background-color 0.2s;
+            margin-top: 20px;
         }
-        .add-card-button:hover {
+        .add-button:hover {
             background-color: #45a049;
         }
-        [contenteditable="true"]:focus {
-            outline: 2px solid #1e90ff;
-            outline-offset: 2px;
-            border-radius: 4px;
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
         }
-        [contenteditable="true"] {
-            user-select: text;
+        .delete-button:hover {
+            transform: scale(1.1);
+        }
+        /* カードテンプレートは非表示にする */
+        .card-template {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-<div class="card-container">
+<div class="container">
+    <div id="character-card-list">
+        </div>
+    <button class="add-button" id="add-card-button">カードを追加</button>
+</div>
+
+<div id="card-template" class="character-card card-template">
+    <button class="delete-button" title="カードを削除">&times;</button>
     <div class="card-header">
-        <div class="profile-image-frame">
-            <input type="file" id="image-upload" accept="image/*" style="display: none;">
-            <img id="profile-image" src="" alt="プロフィール画像">
+        <div class="character-image" data-rank="?">
+            <img src="" alt="" class="card-image">
         </div>
-        <div class="header-content">
-            <div class="character-name-group">
-                <span class="character-name" contenteditable="true" data-placeholder="キャラクター名">キャラクター名</span>
-                <div class="info-box">?</div>
-            </div>
-            <div class="rank-info">
-                <span class="rank-box" contenteditable="true" data-placeholder="?位">?位</span>
-                <span class="total-rank">/??位</span>
-                <div class="info-box">?</div>
+        <div>
+            <div class="character-name" contenteditable="true">キャラクター名</div>
+            <div style="display: flex; align-items: baseline;">
+                <span class="character-rank" contenteditable="true">?位</span>
+                <span class="ranking-text" contenteditable="true">/??位</span>
+                <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">?</span>
             </div>
         </div>
-        <div class="close-button">×</div>
     </div>
-    
-    <div class="divider"></div>
-    <div class="select-image-text">画像を選択</div>
-
+    <label class="image-input">画像を選択</label>
+    <input type="file" style="display: none;" accept="image/*" class="image-file-input">
     <div class="stats-table">
-        <div class="stat-item">
-            <div class="stat-label">耐久</div>
-            <div class="stat-value" contenteditable="true" data-placeholder="?">?</div>
+        <div class="stats-item">
+            <div class="label">耐久</div>
+            <div class="value" contenteditable="true">?</div>
         </div>
-        <div class="stat-item">
-            <div class="stat-label">攻撃</div>
-            <div class="stat-value" contenteditable="true" data-placeholder="?">?</div>
+        <div class="stats-item">
+            <div class="label">攻撃</div>
+            <div class="value" contenteditable="true">?</div>
         </div>
-        <div class="stat-item">
-            <div class="stat-label">安定性</div>
-            <div class="stat-value" contenteditable="true" data-placeholder="?">?</div>
+        <div class="stats-item">
+            <div class="label">安定性</div>
+            <div class="value" contenteditable="true">?</div>
         </div>
-        <div class="stat-item">
-            <div class="stat-label">機動力</div>
-            <div class="stat-value" contenteditable="true" data-placeholder="?">?</div>
+        <div class="stats-item">
+            <div class="label">機動力</div>
+            <div class="value" contenteditable="true">?</div>
         </div>
-        <div class="stat-item">
-            <div class="stat-label">援護</div>
-            <div class="stat-value" contenteditable="true" data-placeholder="?">?</div>
+        <div class="stats-item">
+            <div class="label">援護</div>
+            <div class="value" contenteditable="true">?</div>
         </div>
     </div>
-
-    <div class="skill-section">
-        <ul class="skill-list">
-            <li class="skill-item">
-                <div class="skill-text" contenteditable="true" data-placeholder="スキルや評価を入力してください">スキルや評価を入力してください</div>
-            </li>
-            <li class="skill-item">
-                <div class="skill-text" contenteditable="true" data-placeholder=""></div>
-            </li>
-            <li class="skill-item">
-                <div class="skill-text" contenteditable="true" data-placeholder=""></div>
-            </li>
-            <li class="skill-item">
-                <div class="skill-text" contenteditable="true" data-placeholder=""></div>
-            </li>
-        </ul>
-    </div>
-    
-    <button class="add-card-button">カードを追加</button>
+    <ul class="skill-list">
+        <li contenteditable="true">スキルや評価を入力してください</li>
+        <li contenteditable="true"></li>
+        <li contenteditable="true"></li>
+        <li contenteditable="true"></li>
+    </ul>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const cardContainer = document.querySelector('.card-container');
-    const imageUpload = document.getElementById('image-upload');
-    const profileImageFrame = document.querySelector('.profile-image-frame');
-    const profileImage = document.getElementById('profile-image');
-    const editableElements = cardContainer.querySelectorAll('[contenteditable="true"]');
-    const addCardButton = document.querySelector('.add-card-button');
+    // IndexedDBのセットアップ
+    const dbName = 'characterDB';
+    const dbVersion = 2; // バージョンを上げて新しいストアを作成
+    let db;
 
-    // Load saved data from localStorage
-    function loadData() {
-        const savedData = localStorage.getItem('characterCardData');
-        if (savedData) {
-            const data = JSON.parse(savedData);
+    const request = indexedDB.open(dbName, dbVersion);
 
-            // Load text content
-            editableElements.forEach(el => {
-                const key = el.getAttribute('class');
-                if (data[key]) {
-                    el.textContent = data[key];
+    request.onerror = (event) => {
+        console.error('IndexedDB error:', event.target.errorCode);
+    };
+
+    request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        // カードごとのデータを保存するストア
+        if (!db.objectStoreNames.contains('cardData')) {
+            db.createObjectStore('cardData');
+        }
+        // カードIDのリストを保存するストア
+        if (!db.objectStoreNames.contains('cardOrder')) {
+            db.createObjectStore('cardOrder');
+        }
+    };
+
+    request.onsuccess = (event) => {
+        db = event.target.result;
+        loadAllCards();
+    };
+
+    // --- データ保存と読み込みのロジック ---
+    function saveCardData(cardId, key, value) {
+        const transaction = db.transaction('cardData', 'readwrite');
+        const objectStore = transaction.objectStore('cardData');
+        objectStore.put(value, `${cardId}_${key}`);
+    }
+
+    function loadCardData(cardId, key, element) {
+        const transaction = db.transaction('cardData', 'readonly');
+        const objectStore = transaction.objectStore('cardData');
+        const request = objectStore.get(`${cardId}_${key}`);
+        request.onsuccess = (event) => {
+            const savedData = event.target.result;
+            if (savedData) {
+                if (key === 'image') {
+                    element.src = savedData;
                 } else {
-                    el.textContent = el.dataset.placeholder || '';
+                    element.innerHTML = savedData;
                 }
-            });
-
-            // Load image
-            if (data.image) {
-                profileImage.src = data.image;
             }
-        } else {
-             // Set default placeholder texts
-            editableElements.forEach(el => {
-                if (el.dataset.placeholder) {
-                    el.textContent = el.dataset.placeholder;
-                }
-            });
-        }
+        };
     }
 
-    // Save data to localStorage
-    function saveData() {
-        const data = {};
+    function deleteCardData(cardId) {
+        const transaction = db.transaction('cardData', 'readwrite');
+        const objectStore = transaction.objectStore('cardData');
+        
+        // 当該カードIDに関連する全てのデータを削除
+        const request = objectStore.openCursor();
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                if (cursor.key.startsWith(`${cardId}_`)) {
+                    cursor.delete();
+                }
+                cursor.continue();
+            }
+        };
+    }
 
-        // Save text content
-        editableElements.forEach(el => {
-            const key = el.getAttribute('class');
-            data[key] = el.textContent;
+    // --- カード管理のロジック ---
+    function setupCardEventListeners(cardElement, cardId) {
+        // テキスト入力のイベント
+        const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
+        editableElements.forEach((elem, index) => {
+            elem.addEventListener('input', (e) => {
+                saveCardData(cardId, `text_${index}`, e.target.innerHTML);
+            });
         });
 
-        // Save image as base64
-        if (profileImage.src && !profileImage.src.startsWith('data:image')) {
-            // If the image is a file, convert it to base64 before saving
-            // This part is for images selected during the session
-            const xhr = new XMLHttpRequest();
-            xhr.onload = function() {
+        // 画像入力のイベント
+        const fileInput = cardElement.querySelector('.image-file-input');
+        const imgElement = cardElement.querySelector('.card-image');
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
                 const reader = new FileReader();
-                reader.onloadend = function() {
-                    data.image = reader.result;
-                    localStorage.setItem('characterCardData', JSON.stringify(data));
+                reader.onload = (event) => {
+                    imgElement.src = event.target.result;
+                    saveCardData(cardId, 'image', event.target.result);
                 };
-                reader.readAsDataURL(xhr.response);
-            };
-            xhr.open('GET', profileImage.src);
-            xhr.responseType = 'blob';
-            xhr.send();
-        } else {
-            data.image = profileImage.src;
-            localStorage.setItem('characterCardData', JSON.stringify(data));
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 画像選択ラベルのクリックイベント
+        cardElement.querySelector('.image-input').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 削除ボタンのイベント
+        cardElement.querySelector('.delete-button').addEventListener('click', () => {
+            if (confirm('このカードを本当に削除しますか？')) {
+                deleteCard(cardId, cardElement);
+            }
+        });
+    }
+
+    function createCard(isNew = true) {
+        const template = document.getElementById('card-template');
+        const cardClone = template.cloneNode(true);
+        cardClone.classList.remove('card-template');
+        
+        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        cardClone.setAttribute('data-card-id', newCardId);
+        
+        setupCardEventListeners(cardClone, newCardId);
+        document.getElementById('character-card-list').appendChild(cardClone);
+
+        if (isNew) {
+            saveCardOrder();
         }
     }
 
-    // Event listeners for saving data
-    editableElements.forEach(el => {
-        el.addEventListener('input', saveData);
-        el.addEventListener('blur', () => {
-             // Set placeholder if element is empty
-            if (el.textContent.trim() === '') {
-                el.textContent = el.dataset.placeholder || '';
-            }
+    function loadCard(cardId) {
+        const template = document.getElementById('card-template');
+        const cardClone = template.cloneNode(true);
+        cardClone.classList.remove('card-template');
+        cardClone.setAttribute('data-card-id', cardId);
+
+        setupCardEventListeners(cardClone, cardId);
+
+        const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
+        editableElements.forEach((elem, index) => {
+            loadCardData(cardId, `text_${index}`, elem);
         });
-        // Clear placeholder on focus
-        el.addEventListener('focus', () => {
-            if (el.textContent.trim() === el.dataset.placeholder) {
-                el.textContent = '';
+        loadCardData(cardId, 'image', cardClone.querySelector('.card-image'));
+        
+        document.getElementById('character-card-list').appendChild(cardClone);
+    }
+
+    function deleteCard(cardId, cardElement) {
+        cardElement.remove();
+        deleteCardData(cardId);
+        saveCardOrder();
+    }
+
+    function saveCardOrder() {
+        const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)')).map(card => card.getAttribute('data-card-id'));
+        const transaction = db.transaction('cardOrder', 'readwrite');
+        const objectStore = transaction.objectStore('cardOrder');
+        objectStore.put(cardIds, 'order');
+    }
+
+    function loadAllCards() {
+        const transaction = db.transaction('cardOrder', 'readonly');
+        const objectStore = transaction.objectStore('cardOrder');
+        const request = objectStore.get('order');
+
+        request.onsuccess = (event) => {
+            const cardIds = event.target.result;
+            if (cardIds && cardIds.length > 0) {
+                cardIds.forEach(cardId => {
+                    loadCard(cardId);
+                });
+            } else {
+                for (let i = 0; i < 3; i++) {
+                    createCard();
+                }
             }
-        });
-    });
+        };
 
-    // Image upload functionality
-    profileImageFrame.addEventListener('click', () => {
-        imageUpload.click();
-    });
+        request.onerror = (event) => {
+            console.error('Failed to load card order:', event.target.errorCode);
+            // エラー時もデフォルトカードを作成
+            for (let i = 0; i < 3; i++) {
+                createCard();
+            }
+        };
+    }
 
-    imageUpload.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                profileImage.src = e.target.result;
-                saveData(); // Save the new image
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // Handle "add card" button click
-    addCardButton.addEventListener('click', () => {
-        alert('「カードを追加」機能は、バックエンドの実装が必要です。このボタンは、機能のデモとして配置されています。');
-    });
-
-    // Initial load of data
-    loadData();
-});
+    // イベントリスナー設定
+    document.getElementById('add-card-button').addEventListener('click', () => createCard());
 </script>
-
 </body>
 </html>
