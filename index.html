@@ -184,7 +184,7 @@
     <input type="file" style="display: none;" accept="image/*" class="image-file-input">
     <div class="stats-table">
         <div class="stats-item">
-            <div class="label">変更耐久</div>
+            <div class="label">耐久</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -214,7 +214,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 4; // バージョンを上げました
+    const dbVersion = 3; 
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -225,16 +225,12 @@
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        
-        // cardData object storeが存在しない場合にのみ作成
+        // データストアが存在しない場合のみ作成
         if (!db.objectStoreNames.contains('cardData')) {
-            // keyPathにidを指定して、カードごとのデータを一括で保存できるようにする
             db.createObjectStore('cardData', { keyPath: 'id' });
         }
-
-        // cardOrder object storeが存在しない場合にのみ作成
         if (!db.objectStoreNames.contains('cardOrder')) {
-            db.createObjectStore('cardOrder', { keyPath: 'orderKey' });
+            db.createObjectStore('cardOrder');
         }
     };
 
@@ -251,36 +247,14 @@
         objectStore.put({ id: cardId, data: data });
     }
 
-    function loadCardData(cardId, element) {
+    function loadCardData(cardId) {
         return new Promise((resolve, reject) => {
             const transaction = db.transaction('cardData', 'readonly');
             const objectStore = transaction.objectStore('cardData');
             const request = objectStore.get(cardId);
             
             request.onsuccess = (event) => {
-                const savedData = event.target.result;
-                if (savedData) {
-                    // 保存されたデータを要素に反映
-                    element.querySelector('.card-image').src = savedData.data.image;
-                    element.querySelector('.character-name').innerHTML = savedData.data.name;
-                    element.querySelector('.character-rank').innerHTML = savedData.data.rank;
-                    element.querySelector('.ranking-text').innerHTML = savedData.data.rankingText;
-                    element.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML = savedData.data.value1;
-                    const statsValues = element.querySelectorAll('.stats-item .value');
-                    statsValues[0].innerHTML = savedData.data.value2;
-                    statsValues[1].innerHTML = savedData.data.value3;
-                    statsValues[2].innerHTML = savedData.data.value4;
-                    statsValues[3].innerHTML = savedData.data.value5;
-                    statsValues[4].innerHTML = savedData.data.value6;
-                    
-                    const skillListItems = element.querySelectorAll('.skill-list li');
-                    skillListItems.forEach((li, index) => {
-                        if (savedData.data[`skill${index}`]) {
-                            li.innerHTML = savedData.data[`skill${index}`];
-                        }
-                    });
-                }
-                resolve();
+                resolve(event.target.result ? event.target.result.data : null);
             };
 
             request.onerror = () => reject('Data not found');
@@ -305,7 +279,7 @@
                 name: cardElement.querySelector('.character-name').innerHTML,
                 rank: cardElement.querySelector('.character-rank').innerHTML,
                 rankingText: cardElement.querySelector('.ranking-text').innerHTML,
-                value1: cardElement.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML,
+                value1: cardElement.querySelector('.character-rank[style*="background-color: rgb(59, 89, 152);"]').innerHTML,
                 value2: cardElement.querySelectorAll('.stats-item .value')[0].innerHTML,
                 value3: cardElement.querySelectorAll('.stats-item .value')[1].innerHTML,
                 value4: cardElement.querySelectorAll('.stats-item .value')[2].innerHTML,
@@ -345,22 +319,40 @@
         });
     }
 
-    async function createCard(isNew = true, cardData = null) {
+    async function createCard(cardId = null) {
         const template = document.getElementById('card-template');
         const cardClone = template.cloneNode(true);
         cardClone.classList.remove('card-template');
         
-        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newCardId = cardId || `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         cardClone.setAttribute('data-card-id', newCardId);
         
         document.getElementById('character-card-list').appendChild(cardClone);
         setupCardEventListeners(cardClone, newCardId);
 
-        if (cardData) {
-            // 既存のデータをロード
-            await loadCardData(cardData, cardClone);
-        } else if (isNew) {
-            // 新しいカードを保存
+        if (cardId) {
+            const savedData = await loadCardData(cardId);
+            if (savedData) {
+                cardClone.querySelector('.card-image').src = savedData.image;
+                cardClone.querySelector('.character-name').innerHTML = savedData.name;
+                cardClone.querySelector('.character-rank').innerHTML = savedData.rank;
+                cardClone.querySelector('.ranking-text').innerHTML = savedData.rankingText;
+                cardClone.querySelector('.character-rank[style*="background-color: rgb(59, 89, 152);"]').innerHTML = savedData.value1;
+                const statsValues = cardClone.querySelectorAll('.stats-item .value');
+                statsValues[0].innerHTML = savedData.value2;
+                statsValues[1].innerHTML = savedData.value3;
+                statsValues[2].innerHTML = savedData.value4;
+                statsValues[3].innerHTML = savedData.value5;
+                statsValues[4].innerHTML = savedData.value6;
+                
+                const skillListItems = cardClone.querySelectorAll('.skill-list li');
+                skillListItems.forEach((li, index) => {
+                    if (savedData[`skill${index}`]) {
+                        li.innerHTML = savedData[`skill${index}`];
+                    }
+                });
+            }
+        } else {
             const emptyData = {
                 image: '',
                 name: 'キャラクター名',
@@ -380,9 +372,7 @@
             saveCardData(newCardId, emptyData);
         }
 
-        if (isNew) {
-            saveCardOrder();
-        }
+        saveCardOrder();
     }
 
     function deleteCard(cardId, cardElement) {
@@ -408,7 +398,7 @@
             if (cardIds && cardIds.length > 0) {
                 document.getElementById('character-card-list').innerHTML = '';
                 cardIds.forEach(cardId => {
-                    createCard(false, cardId);
+                    createCard(cardId);
                 });
             } else {
                 for (let i = 0; i < 3; i++) {
