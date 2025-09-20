@@ -17,7 +17,7 @@
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            position: relative; /* 削除ボタンの配置用 */
+            position: relative;
         }
         .card-header {
             display: flex;
@@ -165,7 +165,7 @@
 <body>
     <div id="cards-container">
         <div class="character-card">
-            <button class="delete-card-btn" onclick="deleteCard(this)">×</button>
+            <button class="delete-card-btn">×</button>
             <div class="card-header">
                 <div class="character-image" data-rank="?">
                     <img src="" alt="" class="card-image">
@@ -211,10 +211,11 @@
         </div>
     </div>
     
-    <button class="add-card-btn" onclick="addCard()">＋ カードを追加</button>
+    <button class="add-card-btn" id="add-card-button">＋ カードを追加</button>
 
     <script>
         const cardsContainer = document.getElementById('cards-container');
+        const addCardButton = document.getElementById('add-card-button');
         const dbName = 'characterDB';
         const dbVersion = 1;
         let db;
@@ -238,7 +239,7 @@
 
         // カードのHTMLテンプレート
         const cardTemplate = `
-            <button class="delete-card-btn" onclick="deleteCard(this)">×</button>
+            <button class="delete-card-btn">×</button>
             <div class="card-header">
                 <div class="character-image" data-rank="?">
                     <img src="" alt="" class="card-image">
@@ -284,7 +285,7 @@
         `;
 
         // 新しいカードを追加
-        function addCard(data = null) {
+        function createCardElement(data = null) {
             const newCard = document.createElement('div');
             newCard.className = 'character-card';
             newCard.innerHTML = cardTemplate;
@@ -292,8 +293,11 @@
 
             const imageInput = newCard.querySelector('input[type="file"]');
             const cardImage = newCard.querySelector('.card-image');
+            const deleteButton = newCard.querySelector('.delete-card-btn');
             
+            // イベントリスナーを動的に追加
             imageInput.addEventListener('change', handleImageChange);
+            deleteButton.addEventListener('click', () => deleteCard(newCard));
             newCard.querySelectorAll('[contenteditable="true"]').forEach(elem => {
                 elem.addEventListener('input', () => saveCard(newCard));
             });
@@ -311,28 +315,24 @@
             }
             
             cardsContainer.appendChild(newCard);
-            saveCards();
+            saveCard(newCard);
         }
         
         // カードを保存
-        function saveCards() {
+        function saveCard(card) {
             const transaction = db.transaction('cards', 'readwrite');
             const objectStore = transaction.objectStore('cards');
-            objectStore.clear(); // 全て削除してから保存
-
-            document.querySelectorAll('.character-card').forEach(card => {
-                const cardData = {
-                    id: card.dataset.id,
-                    name: card.querySelector('.character-name').innerHTML,
-                    rank: card.querySelector('.character-rank').innerHTML,
-                    rankTotal: card.querySelector('.ranking-text').innerHTML,
-                    tier: card.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML,
-                    stats: card.querySelector('.stats-table').innerHTML,
-                    skills: card.querySelector('.skill-list').innerHTML,
-                    image: card.querySelector('.card-image').src
-                };
-                objectStore.put(cardData);
-            });
+            const cardData = {
+                id: card.dataset.id,
+                name: card.querySelector('.character-name').innerHTML,
+                rank: card.querySelector('.character-rank').innerHTML,
+                rankTotal: card.querySelector('.ranking-text').innerHTML,
+                tier: card.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML,
+                stats: card.querySelector('.stats-table').innerHTML,
+                skills: card.querySelector('.skill-list').innerHTML,
+                image: card.querySelector('.card-image').src
+            };
+            objectStore.put(cardData);
         }
         
         // カードを読み込み
@@ -345,9 +345,9 @@
                 const savedCards = event.target.result;
                 if (savedCards.length > 0) {
                     cardsContainer.innerHTML = '';
-                    savedCards.forEach(data => addCard(data));
+                    savedCards.forEach(data => createCardElement(data));
                 } else {
-                    addCard(); // データがない場合は初期テンプレートを表示
+                    createCardElement();
                 }
             };
         }
@@ -368,26 +368,8 @@
             }
         }
 
-        // 個別カードの保存
-        function saveCard(card) {
-            const transaction = db.transaction('cards', 'readwrite');
-            const objectStore = transaction.objectStore('cards');
-            const cardData = {
-                id: card.dataset.id,
-                name: card.querySelector('.character-name').innerHTML,
-                rank: card.querySelector('.character-rank').innerHTML,
-                rankTotal: card.querySelector('.ranking-text').innerHTML,
-                tier: card.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML,
-                stats: card.querySelector('.stats-table').innerHTML,
-                skills: card.querySelector('.skill-list').innerHTML,
-                image: card.querySelector('.card-image').src
-            };
-            objectStore.put(cardData);
-        }
-
         // カードの削除
-        function deleteCard(button) {
-            const card = button.closest('.character-card');
+        function deleteCard(card) {
             const cardId = card.dataset.id;
             
             const transaction = db.transaction('cards', 'readwrite');
@@ -397,11 +379,9 @@
             card.remove();
         }
 
-        window.addCard = addCard;
-        window.deleteCard = deleteCard;
+        // ボタンにイベントリスナーを追加
+        addCardButton.addEventListener('click', () => createCardElement());
 
-        // 初期表示時にカードを読み込み
-        loadCards();
     </script>
 </body>
 </html>
