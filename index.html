@@ -5,55 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キャラクター評価</title>
     <style>
-        /* スタイルの最適化 */
+        /* CSSカスタムプロパティ (変数) */
+        :root {
+            --color-primary: #4a4a4a;
+            --color-text-secondary: #777;
+            --color-background: #f0f0f0;
+            --color-card: #ffffff;
+            --color-shadow: rgba(0, 0, 0, 0.1);
+            --color-border: #ccc;
+
+            --rank-ss: #ff4500;
+            --rank-s: #ff8c00;
+            --rank-a: #f9d71c;
+            --rank-b: #32cd32;
+            --rank-c: #1e90ff;
+            --rank-d: #8a2be2;
+            --rank-e: #a42c2c;
+            --rank-default: #999;
+        }
+
+        /* 共通スタイル */
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
-            background-color: #f0f0f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            background-color: var(--color-background);
             margin: 0;
             padding: 20px;
-            color: #333; /* 基本テキストカラーの指定 */
+            color: var(--color-primary);
         }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
         }
+
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* キャラクターカード */
         .character-card {
-            background-color: white;
+            background-color: var(--color-card);
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px var(--color-shadow);
             position: relative;
-            /* Flexboxで内部を整理 */
             display: flex;
             flex-direction: column;
         }
-        .card-header {
+
+        .character-card__header {
             display: flex;
             align-items: center;
             margin-bottom: 15px;
         }
-        .character-image {
+
+        .character-card__image-wrapper {
             width: 80px;
             height: 80px;
             border-radius: 50%;
             margin-right: 15px;
-            border: 3px solid #f9d71c;
+            border: 3px solid var(--rank-a);
             position: relative;
             background-color: #e0e0e0;
-            overflow: hidden; /* 画像のはみ出しを防ぐ */
+            overflow: hidden;
         }
-        .character-image img {
+
+        .character-card__image {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .character-image::after {
+
+        .character-card__image-rank {
             content: attr(data-rank);
             position: absolute;
             bottom: -5px;
             right: -5px;
-            background-color: #a42c2c;
+            background-color: var(--rank-e);
             color: white;
             font-weight: bold;
             font-size: 14px;
@@ -62,17 +92,20 @@
             border: 2px solid white;
             line-height: 1;
         }
-        .character-name {
+
+        .character-card__name {
             font-size: 28px;
             font-weight: bold;
-            color: #4a4a4a;
+            color: var(--color-primary);
         }
-        .ranking-info {
+
+        .character-card__ranking {
             display: flex;
             align-items: baseline;
-            margin-top: 5px; /* 名前との間隔 */
+            margin-top: 5px;
         }
-        .character-rank {
+
+        .character-card__rank {
             color: white;
             font-size: 24px;
             font-weight: bold;
@@ -80,72 +113,94 @@
             border-radius: 8px;
             display: inline-block;
             margin-left: 10px;
-            transition: background-color 0.3s ease; /* 色変化を滑らかに */
+            transition: background-color 0.3s ease;
         }
-        .ranking-text {
+
+        .character-card__rank--ss { background-color: var(--rank-ss); }
+        .character-card__rank--s { background-color: var(--rank-s); }
+        .character-card__rank--a { background-color: var(--rank-a); }
+        .character-card__rank--b { background-color: var(--rank-b); }
+        .character-card__rank--c { background-color: var(--rank-c); }
+        .character-card__rank--d { background-color: var(--rank-d); }
+        .character-card__rank--e { background-color: var(--rank-e); }
+        .character-card__rank--default { background-color: var(--rank-default); }
+
+        .character-card__ranking-text {
             font-size: 18px;
-            color: #777;
+            color: var(--color-text-secondary);
             margin-left: 10px;
         }
-        .stats-table {
+
+        .character-card__stats {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5列のグリッドレイアウト */
+            grid-template-columns: repeat(5, 1fr);
             background-color: #e0e0e0;
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 15px;
             text-align: center;
         }
-        .stats-item {
+
+        .character-card__stats-item {
             padding: 8px;
         }
-        .stats-item:first-child {
+
+        .character-card__stats-item:first-child {
             background-color: #c9c9c9;
             font-weight: bold;
         }
-        .stats-item .label {
+
+        .character-card__stats-label {
             font-size: 14px;
             color: #555;
             margin-bottom: 4px;
         }
-        .stats-item .value {
+
+        .character-card__stats-value {
             font-size: 20px;
             font-weight: bold;
         }
-        .skill-list {
+
+        .character-card__skill-list {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-        .skill-list li {
+
+        .character-card__skill-list li {
             position: relative;
             padding-left: 1.5em;
             margin-bottom: 10px;
             line-height: 1.6;
         }
-        .skill-list li::before {
+
+        .character-card__skill-list li::before {
             content: '・';
             position: absolute;
             left: 0;
-            color: #4a4a4a;
+            color: var(--color-primary);
         }
-        .image-input {
+
+        .character-card__image-input {
             margin-top: 10px;
             padding: 5px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
+            border: 1px solid var(--color-border);
             background-color: #f9f9f9;
             cursor: pointer;
             text-align: center;
             display: block;
             width: 100%;
+            transition: background-color 0.2s;
         }
-        .image-input:hover {
+
+        .character-card__image-input:hover {
             background-color: #e9e9e9;
         }
+
         .add-button, .delete-button {
             transition: background-color 0.2s, transform 0.2s;
         }
+
         .add-button {
             width: 100%;
             padding: 15px;
@@ -157,9 +212,11 @@
             cursor: pointer;
             margin-top: 20px;
         }
+
         .add-button:hover {
             background-color: #45a049;
         }
+
         .delete-button {
             position: absolute;
             top: 10px;
@@ -177,72 +234,61 @@
             padding: 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+
         .delete-button:hover {
             transform: scale(1.1);
         }
-        .card-template {
-            display: none;
-        }
-        /* ランクごとの色を定義 */
-        .rank-ss { background-color: #ff4500; } /* SS: 赤 */
-        .rank-s { background-color: #ff8c00; } /* S: オレンジ */
-        .rank-a { background-color: #f9d71c; } /* A: 黄色 */
-        .rank-b { background-color: #32cd32; } /* B: 緑 */
-        .rank-c { background-color: #1e90ff; } /* C: 青 */
-        .rank-d { background-color: #8a2be2; } /* D: 紫 */
-        .rank-e { background-color: #a42c2c; } /* E: 茶 */
-        .rank-default { background-color: #999; } /* デフォルト: グレー */
     </style>
 </head>
 <body>
 
 <main class="container">
-    <section id="character-card-list">
-        </section>
+    <section id="character-card-list" class="card-list"></section>
     <button type="button" class="add-button" id="add-card-button">カードを追加</button>
 </main>
 
 <template id="card-template">
     <article class="character-card">
-        <button type="button" class="delete-button" aria-label="カードを削除">&times;</button>
-        <header class="card-header">
-            <div class="character-image" data-rank="?">
-                <img src="" alt="キャラクターの画像" class="card-image">
+        <button type="button" class="delete-button" aria-label="カードを削除" data-action="delete-card">&times;</button>
+        <header class="character-card__header">
+            <div class="character-card__image-wrapper">
+                <img src="" alt="キャラクターの画像" class="character-card__image" data-element="image">
+                <span class="character-card__image-rank" data-rank="?"></span>
             </div>
             <div>
-                <h2 class="character-name" contenteditable="true">キャラクター名</h2>
-                <div class="ranking-info">
-                    <span class="character-rank" contenteditable="true">?</span>
-                    <span class="ranking-text" contenteditable="true">/??位</span>
-                    <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">?</span>
+                <h2 class="character-card__name" contenteditable="true" data-key="name">キャラクター名</h2>
+                <div class="character-card__ranking">
+                    <span class="character-card__rank" contenteditable="true" data-key="rank-1">?</span>
+                    <span class="character-card__ranking-text" contenteditable="true" data-key="rank-text">/??位</span>
+                    <span class="character-card__rank" style="background-color: #3b5998;" contenteditable="true" data-key="rank-2">?</span>
                 </div>
             </div>
         </header>
-        <label class="image-input" for="file-input-id">画像を選択</label>
-        <input type="file" id="file-input-id" style="display: none;" accept="image/*" class="image-file-input">
-        <div class="stats-table" role="table" aria-label="キャラクターのステータス">
-            <div role="rowheader" class="stats-item">
-                <div class="label">耐久</div>
-                <div class="value" contenteditable="true">?</div>
+        <label class="character-card__image-input" data-action="select-image">画像を選択</label>
+        <input type="file" style="display: none;" accept="image/*" data-element="file-input">
+        <div class="character-card__stats" role="table" aria-label="キャラクターのステータス">
+            <div role="rowheader" class="character-card__stats-item">
+                <div class="character-card__stats-label">耐久</div>
+                <div class="character-card__stats-value" contenteditable="true" data-key="stat-0">?</div>
             </div>
-            <div role="cell" class="stats-item">
-                <div class="label">攻撃</div>
-                <div class="value" contenteditable="true">?</div>
+            <div role="cell" class="character-card__stats-item">
+                <div class="character-card__stats-label">攻撃</div>
+                <div class="character-card__stats-value" contenteditable="true" data-key="stat-1">?</div>
             </div>
-            <div role="cell" class="stats-item">
-                <div class="label">安定性</div>
-                <div class="value" contenteditable="true">?</div>
+            <div role="cell" class="character-card__stats-item">
+                <div class="character-card__stats-label">安定性</div>
+                <div class="character-card__stats-value" contenteditable="true" data-key="stat-2">?</div>
             </div>
-            <div role="cell" class="stats-item">
-                <div class="label">機動力</div>
-                <div class="value" contenteditable="true">?</div>
+            <div role="cell" class="character-card__stats-item">
+                <div class="character-card__stats-label">機動力</div>
+                <div class="character-card__stats-value" contenteditable="true" data-key="stat-3">?</div>
             </div>
-            <div role="cell" class="stats-item">
-                <div class="label">援護</div>
-                <div class="value" contenteditable="true">?</div>
+            <div role="cell" class="character-card__stats-item">
+                <div class="character-card__stats-label">援護</div>
+                <div class="character-card__stats-value" contenteditable="true" data-key="stat-4">?</div>
             </div>
         </div>
-        <ul class="skill-list">
+        <ul class="character-card__skill-list" data-key="skills">
             <li contenteditable="true">スキルや評価を入力してください</li>
             <li contenteditable="true"></li>
             <li contenteditable="true"></li>
@@ -252,241 +298,231 @@
 </template>
 
 <script>
-    const dbName = 'characterDB';
-    const dbVersion = 2;
-    let db;
+    document.addEventListener('DOMContentLoaded', () => {
+        const dbName = 'characterDB';
+        const dbVersion = 3;
+        let db;
 
-    const request = indexedDB.open(dbName, dbVersion);
+        // IndexedDBの初期化
+        const initDB = () => {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, dbVersion);
 
-    request.onupgradeneeded = (event) => {
-        db = event.target.result;
-        if (!db.objectStoreNames.contains('cardData')) {
-            db.createObjectStore('cardData');
-        }
-        if (!db.objectStoreNames.contains('cardOrder')) {
-            db.createObjectStore('cardOrder');
-        }
-    };
-
-    request.onsuccess = (event) => {
-        db = event.target.result;
-        loadAllCards();
-    };
-
-    request.onerror = (event) => {
-        console.error('IndexedDB error:', event.target.errorCode);
-        for (let i = 0; i < 3; i++) {
-            createCard();
-        }
-    };
-
-    function saveCardData(cardId, key, value) {
-        if (!db) return;
-        const transaction = db.transaction('cardData', 'readwrite');
-        const store = transaction.objectStore('cardData');
-        store.put(value, `${cardId}_${key}`);
-    }
-
-    function loadCardData(cardId, key, element) {
-        if (!db) return;
-        const transaction = db.transaction('cardData', 'readonly');
-        const store = transaction.objectStore('cardData');
-        const request = store.get(`${cardId}_${key}`);
-        request.onsuccess = (event) => {
-            const savedData = event.target.result;
-            if (savedData) {
-                if (key === 'image') {
-                    element.src = savedData;
-                } else {
-                    element.innerHTML = savedData;
-                    if (element.classList.contains('character-rank')) {
-                        updateRankColor(element);
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains('cardData')) {
+                        db.createObjectStore('cardData');
                     }
-                }
-            }
+                    if (!db.objectStoreNames.contains('cardOrder')) {
+                        db.createObjectStore('cardOrder');
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
         };
-    }
 
-    function deleteCardData(cardId) {
-        if (!db) return;
-        const transaction = db.transaction('cardData', 'readwrite');
-        const store = transaction.objectStore('cardData');
-        store.openCursor().onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (cursor.key.startsWith(`${cardId}_`)) {
-                    cursor.delete();
-                }
-                cursor.continue();
-            }
+        // IndexedDBからデータをロード
+        const loadFromDB = (storeName, key) => {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve(null);
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(key);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
         };
-    }
 
-    function createCard(isNew = true) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.content.cloneNode(true);
+        // IndexedDBにデータを保存
+        const saveToDB = (storeName, key, value) => {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve();
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(value, key);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        };
+
+        // IndexedDBからデータを削除
+        const deleteFromDB = async (storeName, key) => {
+            if (!db) return;
+            const transaction = db.transaction(storeName, 'readwrite');
+            const store = transaction.objectStore(storeName);
+            store.delete(key);
+        };
         
-        const newCardId = `card_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-        const articleElement = cardClone.querySelector('article');
-        articleElement.setAttribute('data-card-id', newCardId);
-        
-        // input要素のIDをユニークにする
-        const fileInput = cardClone.querySelector('.image-file-input');
-        const imageLabel = cardClone.querySelector('.image-input');
-        const uniqueId = `file-input-${newCardId}`;
-        fileInput.id = uniqueId;
-        imageLabel.setAttribute('for', uniqueId);
+        // カードのDOM要素を生成
+        const createCardElement = (cardId, data = {}) => {
+            const template = document.querySelector('#card-template');
+            const cardClone = template.content.cloneNode(true);
+            const cardElement = cardClone.querySelector('.character-card');
+            cardElement.setAttribute('data-card-id', cardId);
 
-        setupCardEventListeners(articleElement, newCardId);
-        document.getElementById('character-card-list').appendChild(cardClone);
+            // データの初期値を設定
+            cardElement.querySelector('[data-key="name"]').innerHTML = data.name || 'キャラクター名';
+            cardElement.querySelector('[data-key="rank-1"]').innerHTML = data.rank1 || '?';
+            cardElement.querySelector('[data-key="rank-text"]').innerHTML = data.rankText || '/??位';
+            cardElement.querySelector('[data-key="rank-2"]').innerHTML = data.rank2 || '?';
+            cardElement.querySelector('[data-key="image"]').src = data.image || '';
 
-        if (isNew) {
-            saveCardOrder();
-        }
-        return newCardId;
-    }
+            const statsKeys = ['stat-0', 'stat-1', 'stat-2', 'stat-3', 'stat-4'];
+            statsKeys.forEach((key, index) => {
+                cardElement.querySelector(`[data-key="${key}"]`).innerHTML = data[key] || '?';
+            });
 
-    function loadCard(cardId) {
-        const template = document.getElementById('card-template');
-        const cardClone = template.content.cloneNode(true);
-        const articleElement = cardClone.querySelector('article');
-        articleElement.setAttribute('data-card-id', cardId);
+            const skillsList = cardElement.querySelector('[data-key="skills"]');
+            if (data.skills) {
+                skillsList.innerHTML = '';
+                data.skills.forEach(skill => {
+                    const li = document.createElement('li');
+                    li.contentEditable = true;
+                    li.innerHTML = skill;
+                    skillsList.appendChild(li);
+                });
+            }
 
-        const fileInput = cardClone.querySelector('.image-file-input');
-        const imageLabel = cardClone.querySelector('.image-input');
-        const uniqueId = `file-input-${cardId}`;
-        fileInput.id = uniqueId;
-        imageLabel.setAttribute('for', uniqueId);
+            // ランクの色を更新
+            updateRankColor(cardElement.querySelector('[data-key="rank-1"]'));
+            
+            return cardElement;
+        };
 
-        setupCardEventListeners(articleElement, cardId);
+        // ランクのテキストに基づいて要素の背景色を更新する
+        const updateRankColor = (element) => {
+            const rank = element.innerText.trim().toUpperCase();
+            const rankClass = 'character-card__rank--' + (rank || 'default').toLowerCase();
+            element.className = 'character-card__rank ' + rankClass;
+            element.closest('.character-card__image-wrapper').style.border = `3px solid var(--rank-${(rank || 'a').toLowerCase()})`;
+        };
 
-        const editableElements = articleElement.querySelectorAll('[contenteditable="true"]');
-        editableElements.forEach((elem, index) => {
-            loadCardData(cardId, `text_${index}`, elem);
-        });
-        loadCardData(cardId, 'image', articleElement.querySelector('.card-image'));
-        
-        document.getElementById('character-card-list').appendChild(cardClone);
-    }
-
-    function setupCardEventListeners(cardElement, cardId) {
-        cardElement.querySelectorAll('[contenteditable="true"]').forEach((elem, index) => {
-            elem.addEventListener('input', (e) => {
-                const innerText = e.target.innerHTML;
-                saveCardData(cardId, `text_${index}`, innerText);
-                if (e.target.classList.contains('character-rank')) {
-                    updateRankColor(e.target);
+        // カードの全データを取得
+        const getCardData = (cardElement) => {
+            const data = {};
+            const editableElements = cardElement.querySelectorAll('[contenteditable="true"]');
+            editableElements.forEach(elem => {
+                const key = elem.getAttribute('data-key');
+                if (key) {
+                    data[key] = elem.innerHTML;
                 }
             });
-        });
+            const skills = Array.from(cardElement.querySelectorAll('[data-key="skills"] li')).map(li => li.innerHTML);
+            data.skills = skills;
+            data.image = cardElement.querySelector('[data-element="image"]').src;
+            return data;
+        };
 
-        const fileInput = cardElement.querySelector('.image-file-input');
-        const imgElement = cardElement.querySelector('.card-image');
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    imgElement.src = event.target.result;
-                    saveCardData(cardId, 'image', event.target.result);
-                };
-                reader.readAsDataURL(file);
+        // イベントリスナーの設定（イベント委譲）
+        document.addEventListener('input', async (e) => {
+            const cardElement = e.target.closest('.character-card');
+            if (!cardElement) return;
+
+            const cardId = cardElement.getAttribute('data-card-id');
+            const key = e.target.getAttribute('data-key');
+
+            if (key) {
+                const cardData = getCardData(cardElement);
+                await saveToDB('cardData', cardId, cardData);
+            }
+            if (e.target.classList.contains('character-card__rank')) {
+                updateRankColor(e.target);
             }
         });
 
-        const imageLabel = cardElement.querySelector('.image-input');
-        if (imageLabel) {
-            imageLabel.addEventListener('click', () => fileInput.click());
-        }
+        document.addEventListener('click', async (e) => {
+            const action = e.target.dataset.action;
+            const cardElement = e.target.closest('.character-card');
+            const cardId = cardElement?.getAttribute('data-card-id');
 
-        cardElement.querySelector('.delete-button').addEventListener('click', () => {
-            if (confirm('このカードを本当に削除しますか？')) {
-                deleteCard(cardId, cardElement);
+            if (action === 'delete-card') {
+                if (confirm('このカードを本当に削除しますか？')) {
+                    cardElement.remove();
+                    await deleteFromDB('cardData', cardId);
+                    await saveCardOrder();
+                }
+            }
+
+            if (action === 'select-image') {
+                const fileInput = cardElement.querySelector('[data-element="file-input"]');
+                fileInput.click();
             }
         });
 
-        // ロード時にランクの色を更新
-        const rankElements = cardElement.querySelectorAll('.character-rank');
-        rankElements.forEach(updateRankColor);
-    }
+        document.addEventListener('change', async (e) => {
+            const fileInput = e.target.closest('[data-element="file-input"]');
+            if (!fileInput) return;
 
-    function deleteCard(cardId, cardElement) {
-        cardElement.remove();
-        deleteCardData(cardId);
-        saveCardOrder();
-    }
+            const file = fileInput.files[0];
+            if (!file) return;
 
-    function saveCardOrder() {
-        if (!db) return;
-        const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)'))
-            .map(card => card.getAttribute('data-card-id'));
-        const transaction = db.transaction('cardOrder', 'readwrite');
-        const store = transaction.objectStore('cardOrder');
-        store.put(cardIds, 'order');
-    }
+            const cardElement = fileInput.closest('.character-card');
+            const cardId = cardElement.getAttribute('data-card-id');
+            const imgElement = cardElement.querySelector('[data-element="image"]');
 
-    function loadAllCards() {
-        if (!db) return;
-        const transaction = db.transaction('cardOrder', 'readonly');
-        const store = transaction.objectStore('cardOrder');
-        const request = store.get('order');
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                imgElement.src = event.target.result;
+                const cardData = await loadFromDB('cardData', cardId) || {};
+                cardData.image = event.target.result;
+                await saveToDB('cardData', cardId, cardData);
+            };
+            reader.readAsDataURL(file);
+        });
 
-        request.onsuccess = (event) => {
-            const cardIds = event.target.result;
+        // カードの並び順を保存
+        const saveCardOrder = async () => {
+            const cardIds = Array.from(document.querySelectorAll('.character-card'))
+                .map(card => card.getAttribute('data-card-id'));
+            await saveToDB('cardOrder', 'order', cardIds);
+        };
+
+        // 新しいカードを作成
+        const createNewCard = async () => {
+            const newCardId = `card_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+            const cardElement = createCardElement(newCardId, {});
+            document.getElementById('character-card-list').appendChild(cardElement);
+            await saveCardOrder();
+        };
+
+        // 全カードのロード
+        const loadAllCards = async () => {
+            const cardList = document.getElementById('character-card-list');
+            cardList.innerHTML = ''; // 一度DOMをクリア
+            const cardIds = await loadFromDB('cardOrder', 'order');
+
             if (cardIds && cardIds.length > 0) {
-                cardIds.forEach(loadCard);
+                for (const cardId of cardIds) {
+                    const data = await loadFromDB('cardData', cardId);
+                    const cardElement = createCardElement(cardId, data);
+                    cardList.appendChild(cardElement);
+                }
             } else {
                 for (let i = 0; i < 3; i++) {
-                    createCard();
+                    await createNewCard();
                 }
             }
         };
 
-        request.onerror = () => {
+        // アプリケーションの開始
+        document.getElementById('add-card-button').addEventListener('click', createNewCard);
+        
+        initDB().then(loadAllCards).catch(() => {
+            // DB初期化失敗時もカードを生成
             for (let i = 0; i < 3; i++) {
-                createCard();
+                createNewCard();
             }
-        };
-    }
-
-    /**
-     * ランクのテキストに基づいて要素の背景色を更新する
-     * @param {HTMLElement} element - ランクテキストを含む要素
-     */
-    function updateRankColor(element) {
-        const rank = element.innerText.trim().toUpperCase();
-        element.style.backgroundColor = ''; // スタイルをリセット
-        element.className = 'character-rank'; // クラスもリセット
-
-        switch(rank) {
-            case 'SS':
-                element.classList.add('rank-ss');
-                break;
-            case 'S':
-                element.classList.add('rank-s');
-                break;
-            case 'A':
-                element.classList.add('rank-a');
-                break;
-            case 'B':
-                element.classList.add('rank-b');
-                break;
-            case 'C':
-                element.classList.add('rank-c');
-                break;
-            case 'D':
-                element.classList.add('rank-d');
-                break;
-            case 'E':
-                element.classList.add('rank-e');
-                break;
-            default:
-                element.classList.add('rank-default');
-                break;
-        }
-    }
-
-    document.getElementById('add-card-button').addEventListener('click', () => createCard());
+        });
+    });
 </script>
 </body>
 </html>
