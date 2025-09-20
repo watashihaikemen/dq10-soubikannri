@@ -285,8 +285,11 @@
 
     function updateRankColor(rankElement) {
         const rankValue = rankElement.innerText.toUpperCase().trim().replace(/位$/, '');
+        
+        // すべてのランククラスを削除
         rankElement.classList.remove('rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e', 'rank-default');
 
+        // 値に応じて新しいクラスを追加
         switch (rankValue) {
             case 'SS':
                 rankElement.classList.add('rank-ss');
@@ -319,11 +322,15 @@
         editableElements.forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
                 saveCardData(cardId, `text_${index}`, e.target.innerHTML);
-
-                if (e.target.classList.contains('character-rank')) {
-                    updateRankColor(e.target);
-                }
             });
+            // ランク要素にのみ特別なイベントリスナーを追加
+            if (elem.classList.contains('character-rank')) {
+                elem.addEventListener('input', (e) => {
+                    updateRankColor(e.target);
+                    // ランクの色情報を保存する
+                    saveCardData(cardId, `rank_color_${index}`, e.target.innerText.toUpperCase().trim().replace(/位$/, ''));
+                });
+            }
         });
 
         const fileInput = cardElement.querySelector('.image-file-input');
@@ -351,9 +358,21 @@
                 deleteCard(cardId, cardElement);
             }
         });
-
+        
+        // ページロード時にランクの色を復元
         const rankElements = cardElement.querySelectorAll('.character-rank');
-        rankElements.forEach(updateRankColor);
+        rankElements.forEach((elem, index) => {
+            const transaction = db.transaction('cardData', 'readonly');
+            const objectStore = transaction.objectStore('cardData');
+            const request = objectStore.get(`${cardId}_rank_color_${index}`);
+            request.onsuccess = (event) => {
+                const savedRank = event.target.result;
+                if (savedRank !== undefined) {
+                    elem.innerText = savedRank; // 保存されたランク値を設定
+                }
+                updateRankColor(elem); // 色を適用
+            };
+        });
     }
 
     function createCard(isNew = true) {
