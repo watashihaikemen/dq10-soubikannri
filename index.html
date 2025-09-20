@@ -193,7 +193,7 @@
     <input type="file" style="display: none;" accept="image/*" class="image-file-input">
     <div class="stats-table">
         <div class="stats-item">
-            <div class="label">耐久</div>
+            <div class="label">変更耐久</div>
             <div class="value" contenteditable="true">?</div>
         </div>
         <div class="stats-item">
@@ -223,7 +223,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 3;
+    const dbVersion = 4; // バージョンを上げて、古いデータをクリア
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -234,10 +234,15 @@
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        if (!db.objectStoreNames.contains('cardData')) {
-            db.createObjectStore('cardData');
+        // 既存のストアがあれば削除し、作り直す
+        if (db.objectStoreNames.contains('cardData')) {
+            db.deleteObjectStore('cardData');
         }
-        const cardOrderStore = db.createObjectStore('cardOrder');
+        if (db.objectStoreNames.contains('cardOrder')) {
+            db.deleteObjectStore('cardOrder');
+        }
+        db.createObjectStore('cardData');
+        db.createObjectStore('cardOrder');
     };
 
     request.onsuccess = (event) => {
@@ -255,7 +260,7 @@
         const transaction = db.transaction('cardData', 'readonly');
         const objectStore = transaction.objectStore('cardData');
         const request = objectStore.get(`${cardId}_${key}`);
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             request.onsuccess = (event) => {
                 const savedData = event.target.result;
                 if (savedData !== undefined) {
@@ -267,8 +272,8 @@
                 }
                 resolve();
             };
-            request.onerror = (event) => {
-                reject(event.target.error);
+            request.onerror = () => {
+                resolve(); // エラー時も処理を続行
             };
         });
     }
@@ -276,7 +281,7 @@
     function deleteCardData(cardId) {
         const transaction = db.transaction('cardData', 'readwrite');
         const objectStore = transaction.objectStore('cardData');
-
+        
         const request = objectStore.openCursor();
         request.onsuccess = (event) => {
             const cursor = event.target.result;
@@ -291,11 +296,8 @@
 
     function updateRankColor(rankElement) {
         const rankValue = rankElement.innerText.toUpperCase().trim().replace(/位$/, '');
-        
-        // すべてのランククラスを削除
         rankElement.classList.remove('rank-ss', 'rank-s', 'rank-a', 'rank-b', 'rank-c', 'rank-d', 'rank-e', 'rank-default');
 
-        // 値に応じて新しいクラスを追加
         switch (rankValue) {
             case 'SS':
                 rankElement.classList.add('rank-ss');
@@ -365,45 +367,31 @@
         const template = document.getElementById('card-template');
         const cardClone = template.cloneNode(true);
         cardClone.classList.remove('card-template');
-
         const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         cardClone.setAttribute('data-card-id', newCardId);
-
+        
         setupCardEventListeners(cardClone, newCardId);
 
-        // 新規作成時のみ、初期値を設定
         if (isNew) {
-            // 各editable要素のテキストをリセット
-            const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
-            editableElements.forEach(elem => {
-                elem.innerHTML = '';
-            });
-            // 特定の要素に初期テキストを設定
+            // 初期値を設定
             cardClone.querySelector('.character-name').innerHTML = 'キャラクター名';
             cardClone.querySelectorAll('.character-rank')[0].innerHTML = '?';
             cardClone.querySelector('.ranking-text').innerHTML = '/??位';
             cardClone.querySelectorAll('.character-rank')[1].innerHTML = '?';
-            cardClone.querySelectorAll('.stats-item .value').forEach(elem => {
-                elem.innerHTML = '?';
-            });
-            const skillListItems = cardClone.querySelectorAll('.skill-list li');
-            skillListItems[0].innerHTML = 'スキルや評価を入力してください';
-            skillListItems[1].innerHTML = '';
-            skillListItems[2].innerHTML = '';
-            skillListItems[3].innerHTML = '';
-            
-            // 画像をリセット
-            cardClone.querySelector('.card-image').src = '';
+            const statValues = cardClone.querySelectorAll('.stats-item .value');
+            statValues.forEach(el => el.innerHTML = '?');
+            const skillItems = cardClone.querySelectorAll('.skill-list li');
+            skillItems[0].innerHTML = 'スキルや評価を入力してください';
+            skillItems[1].innerHTML = '';
+            skillItems[2].innerHTML = '';
+            skillItems[3].innerHTML = '';
 
+            // ランクの色を初期化
             updateRankColor(cardClone.querySelectorAll('.character-rank')[0]);
             updateRankColor(cardClone.querySelectorAll('.character-rank')[1]);
 
-            // 初期の値をDBに保存
-            const editableElementsToSave = cardClone.querySelectorAll('[contenteditable="true"]');
-            editableElementsToSave.forEach((elem, index) => {
-                saveCardData(newCardId, `text_${index}`, elem.innerHTML);
-            });
-            saveCardData(newCardId, 'image', '');
+            // 画像をリセット
+            cardClone.querySelector('.card-image').src = '';
         }
 
         document.getElementById('character-card-list').appendChild(cardClone);
@@ -422,9 +410,9 @@
         setupCardEventListeners(cardClone, cardId);
 
         const editableElements = cardClone.querySelectorAll('[contenteditable="true"]');
-        
-        // すべてのテキスト情報を非同期でロード
         const loadPromises = [];
+
+        // テキスト情報をロード
         editableElements.forEach((elem, index) => {
             loadPromises.push(loadCardData(cardId, `text_${index}`, elem));
         });
@@ -432,10 +420,8 @@
 
         await Promise.all(loadPromises);
 
-        // すべてのデータがロードされた後にDOMに追加
         document.getElementById('character-card-list').appendChild(cardClone);
         
-        // ランクの色を再適用
         const rankElements = cardClone.querySelectorAll('.character-rank');
         rankElements.forEach(updateRankColor);
     }
