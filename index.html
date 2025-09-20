@@ -223,7 +223,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 3; // バージョンを元に戻し、既存データを保持
+    const dbVersion = 3;
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -234,7 +234,6 @@
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        // 既存のストアが存在しない場合のみ作成
         if (!db.objectStoreNames.contains('cardData')) {
             db.createObjectStore('cardData');
         }
@@ -378,8 +377,6 @@
         const newCardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         cardClone.setAttribute('data-card-id', newCardId);
         
-        setupCardEventListeners(cardClone, newCardId);
-
         if (isNew) {
             const initialData = {
                 name: 'キャラクター名',
@@ -413,6 +410,7 @@
         }
 
         document.getElementById('character-card-list').appendChild(cardClone);
+        setupCardEventListeners(cardClone, newCardId);
         
         if (isNew) {
             saveCardOrder();
@@ -427,7 +425,6 @@
 
         setupCardEventListeners(cardClone, cardId);
 
-        // 各要素のデータを個別にロード
         await Promise.all([
             loadCardData(cardId, 'name', cardClone.querySelector('.character-name')),
             loadCardData(cardId, 'rank1', cardClone.querySelectorAll('.character-rank')[0]),
