@@ -7,7 +7,7 @@
     <style>
         /* スタイルの最適化 */
         body {
-            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -73,7 +73,6 @@
             margin-top: 5px; /* 名前との間隔 */
         }
         .character-rank {
-            background-color: #a42c2c;
             color: white;
             font-size: 24px;
             font-weight: bold;
@@ -81,6 +80,7 @@
             border-radius: 8px;
             display: inline-block;
             margin-left: 10px;
+            transition: background-color 0.3s ease; /* 色変化を滑らかに */
         }
         .ranking-text {
             font-size: 18px;
@@ -183,6 +183,15 @@
         .card-template {
             display: none;
         }
+        /* ランクごとの色を定義 */
+        .rank-ss { background-color: #ff4500; } /* SS: 赤 */
+        .rank-s { background-color: #f9d71c; } /* S: 金 */
+        .rank-a { background-color: #32cd32; } /* A: 緑 */
+        .rank-b { background-color: #1e90ff; } /* B: 青 */
+        .rank-c { background-color: #8a2be2; } /* C: 紫 */
+        .rank-d { background-color: #ff8c00; } /* D: オレンジ */
+        .rank-e { background-color: #a42c2c; } /* E: 茶 */
+        .rank-default { background-color: #999; } /* デフォルト: グレー */
     </style>
 </head>
 <body>
@@ -203,7 +212,7 @@
             <div>
                 <h2 class="character-name" contenteditable="true">キャラクター名</h2>
                 <div class="ranking-info">
-                    <span class="character-rank" contenteditable="true">?位</span>
+                    <span class="character-rank" contenteditable="true">?</span>
                     <span class="ranking-text" contenteditable="true">/??位</span>
                     <span class="character-rank" style="background-color: #3b5998;" contenteditable="true">?</span>
                 </div>
@@ -243,13 +252,10 @@
 </template>
 
 <script>
-    // JavaScriptは元のコードから大幅な変更なしで動作します
-    // 可読性向上のための変数名やコメントの追加、およびエラーハンドリングの改善
     const dbName = 'characterDB';
     const dbVersion = 2;
     let db;
 
-    // IndexedDBのオープン
     const request = indexedDB.open(dbName, dbVersion);
 
     request.onupgradeneeded = (event) => {
@@ -269,31 +275,20 @@
 
     request.onerror = (event) => {
         console.error('IndexedDB error:', event.target.errorCode);
-        // エラー発生時もデフォルトカードを作成
         for (let i = 0; i < 3; i++) {
             createCard();
         }
     };
 
-    /**
-     * 指定されたカードIDとキーでデータを保存する
-     * @param {string} cardId - カードのユニークID
-     * @param {string} key - 保存するデータのキー
-     * @param {*} value - 保存するデータ
-     */
     function saveCardData(cardId, key, value) {
+        if (!db) return;
         const transaction = db.transaction('cardData', 'readwrite');
         const store = transaction.objectStore('cardData');
         store.put(value, `${cardId}_${key}`);
     }
 
-    /**
-     * 指定されたカードIDとキーでデータを読み込み、要素に反映する
-     * @param {string} cardId - カードのユニークID
-     * @param {string} key - 読み込むデータのキー
-     * @param {HTMLElement} element - データ反映先のHTML要素
-     */
     function loadCardData(cardId, key, element) {
+        if (!db) return;
         const transaction = db.transaction('cardData', 'readonly');
         const store = transaction.objectStore('cardData');
         const request = store.get(`${cardId}_${key}`);
@@ -304,16 +299,16 @@
                     element.src = savedData;
                 } else {
                     element.innerHTML = savedData;
+                    if (element.classList.contains('character-rank')) {
+                        updateRankColor(element);
+                    }
                 }
             }
         };
     }
 
-    /**
-     * 指定されたカードIDに関連するすべてのデータをIndexedDBから削除する
-     * @param {string} cardId - 削除するカードのユニークID
-     */
     function deleteCardData(cardId) {
+        if (!db) return;
         const transaction = db.transaction('cardData', 'readwrite');
         const store = transaction.objectStore('cardData');
         store.openCursor().onsuccess = (event) => {
@@ -327,18 +322,20 @@
         };
     }
 
-    /**
-     * 新しいカードを作成し、DOMに追加する
-     * @param {boolean} isNew - 新規作成か、既存データのロードか
-     * @returns {string} 新しいカードのID
-     */
     function createCard(isNew = true) {
         const template = document.getElementById('card-template');
-        const cardClone = template.content.cloneNode(true); // <template>からコンテンツをクローン
+        const cardClone = template.content.cloneNode(true);
         
         const newCardId = `card_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
         const articleElement = cardClone.querySelector('article');
         articleElement.setAttribute('data-card-id', newCardId);
+        
+        // input要素のIDをユニークにする
+        const fileInput = cardClone.querySelector('.image-file-input');
+        const imageLabel = cardClone.querySelector('.image-input');
+        const uniqueId = `file-input-${newCardId}`;
+        fileInput.id = uniqueId;
+        imageLabel.setAttribute('for', uniqueId);
 
         setupCardEventListeners(articleElement, newCardId);
         document.getElementById('character-card-list').appendChild(cardClone);
@@ -349,15 +346,17 @@
         return newCardId;
     }
 
-    /**
-     * 既存のカードをIDからロードしてDOMに追加する
-     * @param {string} cardId - ロードするカードのID
-     */
     function loadCard(cardId) {
         const template = document.getElementById('card-template');
         const cardClone = template.content.cloneNode(true);
         const articleElement = cardClone.querySelector('article');
         articleElement.setAttribute('data-card-id', cardId);
+
+        const fileInput = cardClone.querySelector('.image-file-input');
+        const imageLabel = cardClone.querySelector('.image-input');
+        const uniqueId = `file-input-${cardId}`;
+        fileInput.id = uniqueId;
+        imageLabel.setAttribute('for', uniqueId);
 
         setupCardEventListeners(articleElement, cardId);
 
@@ -370,15 +369,14 @@
         document.getElementById('character-card-list').appendChild(cardClone);
     }
 
-    /**
-     * カード要素にイベントリスナーを設定する
-     * @param {HTMLElement} cardElement - イベントリスナーを設定するカード要素
-     * @param {string} cardId - カードのID
-     */
     function setupCardEventListeners(cardElement, cardId) {
         cardElement.querySelectorAll('[contenteditable="true"]').forEach((elem, index) => {
             elem.addEventListener('input', (e) => {
-                saveCardData(cardId, `text_${index}`, e.target.innerHTML);
+                const innerText = e.target.innerHTML;
+                saveCardData(cardId, `text_${index}`, innerText);
+                if (e.target.classList.contains('character-rank')) {
+                    updateRankColor(e.target);
+                }
             });
         });
 
@@ -406,23 +404,20 @@
                 deleteCard(cardId, cardElement);
             }
         });
+
+        // ロード時にランクの色を更新
+        const rankElements = cardElement.querySelectorAll('.character-rank');
+        rankElements.forEach(updateRankColor);
     }
 
-    /**
-     * カードをDOMとIndexedDBから削除する
-     * @param {string} cardId - 削除するカードのID
-     * @param {HTMLElement} cardElement - 削除するカードのDOM要素
-     */
     function deleteCard(cardId, cardElement) {
         cardElement.remove();
         deleteCardData(cardId);
         saveCardOrder();
     }
 
-    /**
-     * 現在のカードの並び順をIndexedDBに保存する
-     */
     function saveCardOrder() {
+        if (!db) return;
         const cardIds = Array.from(document.querySelectorAll('.character-card:not(.card-template)'))
             .map(card => card.getAttribute('data-card-id'));
         const transaction = db.transaction('cardOrder', 'readwrite');
@@ -430,10 +425,8 @@
         store.put(cardIds, 'order');
     }
 
-    /**
-     * IndexedDBから保存されているすべてのカードを読み込む
-     */
     function loadAllCards() {
+        if (!db) return;
         const transaction = db.transaction('cardOrder', 'readonly');
         const store = transaction.objectStore('cardOrder');
         const request = store.get('order');
@@ -456,7 +449,43 @@
         };
     }
 
-    // イベントリスナー設定
+    /**
+     * ランクのテキストに基づいて要素の背景色を更新する
+     * @param {HTMLElement} element - ランクテキストを含む要素
+     */
+    function updateRankColor(element) {
+        const rank = element.innerText.trim().toUpperCase();
+        element.style.backgroundColor = ''; // スタイルをリセット
+        element.className = 'character-rank'; // クラスもリセット
+
+        switch(rank) {
+            case 'SS':
+                element.classList.add('rank-ss');
+                break;
+            case 'S':
+                element.classList.add('rank-s');
+                break;
+            case 'A':
+                element.classList.add('rank-a');
+                break;
+            case 'B':
+                element.classList.add('rank-b');
+                break;
+            case 'C':
+                element.classList.add('rank-c');
+                break;
+            case 'D':
+                element.classList.add('rank-d');
+                break;
+            case 'E':
+                element.classList.add('rank-e');
+                break;
+            default:
+                element.classList.add('rank-default');
+                break;
+        }
+    }
+
     document.getElementById('add-card-button').addEventListener('click', () => createCard());
 </script>
 </body>
