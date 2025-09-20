@@ -233,6 +233,18 @@
                     </select>
                 </div>
                 <div class="form-row">
+                    <label for="status-power">火力:</label>
+                    <select id="status-power" name="status-power">
+                        <option value="SS">SS</option>
+                        <option value="S">S</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                    </select>
+                </div>
+                <div class="form-row">
                     <label for="status-endurance">耐久:</label>
                     <select id="status-endurance" name="status-endurance">
                         <option value="SS">SS</option>
@@ -245,19 +257,7 @@
                     </select>
                 </div>
                 <div class="form-row">
-                    <label for="status-attack">攻撃:</label>
-                    <select id="status-attack" name="status-attack">
-                        <option value="SS">SS</option>
-                        <option value="S">S</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                        <option value="E">E</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <label for="status-stability">安定性:</label>
+                    <label for="status-stability">安定感:</label>
                     <select id="status-stability" name="status-stability">
                         <option value="SS">SS</option>
                         <option value="S">S</option>
@@ -281,7 +281,7 @@
                     </select>
                 </div>
                 <div class="form-row">
-                    <label for="status-support">援護:</label>
+                    <label for="status-support">支援:</label>
                     <select id="status-support" name="status-support">
                         <option value="SS">SS</option>
                         <option value="S">S</option>
@@ -347,8 +347,8 @@
                     position: charPosition,
                     rank: form['char-rank'].value,
                     stats: {
+                        power: form['status-power'].value,
                         endurance: form['status-endurance'].value,
-                        attack: form['status-attack'].value,
                         stability: form['status-stability'].value,
                         mobility: form['status-mobility'].value,
                         support: form['status-support'].value,
@@ -364,7 +364,7 @@
                     const cardElement = document.querySelector(`.card-container[data-position="${editingCardData.position}"]`);
                     updateCardElement(cardElement, data);
                     editingCardData = null;
-                    document.getElementById('submit-button').textContent = 'カードを更新';
+                    document.getElementById('submit-button').textContent = 'カードを作成';
                 } else {
                     savedCards.push(data);
                     createCardElement(data);
@@ -422,17 +422,17 @@
                         <table>
                             <thead>
                                 <tr>
+                                    <th>火力</th>
                                     <th>耐久</th>
-                                    <th>攻撃</th>
-                                    <th>安定性</th>
+                                    <th>安定感</th>
                                     <th>機動力</th>
-                                    <th>援護</th>
+                                    <th>支援</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
+                                    <td><span class="rank-${data.stats.power}">${data.stats.power}</span></td>
                                     <td><span class="rank-${data.stats.endurance}">${data.stats.endurance}</span></td>
-                                    <td><span class="rank-${data.stats.attack}">${data.stats.attack}</span></td>
                                     <td><span class="rank-${data.stats.stability}">${data.stats.stability}</span></td>
                                     <td><span class="rank-${data.stats.mobility}">${data.stats.mobility}</span></td>
                                     <td><span class="rank-${data.stats.support}">${data.stats.support}</span></td>
@@ -477,11 +477,11 @@
                 rankSpan.className = `card-rank rank-${data.rank}`;
                 rankSpan.textContent = `総合評価:${data.rank}`;
                 
-                card.querySelector('td:nth-child(1) span').className = `rank-${data.stats.endurance}`;
-                card.querySelector('td:nth-child(1) span').textContent = data.stats.endurance;
+                card.querySelector('td:nth-child(1) span').className = `rank-${data.stats.power}`;
+                card.querySelector('td:nth-child(1) span').textContent = data.stats.power;
                 
-                card.querySelector('td:nth-child(2) span').className = `rank-${data.stats.attack}`;
-                card.querySelector('td:nth-child(2) span').textContent = data.stats.attack;
+                card.querySelector('td:nth-child(2) span').className = `rank-${data.stats.endurance}`;
+                card.querySelector('td:nth-child(2) span').textContent = data.stats.endurance;
 
                 card.querySelector('td:nth-child(3) span').className = `rank-${data.stats.stability}`;
                 card.querySelector('td:nth-child(3) span').textContent = data.stats.stability;
@@ -501,8 +501,8 @@
                 document.getElementById('char-name').value = data.name;
                 document.getElementById('char-position').value = data.position;
                 document.getElementById('char-rank').value = data.rank;
+                document.getElementById('status-power').value = data.stats.power;
                 document.getElementById('status-endurance').value = data.stats.endurance;
-                document.getElementById('status-attack').value = data.stats.attack;
                 document.getElementById('status-stability').value = data.stats.stability;
                 document.getElementById('status-mobility').value = data.stats.mobility;
                 document.getElementById('status-support').value = data.stats.support;
