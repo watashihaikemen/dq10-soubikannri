@@ -214,7 +214,7 @@
 
 <script>
     const dbName = 'characterDB';
-    const dbVersion = 3; 
+    const dbVersion = 4; // バージョンを上げました
     let db;
 
     const request = indexedDB.open(dbName, dbVersion);
@@ -225,10 +225,14 @@
 
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        // データストアが存在しない場合のみ作成
+        
+        // データストアが存在しない場合にのみ作成
         if (!db.objectStoreNames.contains('cardData')) {
+            // keyPathにidを指定して、カードごとのデータを一括で保存できるようにする
             db.createObjectStore('cardData', { keyPath: 'id' });
         }
+
+        // cardOrder object storeが存在しない場合にのみ作成
         if (!db.objectStoreNames.contains('cardOrder')) {
             db.createObjectStore('cardOrder');
         }
@@ -279,7 +283,7 @@
                 name: cardElement.querySelector('.character-name').innerHTML,
                 rank: cardElement.querySelector('.character-rank').innerHTML,
                 rankingText: cardElement.querySelector('.ranking-text').innerHTML,
-                value1: cardElement.querySelector('.character-rank[style*="background-color: rgb(59, 89, 152);"]').innerHTML,
+                value1: cardElement.querySelector('.character-rank[style*="background-color: #3b5998;"]').innerHTML,
                 value2: cardElement.querySelectorAll('.stats-item .value')[0].innerHTML,
                 value3: cardElement.querySelectorAll('.stats-item .value')[1].innerHTML,
                 value4: cardElement.querySelectorAll('.stats-item .value')[2].innerHTML,
