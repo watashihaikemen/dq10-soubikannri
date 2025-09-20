@@ -115,6 +115,11 @@
         .rank-C { color: #0000ff; }  /* 青 */
         .rank-D { color: #8a2be2; }  /* 紫 */
         .rank-E { color: #191970; }  /* 濃い青 */
+        
+        /* ステータスセルの文字色 */
+        .card-stats td {
+            font-weight: bold;
+        }
 
         .card-header .char-image {
             width: 80px;
@@ -177,11 +182,11 @@
         
         /* 説明文の箇条書きのインデントを調整 */
         .card-description ul {
-            padding-left: 15px; /* インデントを減らす */
+            padding-left: 15px;
             margin: 0;
         }
         .card-description li {
-            padding-left: 5px; /* 箇条書きマーカーを調整 */
+            padding-left: 5px;
         }
 
         .card-actions {
@@ -230,46 +235,61 @@
                 <div class="form-row">
                     <label for="status-endurance">耐久:</label>
                     <select id="status-endurance" name="status-endurance">
+                        <option value="SS">SS</option>
                         <option value="S">S</option>
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
                     </select>
                 </div>
                 <div class="form-row">
                     <label for="status-attack">攻撃:</label>
                     <select id="status-attack" name="status-attack">
+                        <option value="SS">SS</option>
                         <option value="S">S</option>
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
                     </select>
                 </div>
                 <div class="form-row">
                     <label for="status-stability">安定性:</label>
                     <select id="status-stability" name="status-stability">
+                        <option value="SS">SS</option>
                         <option value="S">S</option>
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
                     </select>
                 </div>
                 <div class="form-row">
                     <label for="status-mobility">機動力:</label>
                     <select id="status-mobility" name="status-mobility">
+                        <option value="SS">SS</option>
                         <option value="S">S</option>
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
                     </select>
                 </div>
                 <div class="form-row">
                     <label for="status-support">援護:</label>
                     <select id="status-support" name="status-support">
+                        <option value="SS">SS</option>
                         <option value="S">S</option>
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
                     </select>
                 </div>
                 <div class="form-row">
@@ -344,7 +364,7 @@
                     const cardElement = document.querySelector(`.card-container[data-position="${editingCardData.position}"]`);
                     updateCardElement(cardElement, data);
                     editingCardData = null;
-                    document.getElementById('submit-button').textContent = 'カードを作成';
+                    document.getElementById('submit-button').textContent = 'カードを更新';
                 } else {
                     savedCards.push(data);
                     createCardElement(data);
@@ -411,11 +431,11 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>${data.stats.endurance}</td>
-                                    <td>${data.stats.attack}</td>
-                                    <td>${data.stats.stability}</td>
-                                    <td>${data.stats.mobility}</td>
-                                    <td>${data.stats.support}</td>
+                                    <td><span class="rank-${data.stats.endurance}">${data.stats.endurance}</span></td>
+                                    <td><span class="rank-${data.stats.attack}">${data.stats.attack}</span></td>
+                                    <td><span class="rank-${data.stats.stability}">${data.stats.stability}</span></td>
+                                    <td><span class="rank-${data.stats.mobility}">${data.stats.mobility}</span></td>
+                                    <td><span class="rank-${data.stats.support}">${data.stats.support}</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -457,11 +477,21 @@
                 rankSpan.className = `card-rank rank-${data.rank}`;
                 rankSpan.textContent = `総合評価:${data.rank}`;
                 
-                card.querySelector('.card-stats td:nth-child(1)').textContent = data.stats.endurance;
-                card.querySelector('.card-stats td:nth-child(2)').textContent = data.stats.attack;
-                card.querySelector('.card-stats td:nth-child(3)').textContent = data.stats.stability;
-                card.querySelector('.card-stats td:nth-child(4)').textContent = data.stats.mobility;
-                card.querySelector('.card-stats td:nth-child(5)').textContent = data.stats.support;
+                card.querySelector('td:nth-child(1) span').className = `rank-${data.stats.endurance}`;
+                card.querySelector('td:nth-child(1) span').textContent = data.stats.endurance;
+                
+                card.querySelector('td:nth-child(2) span').className = `rank-${data.stats.attack}`;
+                card.querySelector('td:nth-child(2) span').textContent = data.stats.attack;
+
+                card.querySelector('td:nth-child(3) span').className = `rank-${data.stats.stability}`;
+                card.querySelector('td:nth-child(3) span').textContent = data.stats.stability;
+
+                card.querySelector('td:nth-child(4) span').className = `rank-${data.stats.mobility}`;
+                card.querySelector('td:nth-child(4) span').textContent = data.stats.mobility;
+
+                card.querySelector('td:nth-child(5) span').className = `rank-${data.stats.support}`;
+                card.querySelector('td:nth-child(5) span').textContent = data.stats.support;
+                
                 card.querySelector('.card-description ul').innerHTML = `<li>${data.description.split('\n').join('</li><li>')}</li>`;
                 
                 card.querySelector('.card-position').textContent = `${data.position}位/0位`;
