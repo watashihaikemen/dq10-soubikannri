@@ -6,7 +6,7 @@
     <title>キャラクター評価（空白テンプレート）</title>
     <style>
         body {
-            font-family: -apple-system, Blink-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
+            font-family: -apple-system, BlinkMac-Mac-System, "Helvetica Neue", "Segoe UI", YuGothic, "Yu Gothic", sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
@@ -173,11 +173,11 @@
                 <div class="value">?</div>
             </div>
         </div>
-        <ul class="skill-list" contenteditable="true" data-id="char1-skills">
-            <li>ここにスキルや評価を入力してください</li>
-            <li></li>
-            <li></li>
-            <li></li>
+        <ul class="skill-list" data-id="char1-skills">
+            <li contenteditable="true">スキルや評価を入力してください</li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
         </ul>
     </div>
 
@@ -219,11 +219,11 @@
                 <div class="value">?</div>
             </div>
         </div>
-        <ul class="skill-list" contenteditable="true" data-id="char2-skills">
-            <li>ここにスキルや評価を入力してください</li>
-            <li></li>
-            <li></li>
-            <li></li>
+        <ul class="skill-list" data-id="char2-skills">
+            <li contenteditable="true">スキルや評価を入力してください</li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
         </ul>
     </div>
 
@@ -265,11 +265,11 @@
                 <div class="value">?</div>
             </div>
         </div>
-        <ul class="skill-list" contenteditable="true" data-id="char3-skills">
-            <li>ここにスキルや評価を入力してください</li>
-            <li></li>
-            <li></li>
-            <li></li>
+        <ul class="skill-list" data-id="char3-skills">
+            <li contenteditable="true">スキルや評価を入力してください</li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
+            <li contenteditable="true"></li>
         </ul>
     </div>
 
@@ -300,8 +300,8 @@
         // ローカルストレージとIndexedDBからデータを読み込む
         function loadAllData() {
             // テキストデータの読み込み（localStorage）
-            document.querySelectorAll('[data-id]').forEach(element => {
-                const id = element.getAttribute('data-id');
+            document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+                const id = element.getAttribute('data-id') || element.closest('[data-id]').getAttribute('data-id') + '-' + Array.from(element.parentNode.children).indexOf(element);
                 const savedData = localStorage.getItem(id);
                 if (savedData) {
                     element.innerHTML = savedData;
@@ -335,7 +335,9 @@
         // 入力時のイベントリスナー（テキスト）
         document.querySelectorAll('[contenteditable="true"]').forEach(element => {
             element.addEventListener('input', (e) => {
-                saveData(e.target.getAttribute('data-id'), e.target.innerHTML);
+                // 親要素のdata-idと子要素のインデックスを組み合わせて一意なIDを作成
+                const id = e.target.getAttribute('data-id') || e.target.closest('[data-id]').getAttribute('data-id') + '-' + Array.from(e.target.parentNode.children).indexOf(e.target);
+                saveData(id, e.target.innerHTML);
             });
         });
 
